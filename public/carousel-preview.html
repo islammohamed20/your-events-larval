@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معاينة Carousel - خدمات الفئات</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #f8f9fa;
+        }
+
+        /* Services Carousel Styles */
+        .services-carousel-wrapper {
+            position: relative;
+            padding: 0 50px;
+        }
+
+        .services-carousel-track {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding: 10px 5px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .services-carousel-track::-webkit-scrollbar {
+            display: none;
+        }
+
+        .service-card-carousel {
+            flex: 0 0 280px;
+            min-width: 280px;
+        }
+
+        .service-card-carousel .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15) !important;
+        }
+
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #e2e8f0;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .carousel-nav:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .carousel-nav-prev {
+            right: 0;
+        }
+
+        .carousel-nav-next {
+            left: 0;
+        }
+
+        @media (max-width: 768px) {
+            .services-carousel-wrapper {
+                padding: 0 35px;
+            }
+            
+            .service-card-carousel {
+                flex: 0 0 260px;
+                min-width: 260px;
+            }
+            
+            .carousel-nav {
+                width: 35px;
+                height: 35px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <h2 class="text-center mb-5" style="color: #1a202c; font-weight: 800; font-size: 2.5rem;">
+            خدماتنا المميزة
+        </h2>
+
+        <!-- Category 1: الرياض -->
+        <div class="klb-module module-carousel mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center">
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-left: 15px;">
+                        <i class="fas fa-trophy" style="color: white; font-size: 1.5rem;"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-0" style="color: #1a202c; font-weight: 700; font-size: 1.8rem;">الألعاب</h3>
+                        <p class="text-muted mb-0 small">ألعاب ترفيهية متنوعة لجميع الأعمار</p>
+                    </div>
+                </div>
+                <a href="#" class="btn btn-outline-primary rounded-pill px-4">
+                    عرض الكل
+                    <i class="fas fa-arrow-left me-2"></i>
+                </a>
+            </div>
+
+            <div class="services-carousel-wrapper position-relative">
+                <div class="services-carousel-track" id="carousel-1">
+                    <!-- Service Card 1 -->
+                    <div class="service-card-carousel">
+                        <a href="#" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm" style="border-radius: 16px; overflow: hidden; transition: all 0.3s ease;">
+                                <div class="position-absolute top-0 end-0 m-3" style="z-index: 10;">
+                                    <span class="badge bg-danger rounded-pill" style="padding: 8px 16px;">
+                                        خصم 12%
+                                    </span>
+                                </div>
+                                <div style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                    <img src="/images/packages/package-1.jpg" alt="خدمة" style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                <div class="card-body p-3">
+                                    <h5 class="mb-2" style="color: #1a202c; font-weight: 700; font-size: 1.1rem;">
+                                        مكعبات اعلانية | لفات
+                                    </h5>
+                                    <p class="text-muted small mb-2">خدمة ترفيهية مميزة للفعاليات</p>
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <div>
+                                            <span class="text-primary fw-bold" style="font-size: 1.2rem;">300 ر.س</span>
+                                            <span class="text-muted text-decoration-line-through small">2,700 ر.س</span>
+                                        </div>
+                                        <button class="btn btn-sm btn-primary rounded-pill px-3">تحديد أحد الخيارات</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Service Card 2 -->
+                    <div class="service-card-carousel">
+                        <a href="#" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm" style="border-radius: 16px; overflow: hidden; transition: all 0.3s ease;">
+                                <div style="height: 200px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                    <div class="d-flex align-items-center justify-content-center h-100">
+                                        <i class="fas fa-gamepad" style="font-size: 3rem; color: white; opacity: 0.5;"></i>
+                                    </div>
+                                </div>
+                                <div class="card-body p-3">
+                                    <h5 class="mb-2" style="color: #1a202c; font-weight: 700; font-size: 1.1rem;">بوب آب | لفات</h5>
+                                    <p class="text-muted small mb-2">تجربة تفاعلية رائعة</p>
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <div>
+                                            <span class="text-primary fw-bold" style="font-size: 1.2rem;">1,800 ر.س</span>
+                                        </div>
+                                        <button class="btn btn-sm btn-primary rounded-pill px-3">تحديد أحد الخيارات</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Service Card 3 -->
+                    <div class="service-card-carousel">
+                        <a href="#" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm" style="border-radius: 16px; overflow: hidden; transition: all 0.3s ease;">
+                                <div class="position-absolute top-0 end-0 m-3" style="z-index: 10;">
+                                    <span class="badge bg-success rounded-pill" style="padding: 8px 16px;">جديد</span>
+                                </div>
+                                <div style="height: 200px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                    <div class="d-flex align-items-center justify-content-center h-100">
+                                        <i class="fas fa-star" style="font-size: 3rem; color: white; opacity: 0.5;"></i>
+                                    </div>
+                                </div>
+                                <div class="card-body p-3">
+                                    <h5 class="mb-2" style="color: #1a202c; font-weight: 700; font-size: 1.1rem;">بوابة دخول | لفات</h5>
+                                    <p class="text-muted small mb-2">إضافة احترافية لفعاليتك</p>
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <div>
+                                            <span class="text-primary fw-bold" style="font-size: 1.2rem;">3,136 ر.س</span>
+                                        </div>
+                                        <button class="btn btn-sm btn-primary rounded-pill px-3">تحديد أحد الخيارات</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Service Card 4 -->
+                    <div class="service-card-carousel">
+                        <a href="#" class="text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm" style="border-radius: 16px; overflow: hidden; transition: all 0.3s ease;">
+                                <div class="position-absolute top-0 end-0 m-3" style="z-index: 10;">
+                                    <span class="badge bg-warning rounded-pill" style="padding: 8px 16px;">15%</span>
+                                </div>
+                                <div style="height: 200px; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                                    <div class="d-flex align-items-center justify-content-center h-100">
+                                        <i class="fas fa-trophy" style="font-size: 3rem; color: white; opacity: 0.5;"></i>
+                                    </div>
+                                </div>
+                                <div class="card-body p-3">
+                                    <h5 class="mb-2" style="color: #1a202c; font-weight: 700; font-size: 1.1rem;">اليوم الوطني | ديلوكو سنتيشن</h5>
+                                    <p class="text-muted small mb-2">احتفل بالوطن بأجمل الطرق</p>
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <div>
+                                            <span class="text-primary fw-bold" style="font-size: 1.2rem;">699 ر.س</span>
+                                            <span class="text-muted text-decoration-line-through small">8,760 ر.س</span>
+                                        </div>
+                                        <button class="btn btn-sm btn-primary rounded-pill px-3">تحديد أحد الخيارات</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <button class="carousel-nav carousel-nav-prev" onclick="scrollCarousel('carousel-1', -1)">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <button class="carousel-nav carousel-nav-next" onclick="scrollCarousel('carousel-1', 1)">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function scrollCarousel(carouselId, direction) {
+            const carousel = document.getElementById(carouselId);
+            const scrollAmount = 300;
+            carousel.scrollBy({
+                left: direction * scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+    </script>
+</body>
+</html>

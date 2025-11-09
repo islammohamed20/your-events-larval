@@ -1,0 +1,658 @@
+@extends('layouts.app')
+
+@section('title', $service->name . ' - خدماتنا - Your Events')
+
+@if($service->meta_description)
+@section('meta')
+    <meta name="description" content="{{ $service->meta_description }}">
+@endsection
+@endif
+
+@section('content')
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- معرض الصور -->
+                @if($service->images->count() > 0)
+                <div class="mb-4" data-aos="fade-right">
+                    <!-- الصورة الرئيسية -->
+                    <div id="mainImageContainer" class="mb-3">
+                        @php
+                            $mainImage = $service->thumbnailImage ?? $service->images->first();
+                        @endphp
+                        <img id="mainImage" 
+                             src="{{ $mainImage->image_url }}" 
+                             class="img-fluid rounded shadow" 
+                             alt="{{ $service->name }}"
+                             style="width: 100%; height: 500px; object-fit: cover; cursor: pointer;">
+                    </div>
+                    
+                    <!-- صور مصغرة -->
+                    @if($service->images->count() > 1)
+                    <div class="row g-2" id="thumbnailGallery">
+                        @foreach($service->images as $img)
+                        <div class="col-3 col-md-2">
+                            <img src="{{ $img->image_url }}" 
+                                 class="img-thumbnail thumbnail-img" 
+                                 alt="{{ $service->name }}"
+                                 style="width: 100%; height: 80px; object-fit: cover; cursor: pointer;"
+                                 onclick="changeMainImage('{{ $img->image_url }}')">
+                        </div>
+                        @endforeach
+                    </div>
+                    @endif
+                </div>
+                @elseif($service->image)
+                <div class="mb-4" data-aos="fade-right">
+                    <img src="{{ Storage::url($service->image) }}" class="img-fluid rounded shadow" alt="{{ $service->name }}" style="width: 100%; height: 500px; object-fit: cover;">
+                </div>
+                @else
+                <div class="mb-4" data-aos="fade-right">
+                    <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                         class="img-fluid rounded shadow" alt="{{ $service->name }}" style="width: 100%; height: 500px; object-fit: cover;">
+                </div>
+                @endif
+                
+                <div data-aos="fade-up">
+                    <!-- اسم الخدمة ونوعها -->
+                    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+                        <h1 class="mb-0">{{ $service->name }}</h1>
+                        @if($service->type)
+                        <span class="badge bg-primary fs-6 px-3 py-2">
+                            <i class="fas fa-cogs me-2"></i>{{ $service->type }}
+                        </span>
+                        @endif
+                    </div>
+                    
+                    <!-- معلومات الخدمة -->
+                    <div class="row mb-4">
+                        @if($service->duration)
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-clock text-primary me-2"></i>
+                                <div>
+                                    <small class="text-muted d-block">المدة</small>
+                                    <strong>{{ $service->duration }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                    
+                    <!-- الوصف -->
+                    @if($service->description || $service->marketing_description)
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-align-left text-primary me-2"></i>الوصف
+                        </h5>
+                        <div class="text-muted" style="line-height: 1.8;">
+                            {!! nl2br(e($service->description ?: $service->marketing_description)) !!}
+                        </div>
+                    </div>
+                    @endif
+                    
+                    <!-- وش نوفر؟ / اهم المميزات؟ حسب الفئة -->
+                    @if($service->what_we_offer)
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-gift text-primary me-2"></i>
+                            @php
+                                $isGiftsCategory = optional($service->category)->name === 'الهدايا';
+                            @endphp
+                            {{ $isGiftsCategory ? 'اهم المميزات؟' : 'وش نوفر؟' }}
+                        </h5>
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                @php 
+                                    $offerLines = array_values(array_filter(preg_split("/\r\n|\r|\n/", (string)$service->what_we_offer), function($l){ return trim($l) !== ''; }));
+                                @endphp
+                                @if(count($offerLines) > 0)
+                                    <ul class="list-unstyled m-0" style="line-height: 1.9;">
+                                        @foreach($offerLines as $line)
+                                            <li class="mb-2 d-flex align-items-start">
+                                                <span class="text-success me-2" aria-hidden="true">✔</span>
+                                                <span>{{ $line }}</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @else
+                                    <div class="text-muted" style="line-height: 1.8;">{!! nl2br(e($service->what_we_offer)) !!}</div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    
+                    <!-- ليش تختار Your Events؟ -->
+                    @if($service->why_choose_us)
+                    <div class="mb-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-star text-primary me-2"></i>ليش تختار Your Events؟
+                        </h5>
+                        <div class="card border-0 shadow-sm bg-light">
+                            <div class="card-body">
+                                @php 
+                                    $whyLines = array_values(array_filter(preg_split("/\r\n|\r|\n/", (string)$service->why_choose_us), function($l){ return trim($l) !== ''; }));
+                                @endphp
+                                @if(count($whyLines) > 0)
+                                    <ul class="list-unstyled m-0" style="line-height: 1.9;">
+                                        @foreach($whyLines as $line)
+                                            <li class="mb-2 d-flex align-items-start">
+                                                <span class="text-primary me-2" aria-hidden="true">★</span>
+                                                <span>{{ $line }}</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @else
+                                    <div class="text-muted" style="line-height: 1.8;">{!! nl2br(e($service->why_choose_us)) !!}</div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    
+                    @if($service->features && count($service->features) > 0)
+                    <div class="mb-4">
+                        <h5>مميزات الخدمة</h5>
+                        <ul class="list-unstyled">
+                            @foreach($service->features as $feature)
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success me-2"></i>{{ $feature }}
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card sticky-top" style="top: 100px;" data-aos="fade-left">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">احجز هذه الخدمة</h5>
+                        
+                        @if($service->price || $service->isVariable() || $service->attributes->count() > 0)
+                        <div class="text-center mb-3">
+                            <div id="service-price-display" class="h4 text-primary mb-0">
+                                @if($service->isVariable())
+                                    {{ $service->price_range }}
+                                @elseif($service->price)
+                                    {{ number_format($service->price) }} ريال
+                                @else
+                                    —
+                                @endif
+                            </div>
+                            @if($service->duration)
+                                <small class="text-muted">لمدة {{ $service->duration }}</small>
+                            @endif
+                        </div>
+                        @endif
+                        
+                        <p class="text-muted mb-4">
+                            هل تريد الحصول على هذه الخدمة؟ احجز الآن واحصل على استشارة مجانية.
+                        </p>
+                        
+                        <!-- Add to Cart Form -->
+                        <div class="card border-primary mb-3" id="add-to-cart-card">
+                            <div class="card-body">
+                                <h6 class="card-title"><i class="fas fa-shopping-cart me-2"></i>إضافة إلى السلة</h6>
+                                <form id="add-to-cart-form" 
+                                          data-has-variations="{{ $service->isVariable() ? '1' : ($service->attributes->count() > 0 ? '1' : '0') }}"
+                                          data-attr-count="{{ $service->attributes->count() }}"
+                                          data-variation-url="{{ route('services.get-variation', $service) }}"
+                                          data-add-url="{{ route('cart.add', $service) }}"
+                                          data-price-fallback="{{ $service->isVariable() ? $service->price_range : ( ($service->price ? number_format($service->price) . ' ريال' : '—') ) }}">
+                                    @csrf
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">الكمية</label>
+                                            <input type="number" name="quantity" class="form-control" 
+                                                   value="1" min="1" max="100" required>
+                                        </div>
+                                        <div class="col-12 mb-3">
+                                            <label class="form-label">ملاحظات خاصة (اختياري)</label>
+                                            <textarea name="customer_notes" class="form-control" rows="3" 
+                                                      placeholder="أضف أي ملاحظات أو متطلبات خاصة للخدمة..."></textarea>
+                                            <small class="text-muted">مثال: الموقع، الوقت المفضل، متطلبات خاصة</small>
+                                        </div>
+                                    </div>
+
+                                    @if($service->isVariable() || $service->attributes->count() > 0)
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="fas fa-sliders-h me-2"></i>خصص خيارات الخدمة
+                                        </label>
+                                        <div class="border rounded p-3">
+                                            @foreach($service->attributes as $attribute)
+                                                @php $values = $attribute->values()->active()->get(); @endphp
+                                                @if($values->count() > 0)
+                                                <div class="mb-3">
+                                                    <div class="fw-bold mb-2">{{ $attribute->name }}</div>
+                                                    {{-- احترم نوع الحقل: select -> قائمة منسدلة، غير ذلك -> راديو --}}
+                                                    @if($attribute->type === 'select')
+                                                        <select class="form-select variation-select" name="variation[{{ $attribute->id }}]" id="attr-select-{{ $attribute->id }}">
+                                                            <option value="">اختر {{ $attribute->name }}</option>
+                                                            @foreach($values as $val)
+                                                                <option value="{{ $val->id }}">{{ $val->value }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    @else
+                                                        <div class="d-flex flex-wrap gap-2">
+                                                            @foreach($values as $val)
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input variation-input" type="radio" 
+                                                                           name="variation[{{ $attribute->id }}]" 
+                                                                           value="{{ $val->id }}" id="var-{{ $attribute->id }}-{{ $val->id }}">
+                                                                    <label class="form-check-label" for="var-{{ $attribute->id }}-{{ $val->id }}">{{ $val->value }}</label>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                        <div class="small text-muted">يتم تحديد السعر تلقائياً حسب التركيبة المختارة.</div>
+                                    </div>
+                                    @endif
+                                    
+                                    <!-- الحقول المخصصة -->
+                                    @if(is_array($service->custom_fields) && count($service->custom_fields) > 0)
+                                    <div class="mb-3">
+                                        <label class="form-label">اختياراتك (اختياري)</label>
+                                        <div class="border rounded p-3">
+                                            @foreach($service->custom_fields as $field)
+                                                @php
+                                                    $slug = \Illuminate\Support\Str::slug($field['label'] ?? '');
+                                                    $type = $field['type'] ?? 'single';
+                                                    $options = is_array($field['options'] ?? null) ? $field['options'] : [];
+                                                @endphp
+                                                @if($slug && count($options) > 0)
+                                                <div class="mb-3">
+                                                    <div class="fw-bold mb-2">{{ $field['label'] }}</div>
+                                                    @if($type === 'multiple')
+                                                        <div class="d-flex flex-wrap gap-2">
+                                                            @foreach($options as $opt)
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="checkbox" 
+                                                                           name="selections[{{ $slug }}][]" 
+                                                                           value="{{ $opt }}" id="{{ $slug }}-{{ \Illuminate\Support\Str::slug($opt) }}">
+                                                                    <label class="form-check-label" for="{{ $slug }}-{{ \Illuminate\Support\Str::slug($opt) }}">{{ $opt }}</label>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    @else
+                                                        <div class="d-flex flex-wrap gap-2">
+                                                            @foreach($options as $opt)
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input" type="radio" 
+                                                                           name="selections[{{ $slug }}]" 
+                                                                           value="{{ $opt }}" id="{{ $slug }}-{{ \Illuminate\Support\Str::slug($opt) }}">
+                                                                    <label class="form-check-label" for="{{ $slug }}-{{ \Illuminate\Support\Str::slug($opt) }}">{{ $opt }}</label>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    @endif
+                                    
+                                    <button type="submit" class="btn btn-primary w-100 mb-2">
+                                        <i class="fas fa-cart-plus me-2"></i>اضف إلي السلة
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <a href="{{ route('booking.create', ['service_id' => $service->id]) }}" 
+                           class="btn btn-success btn-lg w-100 mb-2">
+                            <i class="fas fa-calendar-check me-2"></i>حجز مباشر
+                        </a>
+                        
+                        @auth
+                        <button type="button" 
+                                class="btn btn-outline-danger w-100 mb-3 wishlist-toggle-btn" 
+                                data-service-id="{{ $service->id }}">
+                            <i class="fas fa-heart me-2 {{ auth()->user()->hasInWishlist($service->id) ? '' : 'text-muted' }}"></i>
+                            <span class="wishlist-text">
+                                {{ auth()->user()->hasInWishlist($service->id) ? 'إزالة من المفضلة' : 'أضف للمفضلة' }}
+                            </span>
+                        </button>
+                        @else
+                        <a href="{{ route('login') }}" class="btn btn-outline-danger w-100 mb-3">
+                            <i class="far fa-heart me-2"></i>سجل دخولك لإضافة للمفضلة
+                        </a>
+                        @endauth
+                        
+                        <a href="{{ route('contact') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-phone me-2"></i>اتصل بنا
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card mt-4" data-aos="fade-left" data-aos-delay="100">
+                    <div class="card-body">
+                        <h6 class="card-title">معلومات الاتصال</h6>
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <i class="fas fa-phone text-primary me-2"></i>
+                                <a href="tel:{{ setting('contact_phone', '+966 50 123 4567') }}" class="text-decoration-none text-dark">
+                                    {{ setting('contact_phone', '+966 50 123 4567') }}
+                                </a>
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-envelope text-primary me-2"></i>
+                                <a href="mailto:{{ setting('contact_email', 'info@yourevents.sa') }}" class="text-decoration-none text-dark">
+                                    {{ setting('contact_email', 'info@yourevents.sa') }}
+                                </a>
+                            </li>
+                            <li>
+                                <i class="fas fa-clock text-primary me-2"></i>
+                                {{ setting('working_hours', 'السبت - الخميس: 9:00 ص - 6:00 م') }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-5" data-aos="fade-up">
+            <a href="{{ route('services.index') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-right me-2"></i>العودة إلى الخدمات
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+.btn-success {
+    background: linear-gradient(135deg, #2dbcae 0%, #4dd2c2 100%);
+    border: none;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(45, 188, 174, 0.4);
+}
+
+#add-to-cart-card {
+    animation: fadeIn 0.5s ease-in;
+}
+
+#add-to-cart-card .card-body {
+    padding: 1.25rem;
+}
+
+.card.sticky-top {
+    top: 100px !important;
+}
+
+.card-body {
+    position: relative;
+    overflow: visible;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.alert-cart-success {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    min-width: 300px;
+    animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translate(-50%, -20px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.wishlist-toggle-btn:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+.wishlist-toggle-btn:hover .fa-heart {
+    color: white !important;
+}
+
+/* Gallery Styles */
+#mainImage {
+    transition: opacity 0.3s ease;
+}
+
+.thumbnail-img {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.thumbnail-img:hover {
+    transform: scale(1.05);
+    border-color: #007bff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+</style>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('add-to-cart-form');
+    const priceBox = document.getElementById('service-price-display');
+
+    // Wishlist Toggle
+    const wishlistBtns = document.querySelectorAll('.wishlist-toggle-btn');
+    wishlistBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const serviceId = this.dataset.serviceId;
+            const icon = this.querySelector('.fa-heart');
+            const text = this.querySelector('.wishlist-text');
+            
+            fetch('/wishlist/toggle', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ service_id: serviceId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update icon
+                    if (data.action === 'added') {
+                        icon.classList.remove('text-muted');
+                        icon.classList.add('text-danger');
+                        text.textContent = 'إزالة من المفضلة';
+                    } else {
+                        icon.classList.remove('text-danger');
+                        icon.classList.add('text-muted');
+                        text.textContent = 'أضف للمفضلة';
+                    }
+                    
+                    // Show alert
+                    showAlert(data.message, 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('حدث خطأ، حاول مرة أخرى', 'danger');
+            });
+        });
+    });
+
+    function showAlert(message, type = 'success') {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-cart-success alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alertDiv);
+        setTimeout(() => { alertDiv.remove(); }, 3000);
+    }
+
+    function currentSelectedValueIds(){
+        // اجمع قيم الراديو
+        const radioInputs = document.querySelectorAll('input.variation-input');
+        const map = new Map();
+        radioInputs.forEach(inp => {
+            const m = inp.name.match(/variation\[(\d+)\]/);
+            const attrId = m ? m[1] : null;
+            if (!attrId) return;
+            if (inp.checked) { map.set(attrId, parseInt(inp.value)); }
+        });
+        // اجمع قيم القوائم المنسدلة
+        const selects = document.querySelectorAll('select.variation-select');
+        selects.forEach(sel => {
+            const m = sel.name.match(/variation\[(\d+)\]/);
+            const attrId = m ? m[1] : null;
+            const val = sel.value;
+            if (!attrId || !val) return;
+            map.set(attrId, parseInt(val));
+        });
+        const ids = Array.from(map.values());
+        ids.sort((a,b)=>a-b);
+        return ids;
+    }
+
+    function updatePriceViaVariation(){
+        if (!priceBox || !form) return;
+        const ids = currentSelectedValueIds();
+        const attrCount = parseInt(form.dataset.attrCount || '0', 10);
+        const variationUrl = form.dataset.variationUrl;
+        const fallbackPriceText = (form.dataset.priceFallback || '0');
+
+        if (ids.length === attrCount && variationUrl){
+            fetch(variationUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ value_ids: ids })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.success){
+                    priceBox.textContent = `${Number(data.price).toLocaleString()} ريال`;
+                    let hid = document.getElementById('selected_variation_id');
+                    if (!hid){
+                        hid = document.createElement('input');
+                        hid.type = 'hidden';
+                        hid.name = 'selected_variation_id';
+                        hid.id = 'selected_variation_id';
+                        form.appendChild(hid);
+                    }
+                    hid.value = data.variation_id || '';
+                } else {
+                    priceBox.textContent = fallbackPriceText;
+                    const hid = document.getElementById('selected_variation_id');
+                    if (hid) hid.value = '';
+                }
+            })
+            .catch(()=>{
+                priceBox.textContent = fallbackPriceText;
+                const hid = document.getElementById('selected_variation_id');
+                if (hid) hid.value = '';
+            });
+        } else {
+            priceBox.textContent = fallbackPriceText;
+            const hid = document.getElementById('selected_variation_id');
+            if (hid) hid.value = '';
+        }
+    }
+
+    // مستمعات الراديو
+    document.querySelectorAll('input.variation-input').forEach(inp => {
+        inp.addEventListener('change', updatePriceViaVariation);
+    });
+    // مستمعات القوائم المنسدلة
+    document.querySelectorAll('select.variation-select').forEach(sel => {
+        sel.addEventListener('change', updatePriceViaVariation);
+    });
+
+    const hasVariations = form?.dataset?.hasVariations === '1';
+    if (hasVariations) { updatePriceViaVariation(); }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الإضافة...';
+        fetch(form.dataset.addUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // تحديث السلة بالكامل (العداد والقائمة المنسدلة)
+                if (typeof window.updateCartDropdown === 'function') {
+                    window.updateCartDropdown();
+                } else {
+                    // Fallback للتحديث التقليدي
+                    const cartBadge = document.getElementById('cart-count');
+                    if (cartBadge) {
+                        cartBadge.textContent = data.cart_count;
+                    } else if (data.cart_count > 0) {
+                        const cartIcon = document.querySelector('.cart-icon-wrapper');
+                        if (cartIcon) {
+                            const badge = document.createElement('span');
+                            badge.className = 'cart-badge';
+                            badge.id = 'cart-count';
+                            badge.textContent = data.cart_count;
+                            cartIcon.appendChild(badge);
+                        }
+                    }
+                }
+                showAlert(data.message, 'success');
+                form.reset();
+            } else {
+                showAlert('حدث خطأ. حاول مرة أخرى.', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('حدث خطأ. حاول مرة أخرى.', 'danger');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        });
+    });
+
+    // ===== معرض الصور =====
+    window.changeMainImage = function(imageUrl) {
+        const mainImage = document.getElementById('mainImage');
+        if (mainImage) {
+            mainImage.src = imageUrl;
+            // تأثير بسيط
+            mainImage.style.opacity = '0.5';
+            setTimeout(() => {
+                mainImage.style.opacity = '1';
+            }, 200);
+        }
+    };
+});
+</script>
+@endpush
+@endsection

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار رفع الصور - الإعدادات</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header">
+                <h3>اختبار رفع صورة الـ Favicon</h3>
+            </div>
+            <div class="card-body">
+                <div id="result"></div>
+                
+                <form id="testForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="favicon" class="form-label">اختر صورة Favicon</label>
+                        <input type="file" class="form-control" id="favicon" name="settings[favicon]" accept="image/*">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="site_name" class="form-label">اسم الموقع</label>
+                        <input type="text" class="form-control" id="site_name" name="settings[site_name]" value="Test Site">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">رفع واختبار</button>
+                </form>
+                
+                <hr>
+                
+                <h5>معلومات التصحيح:</h5>
+                <pre id="debug"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('result');
+            const debugDiv = document.getElementById('debug');
+            
+            resultDiv.innerHTML = '<div class="alert alert-info">جاري الرفع...</div>';
+            
+            try {
+                // Get CSRF token
+                const tokenResponse = await fetch('/admin/settings');
+                const html = await tokenResponse.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const csrfToken = doc.querySelector('input[name="_token"]')?.value;
+                
+                if (!csrfToken) {
+                    throw new Error('CSRF token not found');
+                }
+                
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('_token', csrfToken);
+                formData.append('_method', 'PUT');
+                
+                const fileInput = document.getElementById('favicon');
+                if (fileInput.files.length > 0) {
+                    formData.append('settings[favicon]', fileInput.files[0]);
+                    debugDiv.textContent = 'File selected: ' + fileInput.files[0].name + '\n';
+                    debugDiv.textContent += 'File size: ' + fileInput.files[0].size + ' bytes\n';
+                    debugDiv.textContent += 'File type: ' + fileInput.files[0].type + '\n';
+                } else {
+                    debugDiv.textContent = 'No file selected\n';
+                }
+                
+                formData.append('settings[site_name]', document.getElementById('site_name').value);
+                
+                // Display FormData contents
+                debugDiv.textContent += '\nFormData contents:\n';
+                for (let pair of formData.entries()) {
+                    debugDiv.textContent += pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name : pair[1]) + '\n';
+                }
+                
+                // Submit
+                const response = await fetch('/admin/settings', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = '<div class="alert alert-success">✅ تم الرفع بنجاح!</div>';
+                    
+                    // Check database
+                    const checkResponse = await fetch('/admin/settings');
+                    const checkHtml = await checkResponse.text();
+                    debugDiv.textContent += '\n✅ Response OK\n';
+                } else {
+                    const errorText = await response.text();
+                    resultDiv.innerHTML = '<div class="alert alert-danger">❌ خطأ: ' + response.status + '</div>';
+                    debugDiv.textContent += '\nError response:\n' + errorText.substring(0, 500);
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="alert alert-danger">❌ خطأ: ' + error.message + '</div>';
+                debugDiv.textContent += '\nException: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Category extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'name_en',
+        'description',
+        'icon',
+        'color',
+        'image',
+        'order',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'order' => 'integer',
+    ];
+
+    /**
+     * Get services in this category
+     */
+    public function services()
+    {
+        return $this->hasMany(Service::class);
+    }
+
+    /**
+     * Get active services count
+     */
+    public function getActiveServicesCountAttribute()
+    {
+        return $this->services()->where('is_active', true)->count();
+    }
+
+    /**
+     * Scope for active categories
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope for ordering
+     */
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('order', 'asc')->orderBy('name', 'asc');
+    }
+}

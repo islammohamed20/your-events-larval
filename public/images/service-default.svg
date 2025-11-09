@@ -1,0 +1,112 @@
+<svg width="400" height="250" viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="serviceBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1f144a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#2d1a5e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3d2a7e;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Service Icon Gradient -->
+    <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2dbcae;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#3cc7b8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4dd2c2;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Accent Gradient -->
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ef4870;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f56b8a;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Glow Effect -->
+    <filter id="serviceGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/> 
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="400" height="250" fill="url(#serviceBg)"/>
+  
+  <!-- Geometric Background Pattern -->
+  <g opacity="0.1">
+    <circle cx="50" cy="50" r="30" fill="#ffffff"/>
+    <circle cx="350" cy="200" r="40" fill="#ffffff"/>
+    <rect x="300" y="30" width="60" height="60" fill="#ffffff" transform="rotate(45 330 60)"/>
+  </g>
+  
+  <!-- Main Service Icon -->
+  <g transform="translate(200, 125)">
+    <!-- Icon Background -->
+    <circle cx="0" cy="0" r="50" fill="url(#iconGradient)" filter="url(#serviceGlow)"/>
+    <circle cx="0" cy="0" r="35" fill="rgba(255,255,255,0.2)"/>
+    
+    <!-- Service Symbol (Gear/Settings) -->
+    <g fill="#ffffff">
+      <circle cx="0" cy="0" r="15" fill="none" stroke="#ffffff" stroke-width="3"/>
+      <circle cx="0" cy="0" r="6" fill="#ffffff"/>
+      
+      <!-- Gear Teeth -->
+      <rect x="-2" y="-25" width="4" height="10" fill="#ffffff"/>
+      <rect x="-2" y="15" width="4" height="10" fill="#ffffff"/>
+      <rect x="-25" y="-2" width="10" height="4" fill="#ffffff"/>
+      <rect x="15" y="-2" width="10" height="4" fill="#ffffff"/>
+      
+      <rect x="-18" y="-18" width="4" height="8" fill="#ffffff" transform="rotate(45)"/>
+      <rect x="14" y="-18" width="4" height="8" fill="#ffffff" transform="rotate(45)"/>
+      <rect x="-18" y="10" width="4" height="8" fill="#ffffff" transform="rotate(45)"/>
+      <rect x="14" y="10" width="4" height="8" fill="#ffffff" transform="rotate(45)"/>
+    </g>
+  </g>
+  
+  <!-- Floating Elements -->
+  <g>
+    <!-- Service Features Icons -->
+    <g transform="translate(80, 80)">
+      <circle cx="0" cy="0" r="20" fill="url(#accentGradient)" opacity="0.8">
+        <animate attributeName="cy" values="0;-5;0" dur="2s" repeatCount="indefinite"/>
+      </circle>
+      <!-- Star Icon -->
+      <path d="M0 -10 L3 -3 L10 -3 L5 2 L7 9 L0 5 L-7 9 L-5 2 L-10 -3 L-3 -3 Z" fill="#ffffff"/>
+    </g>
+    
+    <g transform="translate(320, 170)">
+      <circle cx="0" cy="0" r="18" fill="url(#iconGradient)" opacity="0.7">
+        <animate attributeName="cy" values="0;-8;0" dur="2.5s" repeatCount="indefinite"/>
+      </circle>
+      <!-- Check Icon -->
+      <path d="M-8 0 L-3 5 L8 -6" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round"/>
+    </g>
+    
+    <g transform="translate(100, 200)">
+      <circle cx="0" cy="0" r="15" fill="#f0c71d" opacity="0.6">
+        <animate attributeName="cy" values="0;-6;0" dur="1.8s" repeatCount="indefinite"/>
+      </circle>
+      <!-- Lightning Icon -->
+      <path d="M-5 -8 L5 -2 L-2 0 L5 8 L-5 2 L2 0 Z" fill="#ffffff"/>
+    </g>
+  </g>
+  
+  <!-- Service Quality Indicators -->
+  <g transform="translate(50, 30)">
+    <rect x="0" y="0" width="80" height="4" rx="2" fill="rgba(255,255,255,0.3)"/>
+    <rect x="0" y="0" width="65" height="4" rx="2" fill="url(#accentGradient)">
+      <animate attributeName="width" values="65;75;65" dur="3s" repeatCount="indefinite"/>
+    </rect>
+    <text x="85" y="8" font-family="Arial, sans-serif" font-size="12" fill="#ffffff" opacity="0.8">جودة عالية</text>
+  </g>
+  
+  <!-- Bottom Accent Line -->
+  <rect x="0" y="240" width="400" height="10" fill="url(#accentGradient)"/>
+  
+  <!-- Corner Decorations -->
+  <circle cx="30" cy="30" r="3" fill="#2dbcae" opacity="0.6"/>
+  <circle cx="370" cy="30" r="3" fill="#ef4870" opacity="0.6"/>
+  <circle cx="30" cy="220" r="3" fill="#f0c71d" opacity="0.6"/>
+  <circle cx="370" cy="220" r="3" fill="#2dbcae" opacity="0.6"/>
+</svg>

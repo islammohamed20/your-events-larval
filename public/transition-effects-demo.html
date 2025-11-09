@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معاينة تأثيرات الانتقال - Your Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f8f9fa; padding: 40px 0; }
+        .demo-container { max-width: 1200px; margin: 0 auto; }
+        .effect-card { 
+            background: white; 
+            border-radius: 16px; 
+            padding: 30px; 
+            margin-bottom: 30px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .preview-box {
+            position: relative;
+            height: 400px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .slide-item {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: all 0.8s ease;
+        }
+        .slide-item.active { opacity: 1; }
+        .slide-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            width: 80%;
+        }
+        
+        /* Fade Effect */
+        .effect-fade .slide-item {
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+        .effect-fade .slide-item.active {
+            opacity: 1;
+        }
+        
+        /* Slide Effect */
+        .effect-slide .slide-item {
+            transform: translateX(100%);
+            opacity: 1;
+            transition: transform 0.8s ease-in-out;
+        }
+        .effect-slide .slide-item.active {
+            transform: translateX(0);
+        }
+        
+        /* Zoom Effect */
+        .effect-zoom .slide-item {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .effect-zoom .slide-item.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        /* Flip Effect */
+        .effect-flip .slide-item {
+            opacity: 0;
+            transform: perspective(1000px) rotateY(90deg);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .effect-flip .slide-item.active {
+            opacity: 1;
+            transform: perspective(1000px) rotateY(0deg);
+        }
+        
+        .btn-demo {
+            margin: 5px;
+            min-width: 120px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .header h1 {
+            color: #42347b;
+            font-weight: 800;
+            font-size: 3rem;
+        }
+        
+        .badge-effect {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 20px;
+        }
+        
+        .control-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="demo-container">
+    <div class="header">
+        <h1><i class="fas fa-magic text-primary"></i> معاينة التأثيرات</h1>
+        <p class="lead">جرّب التأثيرات المختلفة للانتقال بين السلايدات</p>
+    </div>
+
+    <!-- Fade Effect -->
+    <div class="effect-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3><i class="fas fa-adjust text-primary"></i> Fade - تلاشي ناعم</h3>
+            <span class="badge bg-primary badge-effect">الأكثر شيوعاً</span>
+        </div>
+        <p class="text-muted">انتقال سلس وهادئ بتلاشي تدريجي بين الصور</p>
+        
+        <div class="preview-box effect-fade" id="fade-demo">
+            <div class="slide-item active" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="slide-content">
+                    <h2>السلايد الأول</h2>
+                    <p>تأثير Fade - تلاشي ناعم</p>
+                </div>
+            </div>
+            <div class="slide-item" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="slide-content">
+                    <h2>السلايد الثاني</h2>
+                    <p>انتقال سلس ومريح</p>
+                </div>
+            </div>
+            <div class="slide-item" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="slide-content">
+                    <h2>السلايد الثالث</h2>
+                    <p>مثالي للمحتوى الاحترافي</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <button class="btn btn-primary btn-demo" onclick="changeSlide('fade-demo')">
+                <i class="fas fa-play"></i> تشغيل
+            </button>
+            <button class="btn btn-outline-secondary btn-demo" onclick="stopSlide('fade-demo')">
+                <i class="fas fa-stop"></i> إيقاف
+            </button>
+        </div>
+    </div>
+
+    <!-- Slide Effect -->
+    <div class="effect-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3><i class="fas fa-arrows-alt-h text-success"></i> Slide - انزلاق جانبي</h3>
+            <span class="badge bg-success badge-effect">ديناميكي</span>
+        </div>
+        <p class="text-muted">حركة جانبية حيوية تعطي إحساساً بالتقدم</p>
+        
+        <div class="preview-box effect-slide" id="slide-demo">
+            <div class="slide-item active" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <div class="slide-content">
+                    <h2>السلايد الأول</h2>
+                    <p>تأثير Slide - انزلاق</p>
+                </div>
+            </div>
+            <div class="slide-item" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
+                <div class="slide-content">
+                    <h2>السلايد الثاني</h2>
+                    <p>حركة ديناميكية ومشوقة</p>
+                </div>
+            </div>
+            <div class="slide-item" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+                <div class="slide-content">
+                    <h2>السلايد الثالث</h2>
+                    <p>مناسب للعروض التجارية</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <button class="btn btn-success btn-demo" onclick="changeSlide('slide-demo')">
+                <i class="fas fa-play"></i> تشغيل
+            </button>
+            <button class="btn btn-outline-secondary btn-demo" onclick="stopSlide('slide-demo')">
+                <i class="fas fa-stop"></i> إيقاف
+            </button>
+        </div>
+    </div>
+
+    <!-- Zoom Effect -->
+    <div class="effect-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3><i class="fas fa-search-plus text-warning"></i> Zoom - تكبير تدريجي</h3>
+            <span class="badge bg-warning text-dark badge-effect">درامي</span>
+        </div>
+        <p class="text-muted">تأثير مثير يبرز التفاصيل المهمة</p>
+        
+        <div class="preview-box effect-zoom" id="zoom-demo">
+            <div class="slide-item active" style="background: linear-gradient(135deg, #ff9a56 0%, #ff6a00 100%);">
+                <div class="slide-content">
+                    <h2>السلايد الأول</h2>
+                    <p>تأثير Zoom - تكبير</p>
+                </div>
+            </div>
+            <div class="slide-item" style="background: linear-gradient(135deg, #e96443 0%, #904e95 100%);">
+                <div class="slide-content">
+                    <h2>السلايد الثاني</h2>
+                    <p>يجذب الانتباه بقوة</p>
+                </div>
+            </div>
+            <div class="slide-item" style="background: linear-gradient(135deg, #20E2D7 0%, #F9FEA5 100%);">
+                <div class="slide-content">
+                    <h2>السلايد الثالث</h2>
+                    <p>رائع للصور المؤثرة</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <button class="btn btn-warning btn-demo" onclick="changeSlide('zoom-demo')">
+                <i class="fas fa-play"></i> تشغيل
+            </button>
+            <button class="btn btn-outline-secondary btn-demo" onclick="stopSlide('zoom-demo')">
+                <i class="fas fa-stop"></i> إيقاف
+            </button>
+        </div>
+    </div>
+
+    <!-- Flip Effect -->
+    <div class="effect-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3><i class="fas fa-sync-alt text-danger"></i> Flip - تقليب ثلاثي الأبعاد</h3>
+            <span class="badge bg-danger badge-effect">عصري</span>
+        </div>
+        <p class="text-muted">تأثير ثلاثي الأبعاد يعطي إحساساً بالعمق</p>
+        
+        <div class="preview-box effect-flip" id="flip-demo">
+            <div class="slide-item active" style="background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%);">
+                <div class="slide-content">
+                    <h2>السلايد الأول</h2>
+                    <p>تأثير Flip - تقليب 3D</p>
+                </div>
+            </div>
+            <div class="slide-item" style="background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);">
+                <div class="slide-content">
+                    <h2>السلايد الثاني</h2>
+                    <p>مبتكر ويلفت النظر</p>
+                </div>
+            </div>
+            <div class="slide-item" style="background: linear-gradient(135deg, #396afc 0%, #2948ff 100%);">
+                <div class="slide-content">
+                    <h2>السلايد الثالث</h2>
+                    <p>مثالي للتصاميم الحديثة</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <button class="btn btn-danger btn-demo" onclick="changeSlide('flip-demo')">
+                <i class="fas fa-play"></i> تشغيل
+            </button>
+            <button class="btn btn-outline-secondary btn-demo" onclick="stopSlide('flip-demo')">
+                <i class="fas fa-stop"></i> إيقاف
+            </button>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="effect-card bg-light">
+        <h4><i class="fas fa-info-circle text-info"></i> كيفية الاستخدام</h4>
+        <ol class="mt-3">
+            <li class="mb-2">اذهب إلى <strong>لوحة التحكم → سلايدات البانر الرئيسي</strong></li>
+            <li class="mb-2">اختر <strong>إضافة سلايد جديد</strong> أو <strong>تعديل</strong> سلايد موجود</li>
+            <li class="mb-2">اختر <strong>تأثير الانتقال</strong> المفضل من القائمة</li>
+            <li class="mb-2">حدد <strong>مدة العرض</strong> المناسبة (2-15 ثانية)</li>
+            <li class="mb-2">احفظ التغييرات وشاهد النتيجة!</li>
+        </ol>
+    </div>
+</div>
+
+<script>
+    const intervals = {};
+    
+    function changeSlide(demoId) {
+        const container = document.getElementById(demoId);
+        const slides = container.querySelectorAll('.slide-item');
+        let currentIndex = 0;
+        
+        // Find current active slide
+        slides.forEach((slide, index) => {
+            if (slide.classList.contains('active')) {
+                currentIndex = index;
+            }
+        });
+        
+        // Remove active from all
+        slides.forEach(slide => slide.classList.remove('active'));
+        
+        // Add active to next
+        const nextIndex = (currentIndex + 1) % slides.length;
+        slides[nextIndex].classList.add('active');
+        
+        // Auto-play
+        if (!intervals[demoId]) {
+            intervals[demoId] = setInterval(() => changeSlide(demoId), 3000);
+        }
+    }
+    
+    function stopSlide(demoId) {
+        if (intervals[demoId]) {
+            clearInterval(intervals[demoId]);
+            delete intervals[demoId];
+        }
+    }
+    
+    // Auto-start all demos
+    window.addEventListener('DOMContentLoaded', function() {
+        ['fade-demo', 'slide-demo', 'zoom-demo', 'flip-demo'].forEach(id => {
+            intervals[id] = setInterval(() => changeSlide(id), 3000);
+        });
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Setting;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+
+class SettingsController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            if (!Auth::check() || !Auth::user()->isAdmin()) {
+                abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
+            }
+            return $next($request);
+        });
+    }
+
+    public function index()
+    {
+        // Ensure additional general settings exist so they appear in the General card
+        $expected = [
+            'contact_email' => ['type' => 'text', 'default' => ''],
+            'contact_phone' => ['type' => 'text', 'default' => ''],
+            'contact_address' => ['type' => 'text', 'default' => ''],
+            'working_hours' => ['type' => 'text', 'default' => ''],
+            'whatsapp_number' => ['type' => 'text', 'default' => ''],
+            'facebook_url' => ['type' => 'text', 'default' => ''],
+            'twitter_url' => ['type' => 'text', 'default' => ''],
+            'instagram_url' => ['type' => 'text', 'default' => ''],
+            'linkedin_url' => ['type' => 'text', 'default' => ''],
+            'youtube_url' => ['type' => 'text', 'default' => ''],
+            'tiktok_url' => ['type' => 'text', 'default' => ''],
+        ];
+        foreach ($expected as $key => $meta) {
+            if (!Setting::where('key', $key)->exists()) {
+                Setting::set($key, $meta['default'], $meta['type'], 'general');
+            }
+        }
+
+        $settings = Setting::all()->groupBy('group');
+        return view('admin.settings.index', compact('settings'));
+    }
+
+    public function update(Request $request)
+    {
+        try {
+            // Get all settings
+            $allSettings = Setting::all();
+            
+            // Process text and textarea settings
+            foreach ($request->input('settings', []) as $key => $value) {
+                $setting = Setting::where('key', $key)->first();
+                
+                if (!$setting) {
+                    continue;
+                }
+                
+                // Skip image type settings here, they will be handled separately
+                if ($setting->type === 'image') {
+                    continue;
+                }
+                
+                $setting->value = $value;
+                $setting->save();
+            }
+            
+            // Process image uploads
+            foreach ($allSettings->where('type', 'image') as $setting) {
+                // Check if file was uploaded using array syntax: settings[key]
+                if ($request->hasFile('settings')  && isset($request->file('settings')[$setting->key])) {
+                    $file = $request->file('settings')[$setting->key];
+                    
+                    // Delete old file if exists
+                    if ($setting->value && Storage::disk('public')->exists($setting->value)) {
+                        Storage::disk('public')->delete($setting->value);
+                    }
+                    
+                    // Store new file
+                    $path = $file->store('settings', 'public');
+                    $setting->value = $path;
+                    $setting->save();
+                }
+            }
+            
+            // Clear settings cache
+            Setting::clearCache();
+
+            return redirect()->route('admin.settings.index')
+                           ->with('success', 'تم تحديث الإعدادات بنجاح');
+                           
+        } catch (\Exception $e) {
+            \Log::error('Settings update error: ' . $e->getMessage());
+            
+            return redirect()->back()
+                           ->with('error', 'حدث خطأ أثناء حفظ الإعدادات: ' . $e->getMessage())
+                           ->withInput();
+        }
+    }
+
+    public function importLegacy()
+    {
+        try {
+            $settingsFile = storage_path('app/settings.json');
+            if (!file_exists($settingsFile)) {
+                return redirect()->route('admin.settings.index')
+                    ->with('error', 'ملف الإعدادات القديمة غير موجود.');
+            }
+
+            $content = file_get_contents($settingsFile);
+            $data = json_decode($content, true);
+            if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+                return redirect()->route('admin.settings.index')
+                    ->with('error', 'ملف الإعدادات القديمة غير صالح.');
+            }
+
+            $map = [
+                'site_name' => ['key' => 'site_name', 'type' => 'text', 'group' => 'general'],
+                'site_tagline' => ['key' => 'site_description', 'type' => 'textarea', 'group' => 'general'],
+                'site_description' => ['key' => 'site_description', 'type' => 'textarea', 'group' => 'general'],
+                'contact_phone' => ['key' => 'contact_phone', 'type' => 'text', 'group' => 'general'],
+                'contact_email' => ['key' => 'contact_email', 'type' => 'text', 'group' => 'general'],
+                'contact_address' => ['key' => 'contact_address', 'type' => 'text', 'group' => 'general'],
+                'working_hours' => ['key' => 'working_hours', 'type' => 'text', 'group' => 'general'],
+                'whatsapp_number' => ['key' => 'whatsapp_number', 'type' => 'text', 'group' => 'general'],
+                'facebook_url' => ['key' => 'facebook_url', 'type' => 'text', 'group' => 'general'],
+                'twitter_url' => ['key' => 'twitter_url', 'type' => 'text', 'group' => 'general'],
+                'instagram_url' => ['key' => 'instagram_url', 'type' => 'text', 'group' => 'general'],
+                'linkedin_url' => ['key' => 'linkedin_url', 'type' => 'text', 'group' => 'general'],
+                'youtube_url' => ['key' => 'youtube_url', 'type' => 'text', 'group' => 'general'],
+                'tiktok_url' => ['key' => 'tiktok_url', 'type' => 'text', 'group' => 'general'],
+                'primary_color' => ['key' => 'primary_color', 'type' => 'text', 'group' => 'appearance'],
+                'secondary_color' => ['key' => 'secondary_color', 'type' => 'text', 'group' => 'appearance'],
+                'accent_color' => ['key' => 'accent_color', 'type' => 'text', 'group' => 'appearance'],
+                'logo' => ['key' => 'logo', 'type' => 'image', 'group' => 'appearance'],
+                'favicon' => ['key' => 'favicon', 'type' => 'image', 'group' => 'appearance'],
+            ];
+
+            foreach ($map as $legacyKey => $target) {
+                if (array_key_exists($legacyKey, $data) && !is_null($data[$legacyKey]) && $data[$legacyKey] !== '') {
+                    Setting::set($target['key'], $data[$legacyKey], $target['type'], $target['group']);
+                }
+            }
+
+            Setting::clearCache();
+
+            return redirect()->route('admin.settings.index')
+                ->with('success', 'تم استيراد الإعدادات القديمة بنجاح.');
+        } catch (\Exception $e) {
+            \Log::error('Legacy settings import error: ' . $e->getMessage());
+            return redirect()->route('admin.settings.index')
+                ->with('error', 'حدث خطأ أثناء الاستيراد: ' . $e->getMessage());
+        }
+    }
+}

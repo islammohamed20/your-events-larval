@@ -1,0 +1,41 @@
+# Laravel standard .gitignore
+
+# Environment files
+.env
+.env.*
+
+# Vendor & Node modules
+/vendor/
+/node_modules/
+
+# Laravel storage
+/storage/app/public
+/storage/framework/*
+/storage/logs/*
+/storage/debugbar/*
+
+# Compiled & cached files
+/bootstrap/cache/*
+/.phpunit.result.cache
+.phpunit.cache
+
+# Public generated storage symlink
+/public/storage
+
+# IDE & OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# NPM/Yarn logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Composer
+composer.phar
+
+# Misc local files (optional)
+cookies.txt
+yourevents.sa.conf

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار إنشاء خاصية</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header">
+                <h3>اختبار إنشاء خاصية جديدة</h3>
+            </div>
+            <div class="card-body">
+                <div id="result" class="alert d-none"></div>
+                
+                <form id="attributeForm">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">اسم الخاصية</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="type" class="form-label">نوع الحقل</label>
+                        <select class="form-select" id="type" name="type" required>
+                            <option value="select">قائمة منسدلة</option>
+                            <option value="radio">اختيار واحد</option>
+                            <option value="checkbox">اختيارات متعددة</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="order" class="form-label">الترتيب</label>
+                        <input type="number" class="form-control" id="order" name="order" value="0">
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked>
+                        <label class="form-check-label" for="is_active">نشط</label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">إنشاء الخاصية</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('attributeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'alert d-none';
+            
+            // Get CSRF token first
+            try {
+                // Get CSRF token from meta tag or cookie
+                const response = await fetch('/admin/attributes/create');
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const csrfToken = doc.querySelector('input[name="_token"]')?.value;
+                
+                if (!csrfToken) {
+                    throw new Error('لم يتم العثور على CSRF token');
+                }
+                
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('_token', csrfToken);
+                formData.append('name', document.getElementById('name').value);
+                formData.append('type', document.getElementById('type').value);
+                formData.append('order', document.getElementById('order').value);
+                if (document.getElementById('is_active').checked) {
+                    formData.append('is_active', 'on');
+                }
+                
+                // Submit form
+                const submitResponse = await fetch('/admin/attributes', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                if (submitResponse.ok) {
+                    resultDiv.className = 'alert alert-success';
+                    resultDiv.textContent = 'تم إنشاء الخاصية بنجاح!';
+                    document.getElementById('attributeForm').reset();
+                    
+                    // Get the redirect location
+                    const redirectUrl = submitResponse.url;
+                    setTimeout(() => {
+                        window.location.href = redirectUrl;
+                    }, 1000);
+                } else {
+                    const errorText = await submitResponse.text();
+                    resultDiv.className = 'alert alert-danger';
+                    resultDiv.textContent = `خطأ: ${submitResponse.status} - ${errorText.substring(0, 200)}`;
+                }
+                
+                resultDiv.classList.remove('d-none');
+                
+            } catch (error) {
+                resultDiv.className = 'alert alert-danger';
+                resultDiv.textContent = `خطأ: ${error.message}`;
+                resultDiv.classList.remove('d-none');
+            }
+        });
+    </script>
+</body>
+</html>
