@@ -10,8 +10,8 @@
                 <div class="card shadow-lg" data-aos="fade-up">
                     <div class="card-body p-5">
                         <div class="text-center mb-4">
-                            <h1 class="h3 fw-bold text-primary">تسجيل الدخول</h1>
-                            <p class="text-muted">ادخل بياناتك للوصول إلى حسابك</p>
+                            <h1 class="h3 fw-bold text-primary">حيااااك الله</h1>
+                            <p class="text-muted">و لا عليك أمر، سجّل دخولك وعيش رحلة تجهيز فعاليتك</p>
                         </div>
 
                         @if($errors->any())
@@ -34,7 +34,7 @@
                                         <i class="fas fa-envelope"></i>
                                     </span>
                                     <input type="email" class="form-control" name="email" id="email" 
-                                           value="{{ old('email') }}" required autofocus>
+                                           value="{{ old('email') }}" placeholder="hello@yourevents.sa" required autofocus>
                                 </div>
                             </div>
 
@@ -44,7 +44,7 @@
                                     <span class="input-group-text">
                                         <i class="fas fa-lock"></i>
                                     </span>
-                                    <input type="password" class="form-control" name="password" id="password" required>
+                                    <input type="password" class="form-control" name="password" id="password" placeholder="xxxxxxxxxxxxxxxx" required>
                                 </div>
                             </div>
 
@@ -65,16 +65,19 @@
                         <hr class="my-4">
 
                         <div class="text-center">
-                            <p class="mb-2">ليس لديك حساب؟</p>
+                            <p class="mb-2">ما عندك حساب؟</p>
                             <a href="{{ route('register') }}" class="btn btn-outline-primary">
-                                <i class="fas fa-user-plus me-2"></i>إنشاء حساب جديد
+                                <i class="fas fa-user-plus me-2"></i>تعال نبتدي معك
                             </a>
+                            <p class="text-muted small mt-3 mb-0">
+                                أستمرارك معنا، يعني أنت موافق على <a href="{{ route('terms') }}" class="text-decoration-none">شروط الاستخدام</a>
+                            </p>
                         </div>
 
                         <div class="text-center mt-3">
                             <a href="{{ route('password.request') }}" class="text-decoration-none">
                                 <i class="fas fa-key me-1"></i>
-                                هل نسيت كلمة المرور؟
+                                نسيت كلمة السر؟ ولا يهمك
                             </a>
                         </div>
                     </div>

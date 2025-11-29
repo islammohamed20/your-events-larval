@@ -72,6 +72,19 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
+                                <label for="icon_png" class="form-label">أيقونة PNG (اختياري)</label>
+                                <input type="file" 
+                                       class="form-control @error('icon_png') is-invalid @enderror" 
+                                       id="icon_png" 
+                                       name="icon_png"
+                                       accept="image/png">
+                                <small class="text-muted">يُفضّل المقاس 64×64 أو 128×128</small>
+                                @error('icon_png')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 mb-3">
                                 <label for="color" class="form-label">اللون</label>
                                 <input type="color" 
                                        class="form-control form-control-color @error('color') is-invalid @enderror" 

@@ -156,8 +156,8 @@
                             <p class="mb-1">
                                 <i class="fas fa-phone me-2 text-primary"></i>
                                 <strong>الهاتف:</strong>
-                                <a href="tel:{{ \App\Models\Setting::get('contact_phone') }}" class="text-decoration-none">
-                                    {{ \App\Models\Setting::get('contact_phone') }}
+                                <a href="tel:{{ preg_replace('/\s+/', '', \App\Models\Setting::get('contact_phone')) }}" class="text-decoration-none phone-ltr" dir="ltr">
+                                    <span>{{ \App\Models\Setting::get('contact_phone') }}</span>
                                 </a>
                             </p>
                         </div>

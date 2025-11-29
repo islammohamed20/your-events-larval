@@ -12,6 +12,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // لا نشفر cookie app_locale
+        $middleware->encryptCookies(except: ['app_locale']);
+        
+        // Set application locale based on cookie/session/config
+        // يجب أن يعمل هذا قبل باقي الـ middleware
+        $middleware->append(\App\Http\Middleware\SetLocale::class);
+        
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);

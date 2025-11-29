@@ -33,7 +33,16 @@ class BookingController extends Controller
             'status' => 'required|in:pending,confirmed,cancelled,completed',
         ]);
 
+        $old = $booking->status;
         $booking->update($validated);
+
+        // Log status change
+        if ($old !== $booking->status) {
+            \App\Models\ActivityLog::record($booking, 'status_changed', 'تم تغيير حالة الحجز', [
+                'old' => $old,
+                'new' => $booking->status,
+            ]);
+        }
 
         return redirect()->back()
                          ->with('success', 'تم تحديث حالة الحجز بنجاح');

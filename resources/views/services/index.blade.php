@@ -149,11 +149,11 @@
                              data-aos-delay="{{ $loop->index * 50 }}">
                             <div class="card h-100 service-card">
                                 <!-- Service Image -->
-                                <div class="position-relative">
+                                <div class="position-relative service-image-wrapper">
                                     <img src="{{ $service->thumbnail_url }}" 
-                                         class="card-img-top" 
+                                         class="card-img-top service-image" 
                                          alt="{{ $service->name }}"
-                                         style="height: 250px; object-fit: cover;">
+                                         style="object-fit: cover;">
                                     
                                     <!-- Wishlist Button -->
                                     @auth
@@ -193,7 +193,7 @@
                                     @endif
                                     
                                     <!-- Service Description -->
-                                    <p class="card-text text-muted flex-grow-1">
+                                    <p>
                                         {{ Str::limit($service->description, 100) }}
                                     </p>
                                     
@@ -240,6 +240,17 @@
         </div>
     </div>
 </section>
+
+<style>
+/* الحفاظ على ارتفاع ثابت على الشاشات الكبيرة لتناسق الكروت */
+.service-card .service-image { width: 100%; height: 250px; object-fit: cover; display: block; }
+
+/* حاوية مربعة على الموبايل والصورة تملأها بالكامل */
+@media (max-width: 768px) {
+    .service-card .service-image-wrapper { width: 100%; aspect-ratio: 1 / 1; }
+    .service-card .service-image { width: 100%; height: 100%; object-fit: cover; }
+}
+</style>
 
 <!-- Mobile Filters Offcanvas -->
 <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileFilters">

@@ -4,11 +4,11 @@
 
 @section('content')
 <!-- Page Header -->
-<section class="hero-section" style="padding: 40px 0;">
+<section class="hero-section hero-contact" style="padding: 40px 0; background: var(--gradient-secondary);">
     <div class="container">
         <div class="text-center">
-            <h1 class="display-4 fw-bold mb-3" style="color: var(--primary-color);">تواصل معنا</h1>
-            <p class="lead" style="color: var(--text-color);">نحن هنا للإجابة على جميع استفساراتك ومساعدتك في تنظيم مناسبتك المثالية</p>
+            <h1 class="display-4 fw-bold mb-3">تواصل معنا</h1>
+            <p class="lead">نحن هنا للإجابة على جميع استفساراتك ومساعدتك في تنظيم مناسبتك المثالية</p>
         </div>
     </div>
 </section>
@@ -37,16 +37,30 @@
                                     <label for="phone" class="form-label">رقم الهاتف</label>
                                     <input type="tel" class="form-control" id="phone">
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="subject" class="form-label">الموضوع</label>
-                                    <select class="form-select" id="subject">
-                                        <option value="">اختر الموضوع</option>
-                                        <option value="booking">استفسار عن الحجز</option>
-                                        <option value="packages">استفسار عن الباقات</option>
-                                        <option value="services">استفسار عن الخدمات</option>
-                                        <option value="complaint">شكوى</option>
-                                        <option value="other">أخرى</option>
-                                    </select>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label d-block">اختر الموضوع</label>
+                                    <div class="d-flex flex-wrap gap-3" id="subject-group">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="subject" id="subjectBooking" value="booking">
+                                            <label class="form-check-label" for="subjectBooking">استفسار عن الحجز</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="subject" id="subjectPackages" value="packages">
+                                            <label class="form-check-label" for="subjectPackages">استفسار عن الباقات</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="subject" id="subjectServices" value="services">
+                                            <label class="form-check-label" for="subjectServices">استفسار عن الخدمات</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="subject" id="subjectComplaint" value="complaint">
+                                            <label class="form-check-label" for="subjectComplaint">شكوى</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="subject" id="subjectOther" value="other">
+                                            <label class="form-check-label" for="subjectOther">أخرى</label>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label for="message" class="form-label">الرسالة *</label>
@@ -83,7 +97,9 @@
                                 <i class="fas fa-phone text-primary me-3"></i>
                                 <div>
                                     <strong>الهاتف:</strong><br>
-                                    <a href="tel:{{ \App\Models\Setting::get('contact_phone', '+966 50 123 4567') }}">{{ \App\Models\Setting::get('contact_phone', '+966 50 123 4567') }}</a>
+                                    <a href="tel:{{ preg_replace('/\s+/', '', \App\Models\Setting::get('contact_phone', '+966 50 123 4567')) }}" class="phone-ltr" dir="ltr">
+                                        <span>{{ \App\Models\Setting::get('contact_phone', '+966 50 123 4567') }}</span>
+                                    </a>
                                 </div>
                             </li>
                             <li class="mb-3">

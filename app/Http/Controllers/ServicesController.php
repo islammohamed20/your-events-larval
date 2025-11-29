@@ -29,7 +29,22 @@ class ServicesController extends Controller
 
     public function show($id)
     {
-        $service = Service::with(['attributes.values' => function($q){ $q->active(); }, 'variations' => function($q){ $q->where('is_active', true); }])->findOrFail($id);
-        return view('services.show', compact('service'));
+        $service = Service::with([
+            'attributes.values' => function($q){ $q->active(); },
+            'variations' => function($q){ $q->where('is_active', true); }
+        ])->findOrFail($id);
+
+        // Similar services: same category if available, exclude current, active only
+        $similar = Service::active()
+            ->where('id', '<>', $service->id)
+            ->when($service->category_id, function($q) use ($service) {
+                $q->where('category_id', $service->category_id);
+            })
+            ->with(['thumbnailImage', 'category'])
+            ->inRandomOrder()
+            ->take(12)
+            ->get();
+
+        return view('services.show', compact('service', 'similar'));
     }
 }

@@ -216,14 +216,14 @@
                             
                             <div class="mb-3">
                                 <label class="form-label fw-bold">الاسم:</label>
-                                <p class="mb-0">{{ $booking->customer_name }}</p>
+                                <p class="mb-0">{{ $booking->client_name }}</p>
                             </div>
                             
                             <div class="mb-3">
                                 <label class="form-label fw-bold">البريد الإلكتروني:</label>
                                 <p class="mb-0">
-                                    <a href="mailto:{{ $booking->customer_email }}" class="text-decoration-none">
-                                        <i class="fas fa-envelope me-1"></i>{{ $booking->customer_email }}
+                                    <a href="mailto:{{ $booking->client_email }}" class="text-decoration-none">
+                                        <i class="fas fa-envelope me-1"></i>{{ $booking->client_email }}
                                     </a>
                                 </p>
                             </div>
@@ -231,26 +231,42 @@
                             <div class="mb-3">
                                 <label class="form-label fw-bold">رقم الهاتف:</label>
                                 <p class="mb-0">
-                                    <a href="tel:{{ $booking->customer_phone }}" class="text-decoration-none">
-                                        <i class="fas fa-phone me-1"></i>{{ $booking->customer_phone }}
+                                    <a href="tel:{{ $booking->client_phone }}" class="text-decoration-none">
+                                        <i class="fas fa-phone me-1"></i>{{ $booking->client_phone }}
                                     </a>
                                 </p>
                             </div>
 
-                            @if($booking->customer_address)
+                            @if($booking->event_location)
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold">العنوان:</label>
+                                    <label class="form-label fw-bold">موقع المناسبة:</label>
                                     <p class="mb-0">
-                                        <i class="fas fa-map-marker-alt me-1"></i>{{ $booking->customer_address }}
+                                        <i class="fas fa-map-marker-alt me-1"></i>{{ $booking->event_location }}
                                     </p>
                                 </div>
                             @endif
 
+                            @if($booking->guests_count)
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">عدد الضيوف:</label>
+                                    <p class="mb-0">
+                                        <i class="fas fa-users me-1"></i>{{ number_format($booking->guests_count) }} ضيف
+                                    </p>
+                                </div>
+                            @endif
+
+                            @if($booking->special_requests)
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">طلبات خاصة:</label>
+                                    <p class="mb-0 text-muted">{{ $booking->special_requests }}</p>
+                                </div>
+                            @endif
+
                             <div class="d-grid gap-2 mt-4">
-                                <a href="mailto:{{ $booking->customer_email }}" class="btn btn-outline-primary">
+                                <a href="mailto:{{ $booking->client_email }}" class="btn btn-outline-primary">
                                     <i class="fas fa-envelope me-1"></i>إرسال بريد إلكتروني
                                 </a>
-                                <a href="tel:{{ $booking->customer_phone }}" class="btn btn-outline-success">
+                                <a href="tel:{{ $booking->client_phone }}" class="btn btn-outline-success">
                                     <i class="fas fa-phone me-1"></i>اتصال
                                 </a>
                             </div>
@@ -260,5 +276,9 @@
             </div>
         </div>
     </div>
+
+    {{-- Activity Logs --}}
+    @php $logs = $booking->activityLogs()->latest()->limit(25)->get(); @endphp
+    @include('admin.partials.activity-logs', ['logs' => $logs, 'title' => 'سجل نشاط الحجز'])
 </div>
 @endsection

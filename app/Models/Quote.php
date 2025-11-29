@@ -52,13 +52,13 @@ class Quote extends Model
      */
     public function calculateTotals()
     {
-    $itemsSum = $this->items->sum('subtotal');
-    $this->subtotal = sprintf('%.2f', $itemsSum);
-    $tax = $itemsSum * 0.15;
-    $this->tax = sprintf('%.2f', $tax); // 15% ضريبة
-    $total = $itemsSum + $tax - ($this->discount ?? 0);
-    $this->total = sprintf('%.2f', $total);
-    $this->save();
+        $itemsSum = $this->items->sum('subtotal');
+        $this->subtotal = sprintf('%.2f', $itemsSum);
+        $tax = $itemsSum * 0.15;
+        $this->tax = sprintf('%.2f', $tax); // 15% ضريبة
+        $total = $itemsSum + $tax - ($this->discount ?? 0);
+        $this->total = sprintf('%.2f', $total);
+        $this->save();
     }
 
     /**
@@ -72,6 +72,14 @@ class Quote extends Model
     public function items()
     {
         return $this->hasMany(QuoteItem::class);
+    }
+
+    /**
+     * Activity logs relation
+     */
+    public function activityLogs()
+    {
+        return $this->morphMany(\App\Models\ActivityLog::class, 'subject')->latest();
     }
 
     /**
@@ -116,5 +124,31 @@ class Quote extends Model
         ];
 
         return $statuses[$this->status] ?? $this->status;
+    }
+
+    /**
+     * Model events for logging
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($quote) {
+            \App\Models\ActivityLog::record($quote, 'created', 'تم إنشاء عرض سعر جديد', [
+                'status' => $quote->status,
+                'quote_number' => $quote->quote_number,
+                'total' => $quote->total,
+            ]);
+        });
+
+        static::updated(function ($quote) {
+            $changes = $quote->getChanges();
+            unset($changes['updated_at']);
+            if (!empty($changes)) {
+                \App\Models\ActivityLog::record($quote, 'updated', 'تم تعديل عرض السعر', [
+                    'changes' => $changes,
+                ]);
+            }
+        });
     }
 }

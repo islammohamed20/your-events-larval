@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'معرض أعمالنا - Your Events')
+@section('title', 'Our Gallery - Your Events')
 
 @section('content')
 <!-- Page Header -->
 <section class="hero-section" style="padding: 40px 0;">
     <div class="container">
         <div class="text-center">
-            <h1 class="display-4 fw-bold mb-3" style="color: var(--primary-color);">معرض أعمالنا</h1>
-            <p class="lead" style="color: var(--text-color);">شاهد بعض من أعمالنا المميزة وإنجازاتنا في تنظيم المناسبات</p>
+            <h1 class="display-4 fw-bold mb-3" style="color: var(--primary-color);">{{ app()->getLocale() === 'en' ? 'Our Gallery' : 'معرض أعمالنا' }}</h1>
+            <p class="lead" style="color: var(--text-color);">{{ app()->getLocale() === 'en' ? 'Check out some of our featured works and achievements in organizing events' : 'شاهد بعض من أعمالنا المميزة وإنجازاتنا في تنظيم المناسبات' }}</p>
         </div>
     </div>
 </section>
@@ -19,13 +19,13 @@
         <div class="text-center">
             <div class="btn-group" role="group" aria-label="Gallery filters">
                 <input type="radio" class="btn-check" name="gallery-filter" id="filter-all" autocomplete="off" checked>
-                <label class="btn btn-outline-primary" for="filter-all" onclick="filterGallery('all')">الكل</label>
+                <label class="btn btn-outline-primary" for="filter-all" onclick="filterGallery('all')">{{ __('common.all') }}</label>
 
                 <input type="radio" class="btn-check" name="gallery-filter" id="filter-images" autocomplete="off">
-                <label class="btn btn-outline-primary" for="filter-images" onclick="filterGallery('image')">الصور</label>
+                <label class="btn btn-outline-primary" for="filter-images" onclick="filterGallery('image')">{{ __('common.images') }}</label>
 
                 <input type="radio" class="btn-check" name="gallery-filter" id="filter-videos" autocomplete="off">
-                <label class="btn btn-outline-primary" for="filter-videos" onclick="filterGallery('video')">الفيديوهات</label>
+                <label class="btn btn-outline-primary" for="filter-videos" onclick="filterGallery('video')">{{ __('common.videos') }}</label>
             </div>
         </div>
     </div>

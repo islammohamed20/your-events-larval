@@ -29,7 +29,7 @@ class BookingConfirmation extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'تأكيد طلب الحجز - Your Events',
+            subject: 'تأكيد طلب حجز الفعالية - Your Events',
         );
     }
 

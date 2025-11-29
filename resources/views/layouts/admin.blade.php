@@ -8,12 +8,17 @@
     
     <!-- Favicon -->
     @php
-        $favicon = \App\Models\Setting::get('favicon');
+        $faviconSetting = \App\Models\Setting::get('site_favicon');
+        $faviconUrlSetting = \App\Models\Setting::get('favicon_url');
+        $faviconUrl = $faviconSetting
+            ? Storage::url($faviconSetting)
+            : ($faviconUrlSetting ?: asset('images/logo/logo.png'));
+        $faviconPath = parse_url($faviconUrl, PHP_URL_PATH);
+        $faviconExt = strtolower(pathinfo($faviconPath ?? $faviconUrl, PATHINFO_EXTENSION));
+        $faviconType = $faviconExt === 'ico' ? 'image/x-icon' : 'image/png';
     @endphp
-    @if($favicon)
-        <link rel="icon" type="image/png" href="{{ Storage::url($favicon) }}">
-        <link rel="shortcut icon" type="image/png" href="{{ Storage::url($favicon) }}">
-    @endif
+    <link rel="icon" type="{{ $faviconType }}" href="{{ $faviconUrl }}">
+    <link rel="shortcut icon" type="{{ $faviconType }}" href="{{ $faviconUrl }}">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -182,6 +187,57 @@
             font-weight: 600;
         }
 
+        /* Pagination tweaks: ضبط حجم الأيقونات ليطابق حجم الأرقام */
+        .pagination .page-link i {
+            font-size: 14px !important; /* حجم ثابت لتفادي التضخيم */
+            line-height: 1 !important; /* يقلل الارتفاع العمودي للأيقونة */
+            vertical-align: middle !important; /* تحسين المحاذاة مع النص */
+        }
+        /* تأكيد ضبط الحجم حتى لو خرجت الأيقونة خارج عنصر الصفحة */
+        i.fa-chevron-left,
+        i.fa-chevron-right,
+        i[class*="fa-chevron-"] {
+            font-size: 14px !important;
+            line-height: 1 !important;
+            vertical-align: middle !important;
+            display: inline-block !important;
+        }
+
+        /* دعم أيقونات SVG من Font Awesome (إذا وُجدت) */
+        .pagination .page-link svg,
+        .pagination .page-link .svg-inline--fa {
+            width: 14px !important;
+            height: 14px !important;
+            vertical-align: middle !important;
+        }
+
+        /* قيود عامة لأي أيقونة شيفرون أينما ظهرت في لوحة الإدارة */
+        .svg-inline--fa[data-icon="chevron-left"],
+        .svg-inline--fa[data-icon="chevron-right"],
+        svg[aria-hidden="true"][data-icon="chevron-left"],
+        svg[aria-hidden="true"][data-icon="chevron-right"],
+        i.fa-chevron-left,
+        i.fa-chevron-right,
+        [class*="fa-chevron-"] {
+            width: 14px !important;
+            height: 14px !important;
+            font-size: 14px !important;
+            line-height: 14px !important;
+        }
+
+        /* توحيد حجم عناصر الترقيم حتى للقوالب الافتراضية بدون .page-link */
+        .pagination li > a,
+        .pagination li > span {
+            font-size: 0.95rem;
+            padding: 0.375rem 0.75rem;
+            line-height: 1.5;
+        }
+        /* خيار إضافي لتوازن ارتفاع الروابط إن لزم */
+        .pagination .page-link {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.95rem;
+        }
+
         .stats-card {
             background: linear-gradient(135deg, var(--primary-color), var(--purple-light));
             color: white;
@@ -332,6 +388,15 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.suppliers.*') ? 'active' : '' }}" 
+                       href="{{ route('admin.suppliers.index') }}">
+                        <i class="fas fa-handshake me-2"></i>إدارة الموردين
+                        @if(\App\Models\Supplier::where('status', 'pending')->count() > 0)
+                            <span class="badge bg-warning text-dark ms-1">{{ \App\Models\Supplier::where('status', 'pending')->count() }}</span>
+                        @endif
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('admin.hero-slides.*') ? 'active' : '' }}" 
                        href="{{ route('admin.hero-slides.index') }}">
                         <i class="fas fa-images me-2"></i>سلايدات البانر الرئيسي
@@ -341,6 +406,25 @@
                     <a class="nav-link {{ request()->routeIs('admin.homepage.*') ? 'active' : '' }}" 
                        href="{{ route('admin.homepage.index') }}">
                         <i class="fas fa-home me-2"></i>إدارة الصفحة الرئيسية
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}" 
+                       href="{{ route('admin.reports.index') }}">
+                        <i class="fas fa-chart-line me-2"></i>التقارير
+                    </a>
+                </li>
+                <li class="nav-item ms-3">
+                    <a class="nav-link {{ request()->routeIs('admin.reports.security') ? 'active' : '' }}" 
+                       href="{{ route('admin.reports.security') }}">
+                        <i class="fas fa-shield-alt me-2 text-muted"></i>
+                        <small>تقرير الأمان</small>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.login-activities.*') ? 'active' : '' }}" 
+                       href="{{ route('admin.login-activities.index') }}">
+                        <i class="fas fa-user-shield me-2"></i>سجلات الدخول
                     </a>
                 </li>
                 <li class="nav-item">

@@ -10,8 +10,8 @@
                 <div class="card shadow-lg" data-aos="fade-up">
                     <div class="card-body p-5">
                         <div class="text-center mb-4">
-                            <h1 class="h3 fw-bold text-primary">إنشاء حساب جديد</h1>
-                            <p class="text-muted">أنشئ حسابك الآن للحصول على تجربة أفضل</p>
+                            <h1 class="h3 fw-bold text-primary">يلا نسجّل حسابك الجديد بخطوات سريعة</h1>
+                            <p class="text-muted">وخلك جاهز لتجربتك معنا، حيث نحرص على أن تكون كل خطوة بسيطة وممتعة لتسجّل حسابك الجديد بسهولة وسلاسة</p>
                         </div>
 
                         @if($errors->any())
@@ -28,19 +28,19 @@
                             @csrf
                             
                             <div class="mb-3">
-                                <label for="name" class="form-label">الاسم الكامل</label>
+                                <label for="name" class="form-label">سجّل اسمك الكامل وابدأ <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text">
                                         <i class="fas fa-user"></i>
                                     </span>
                                     <input type="text" class="form-control" name="name" id="name" 
-                                           value="{{ old('name') }}" required autofocus>
+                                           value="{{ old('name') }}" placeholder="محمد سعد احمد" required autofocus>
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="company_name" class="form-label">
-                                    اسم الجهة <span class="text-danger">*</span>
+                                    خلّنا نعرف اسم الجهة <span class="text-danger">*</span>
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text">
@@ -49,7 +49,7 @@
                                     <input type="text" class="form-control @error('company_name') is-invalid @enderror" 
                                            name="company_name" id="company_name" 
                                            value="{{ old('company_name') }}" 
-                                           placeholder="اسم الشركة أو المؤسسة"
+                                           placeholder="مكان عملك أو شركتك"
                                            required>
                                 </div>
                                 @error('company_name')
@@ -59,7 +59,7 @@
 
                             <div class="mb-3">
                                 <label for="tax_number" class="form-label">
-                                    الرقم الضريبي <span class="text-muted small">(اختياري)</span>
+                                    أدخل رقمك الضريبي لو حاب <span class="text-muted small">(اختياري)</span>
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text">
@@ -68,56 +68,53 @@
                                     <input type="text" class="form-control @error('tax_number') is-invalid @enderror" 
                                            name="tax_number" id="tax_number" 
                                            value="{{ old('tax_number') }}"
-                                           placeholder="الرقم الضريبي للجهة">
+                                           placeholder="311019444900003">
                                 </div>
-                                <small class="form-text text-muted">
-                                    أدخل الرقم الضريبي للجهة إن وجد (15 رقم)
-                                </small>
                                 @error('tax_number')
                                     <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <div class="mb-3">
-                                <label for="email" class="form-label">البريد الإلكتروني</label>
+                                <label for="email" class="form-label">ولا عليك أمر، أدخل بريدك الإلكتروني <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text">
                                         <i class="fas fa-envelope"></i>
                                     </span>
                                     <input type="email" class="form-control" name="email" id="email" 
-                                           value="{{ old('email') }}" required>
+                                           value="{{ old('email') }}" placeholder="hello@yourevents.sa" required>
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="phone" class="form-label">رقم الهاتف</label>
+                                <label for="phone" class="form-label">ولا عليك أمر، أدخل رقم جوالك <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text">
                                         <i class="fas fa-phone"></i>
                                     </span>
                                     <input type="tel" class="form-control" name="phone" id="phone" 
-                                           value="{{ old('phone') }}" required>
+                                           value="{{ old('phone') }}" placeholder="05XXXXXXXX" required>
                                 </div>
                             </div>
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="password" class="form-label">كلمة المرور</label>
+                                    <label for="password" class="form-label">ولا عليك امر، سجل كلمة السر <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <span class="input-group-text">
                                             <i class="fas fa-lock"></i>
                                         </span>
-                                        <input type="password" class="form-control" name="password" id="password" required>
+                                        <input type="password" class="form-control" name="password" id="password" placeholder="••••••••" required>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="password_confirmation" class="form-label">تأكيد كلمة المرور</label>
+                                    <label for="password_confirmation" class="form-label">أكد كلمة مرورك <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <span class="input-group-text">
                                             <i class="fas fa-lock"></i>
                                         </span>
-                                        <input type="password" class="form-control" name="password_confirmation" id="password_confirmation" required>
+                                        <input type="password" class="form-control" name="password_confirmation" id="password_confirmation" placeholder="••••••••" required>
                                     </div>
                                 </div>
                             </div>

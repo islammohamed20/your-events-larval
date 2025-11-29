@@ -61,7 +61,7 @@
                 </h5>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ route('admin.services.update', $service) }}" enctype="multipart/form-data" id="serviceForm">
+                <form method="POST" action="{{ route('admin.services.update', $service) }}" enctype="multipart/form-data" id="serviceForm" data-service-id="{{ $service->id }}">
                     @csrf
                     @method('PUT')
                     
@@ -159,13 +159,14 @@
                                 
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="duration" class="form-label">مدة الخدمة</label>
-                                        <input type="text" 
+                                        <label for="duration" class="form-label">مدة الخدمة (بالساعات)</label>
+                                        <input type="number" 
                                                class="form-control @error('duration') is-invalid @enderror" 
                                                id="duration" 
                                                name="duration" 
                                                value="{{ old('duration', $service->duration) }}" 
-                                               placeholder="مثال: 4 ساعات">
+                                               min="0" step="1" 
+                                               placeholder="مثال: 4">
                                         @error('duration')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -842,7 +843,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!confirm('هل أنت متأكد من حذف هذه الصورة؟')) return;
             
             const imageId = this.dataset.imageId;
-            const serviceId = {{ $service->id }};
+            const formEl = document.getElementById('serviceForm');
+            const serviceId = formEl ? formEl.dataset.serviceId : null;
+            if (!serviceId) {
+                alert('معرّف الخدمة غير متوفر');
+                return;
+            }
             
             fetch(`/admin/services/${serviceId}/images/${imageId}`, {
                 method: 'DELETE',
@@ -871,7 +877,12 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.set-thumbnail-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const imageId = this.dataset.imageId;
-            const serviceId = {{ $service->id }};
+            const formEl = document.getElementById('serviceForm');
+            const serviceId = formEl ? formEl.dataset.serviceId : null;
+            if (!serviceId) {
+                alert('معرّف الخدمة غير متوفر');
+                return;
+            }
             
             fetch(`/admin/services/${serviceId}/images/${imageId}/set-thumbnail`, {
                 method: 'POST',

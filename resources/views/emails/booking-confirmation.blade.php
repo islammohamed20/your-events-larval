@@ -99,10 +99,15 @@
         <div class="content">
             <h2>عزيزي {{ $booking->client_name }}،</h2>
             
-            <p>شكراً لك على الثقة بخدماتنا! تم استلام طلب الحجز الخاص بك بنجاح.</p>
+            <p>شكراً لك على الثقة بخدماتنا! تم استلام طلب الحجز الخاص بالفعالية بنجاح.</p>
             
             <div class="booking-details">
                 <h3 style="color: #D4AF37; margin-top: 0;">تفاصيل الحجز:</h3>
+
+                <div class="detail-row">
+                    <span class="detail-label">اسم الفعالية:</span>
+                    <span class="detail-value">{{ $booking->activity_name }}</span>
+                </div>
                 
                 <div class="detail-row">
                     <span class="detail-label">رقم الحجز:</span>
@@ -115,12 +120,12 @@
                 </div>
                 
                 <div class="detail-row">
-                    <span class="detail-label">تاريخ المناسبة:</span>
+                    <span class="detail-label">تاريخ الفعالية:</span>
                     <span class="detail-value">{{ \Carbon\Carbon::parse($booking->event_date)->format('d/m/Y') }}</span>
                 </div>
                 
                 <div class="detail-row">
-                    <span class="detail-label">مكان المناسبة:</span>
+                    <span class="detail-label">مكان الفعالية:</span>
                     <span class="detail-value">{{ $booking->event_location }}</span>
                 </div>
                 

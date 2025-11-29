@@ -200,7 +200,7 @@
                                     @endif
                                     
                                     <!-- Service Description -->
-                                    <p class="card-text text-muted flex-grow-1">
+                                    <p>
                                         {{ Str::limit($service->description, 100) }}
                                     </p>
                                     

@@ -19,21 +19,16 @@
         }
         
         .header {
-            background: #1f144a;
-            color: white;
-            padding: 20px;
+            display: none; /* Hidden since letter head provides header */
+        }
+        
+        .quote-title {
             text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        .header h1 {
-            font-size: 22px;
-            margin: 0 0 5px 0;
-        }
-        
-        .header p {
-            font-size: 12px;
-            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f144a;
+            margin: 80px 0 20px 0; /* Space for letter head header */
+            padding: 10px;
         }
         
         .info-table {
@@ -69,19 +64,20 @@
         
         h3 {
             color: #1f144a;
-            margin: 15px 0 10px 0;
+            margin: 20px 0 12px 0;
             font-size: 14px;
         }
         
         table.items {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
+            background: #fff; /* خلفية صلبة */
         }
         
         table.items th {
-            background: #f5f5f5;
-            padding: 8px;
+            background: #f7f7f7;
+            padding: 8px 10px;
             text-align: right;
             font-weight: bold;
             border: 1px solid #ddd;
@@ -89,12 +85,13 @@
         }
         
         table.items td {
-            padding: 8px;
+            padding: 8px 10px;
             border: 1px solid #ddd;
             font-size: 10px;
+            background: #fff;
         }
         
-        table.items tr:nth-child(even) {
+        table.items tr:nth-child(even) td {
             background: #fafafa;
         }
         
@@ -142,9 +139,9 @@
         }
         
         .total-row {
-            background: #1f144a;
-            color: white;
-            font-size: 13px;
+            background: #f2f2f7; /* لون فاتح لضمان وضوح النص */
+            color: #1f144a;
+            font-size: 12px;
         }
         
         .notes-box {
@@ -161,12 +158,7 @@
         }
         
         .footer {
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 2px solid #ddd;
-            text-align: center;
-            font-size: 9px;
-            color: #666;
+            display: none; /* Hidden since letter head provides footer */
         }
         
         .footer-info {
@@ -175,64 +167,103 @@
         
         .text-center { text-align: center; }
         .text-left { text-align: left; }
+
+        /* Two-column layout for quote info (robust for mPDF) */
+        .info-columns { width: 100%; margin-bottom: 20px; overflow: hidden; }
+        .info-col { float: left; width: 48%; vertical-align: top; }
+        .info-col.right { float: right; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <h1>عرض سعر من Your Events</h1>
-            <p>حوّل مناسبتك العادية إلى لحظة استثنائية</p>
+        <!-- Quote Title -->
+        <div class="quote-title">
+            عرض سعر رقم {{ $quote->quote_number }}
         </div>
         
         <!-- Quote Information -->
-        <table class="info-table">
-            <tr>
-                <td class="info-label">رقم العرض:</td>
-                <td><strong>{{ $quote->quote_number }}</strong></td>
-            </tr>
-            <tr>
-                <td class="info-label">تاريخ الإصدار:</td>
-                <td>{{ $quote->created_at->format('Y/m/d') }}</td>
-            </tr>
-            <tr>
-                <td class="info-label">اسم العميل:</td>
-                <td>{{ $quote->user->name }}</td>
-            </tr>
-            <tr>
-                <td class="info-label">اسم الجهة:</td>
-                <td><strong>{{ $quote->user->company_name }}</strong></td>
-            </tr>
-            @if($quote->user->tax_number)
-            <tr>
-                <td class="info-label">الرقم الضريبي:</td>
-                <td>{{ $quote->user->tax_number }}</td>
-            </tr>
-            @endif
-            <tr>
-                <td class="info-label">البريد الإلكتروني:</td>
-                <td>{{ $quote->user->email }}</td>
-            </tr>
-            <tr>
-                <td class="info-label">الحالة:</td>
-                <td>
-                    <span class="status-badge status-{{ $quote->status }}">
-                        {{ $quote->status_text }}
-                    </span>
-                </td>
-            </tr>
-        </table>
+        <div class="info-columns">
+            <!-- Company Info: left side -->
+            <div class="info-col left">
+                <table class="info-table">
+                    <tr>
+                        <td class="info-label">اسم المنصة:</td>
+                        <td><strong>Your Events</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">السجل التجاري:</td>
+                        <td><strong>7025605267</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">الرقم الضريبي:</td>
+                        <td><strong>311019444900003</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">رقم الجوال:</td>
+                        <td><strong>+966 50 515 9616</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">البريد الإلكتروني:</td>
+                        <td><strong>sales@yourevents.sa</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">الموقع الإلكتروني:</td>
+                        <td><strong>www.yourevents.sa</strong></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Quote/Customer Info: right side -->
+            <div class="info-col right">
+                <table class="info-table">
+                    <tr>
+                        <td class="info-label">رقم العرض:</td>
+                        <td><strong>{{ $quote->quote_number }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">تاريخ الإصدار:</td>
+                        <td>{{ $quote->created_at->format('Y/m/d') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">اسم العميل:</td>
+                        <td>{{ $quote->user->name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">اسم الجهة:</td>
+                        <td><strong>{{ $quote->user->company_name }}</strong></td>
+                    </tr>
+                    @if($quote->user->tax_number)
+                    <tr>
+                        <td class="info-label">الرقم الضريبي:</td>
+                        <td>{{ $quote->user->tax_number }}</td>
+                    </tr>
+                    @endif
+                    <tr>
+                        <td class="info-label">البريد الإلكتروني:</td>
+                        <td>{{ $quote->user->email }}</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">الحالة:</td>
+                        <td>
+                            <span class="status-badge status-{{ $quote->status }}">
+                                {{ $quote->status_text }}
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
         
         <!-- Items Table -->
         <h3>تفاصيل الخدمات</h3>
         <table class="items">
             <thead>
                 <tr>
-                    <th style="width: 5%;">#</th>
-                    <th style="width: 45%;">الخدمة</th>
+                    <th style="width: 6%;">#</th>
+                    <th style="width: 46%;">الخدمة</th>
                     <th style="width: 12%; text-align: center;">الكمية</th>
-                    <th style="width: 18%; text-align: left;">السعر</th>
-                    <th style="width: 20%; text-align: left;">المجموع</th>
+                    <th style="width: 18%; text-align: right;">السعر (ريال)</th>
+                    <th style="width: 18%; text-align: right;">المجموع (ريال)</th>
                 </tr>
             </thead>
             <tbody>
@@ -302,8 +333,8 @@
                         @endif
                     </td>
                     <td class="text-center">{{ $item->quantity }}</td>
-                    <td class="text-left">{{ number_format($item->price, 2) }} ريال</td>
-                    <td class="text-left"><strong>{{ number_format($item->subtotal, 2) }} ريال</strong></td>
+                    <td class="text-right">{{ number_format($item->price, 2) }}</td>
+                    <td class="text-right"><strong>{{ number_format($item->subtotal, 2) }}</strong></td>
                 </tr>
                 @endforeach
             </tbody>
@@ -354,8 +385,13 @@
                 • عرض السعر صالح لمدة 30 يوم من تاريخ الإصدار<br>
                 • الأسعار المذكورة شاملة ضريبة القيمة المضافة (15%)<br>
                 • يرجى مراجعة الخدمات والأسعار قبل التأكيد<br>
-                • للاستفسارات والتواصل: info@yourevents.com
+                • للاستفسارات والتواصل: hello@yourevents.sa
             </div>
+        </div>
+        
+        <!-- Stamp on the left -->
+        <div style="text-align: left; margin-top: 15px; margin-left: 70px;">
+            <img src="{{ public_path('storage/extra/stamp.png') }}" alt="ختم الشركة" style="width: 120px; height: auto;">
         </div>
         
         <!-- Footer -->
@@ -364,7 +400,7 @@
                 <strong>Your Events</strong> - حوّل مناسبتك العادية إلى لحظة استثنائية
             </div>
             <div class="footer-info">
-                البريد الإلكتروني: info@yourevents.com | الهاتف: +966 XX XXX XXXX
+                البريد الإلكتروني: hello@yourevents.sa | الهاتف: +966 50 515 9616
             </div>
             <div class="footer-info">
                 تم إنشاء هذا المستند بواسطة نظام Your Events

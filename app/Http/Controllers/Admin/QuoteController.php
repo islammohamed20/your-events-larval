@@ -105,6 +105,21 @@ class QuoteController extends Controller
         if (isset($validated['discount'])) {
             $quote->calculateTotals();
         }
+
+        // Log status change and updates
+        if ($oldStatus !== $quote->status) {
+            \App\Models\ActivityLog::record($quote, 'status_changed', 'تم تغيير حالة عرض السعر', [
+                'old' => $oldStatus,
+                'new' => $quote->status,
+                'discount' => $quote->discount,
+                'admin_notes' => $quote->admin_notes,
+            ]);
+        } else {
+            \App\Models\ActivityLog::record($quote, 'updated', 'تم تعديل عرض السعر', [
+                'discount' => $quote->discount,
+                'admin_notes' => $quote->admin_notes,
+            ]);
+        }
         
         return redirect()->back()->with('success', 'تم تحديث حالة عرض السعر بنجاح');
     }

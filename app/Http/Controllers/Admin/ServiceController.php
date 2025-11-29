@@ -17,11 +17,47 @@ use App\Imports\ServicesImport;
 
 class ServiceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Eager-load category to show it in the admin list without N+1 queries
-        $services = Service::with('category')->latest()->get();
-        return view('admin.services.index', compact('services'));
+        // قاعدة البحث
+        $search = trim((string) $request->get('q', ''));
+
+        // Eager-load category لإظهارها بدون N+1، مع فلترة حسب البحث
+        $query = Service::with('category')->latest();
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('subtitle', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('marketing_description', 'like', "%{$search}%")
+                  ->orWhere('what_we_offer', 'like', "%{$search}%")
+                  ->orWhere('why_choose_us', 'like', "%{$search}%")
+                  ->orWhere('meta_description', 'like', "%{$search}%")
+                  ->orWhere('type', 'like', "%{$search}%")
+                  ->orWhere('service_type', 'like', "%{$search}%")
+                  ->orWhere('duration', 'like', "%{$search}%")
+                  // الحقول المصفوفة/JSON: استخدام LIKE كبحث نصي عام
+                  ->orWhere('features', 'like', "%{$search}%")
+                  ->orWhere('custom_fields', 'like', "%{$search}%");
+
+                // البحث الرقمي: المطابقة على id أو السعر
+                if (is_numeric($search)) {
+                    $q->orWhere('id', (int) $search)
+                      ->orWhere('price', (float) $search);
+                }
+            })
+            ->orWhereHas('category', function ($cq) use ($search) {
+                $cq->where('name', 'like', "%{$search}%")
+                   ->orWhere('name_en', 'like', "%{$search}%");
+            });
+        }
+
+        // ترقيم الصفحات مع الحفاظ على معاملات الاستعلام
+        $services = $query->paginate(15)->withQueryString();
+
+        return view('admin.services.index', compact('services'))
+            ->with('search', $search);
     }
 
     public function show(Service $service)
@@ -49,9 +85,9 @@ class ServiceController extends Controller
             'what_we_offer' => 'nullable|string',
             'why_choose_us' => 'nullable|string',
             'meta_description' => 'nullable|string|max:160',
-            'service_type' => 'required|in:simple,variable',
-            'price' => 'required_if:service_type,simple|nullable|numeric|min:0',
-            'duration' => 'nullable|string|max:255',
+            'service_type' => 'nullable|in:simple,variable',
+            'price' => 'nullable|numeric|min:0',
+            'duration' => 'nullable|integer|min:0',
             'type' => 'nullable|string|max:255',
             'features' => 'nullable|array',
             'custom_fields' => 'nullable|array',
@@ -67,7 +103,9 @@ class ServiceController extends Controller
         }
 
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
-        $validated['has_variations'] = ($request->input('service_type') === 'variable') ? 1 : 0;
+        // Default service_type to 'simple' if not provided
+        $validated['service_type'] = $validated['service_type'] ?? 'simple';
+        $validated['has_variations'] = ($validated['service_type'] === 'variable') ? 1 : 0;
         $validated['custom_fields'] = $this->normalizeCustomFields($request->input('custom_fields', []));
 
         // Ensure description is not null (DB column may be NOT NULL)
@@ -99,7 +137,7 @@ class ServiceController extends Controller
         }
 
         // Sync attributes for variable services
-        if ($request->input('service_type') === 'variable' && $request->has('attributes')) {
+        if ($validated['service_type'] === 'variable' && $request->has('attributes')) {
             $service->attributes()->sync($request->input('attributes', []));
         }
 
@@ -130,7 +168,7 @@ class ServiceController extends Controller
             'meta_description' => 'nullable|string|max:160',
             'service_type' => 'required|in:simple,variable',
             'price' => 'required_if:service_type,simple|nullable|numeric|min:0',
-            'duration' => 'nullable|string|max:255',
+            'duration' => 'nullable|integer|min:0',
             'type' => 'nullable|string|max:255',
             'features' => 'nullable|array',
             'custom_fields' => 'nullable|array',
@@ -216,7 +254,7 @@ class ServiceController extends Controller
             $service->attributes()->sync([]);
         }
 
-        return redirect()->route('admin.services.index')
+        return redirect()->route('admin.services.edit', $service)
                          ->with('success', 'تم تحديث الخدمة بنجاح');
     }
 

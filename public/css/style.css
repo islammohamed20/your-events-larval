@@ -214,6 +214,18 @@ body::before {
     margin-top: 80px;
 }
 
+/* ============ Hero Sections ============ */
+.hero-contact {
+    background: var(--gradient-secondary);
+    color: #fff;
+}
+.hero-contact .display-4 {
+    color: #fff !important;
+}
+.hero-contact .lead {
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+
 .footer-logo {
     height: 50px;
     width: auto;
@@ -236,6 +248,35 @@ body::before {
 .hover-social-twitter:hover {
     color: #1DA1F2 !important;
     transform: scale(1.15);
+}
+
+/* ============ Phone Image Wrapper Tweaks ============ */
+/* تحريك بسيط لأسفل مع تصغير طفيف */
+.phone-image-wrapper {
+    display: inline-block;
+    transform: translateY(8px) scale(0.95);
+    transform-origin: center bottom;
+    transition: var(--transition-smooth);
+}
+
+.phone-image-wrapper img,
+.phone-image-wrapper .phone-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* استجابة للشاشات الأصغر: زيادة التحريك وتقليل الحجم قليلًا */
+@media (max-width: 992px) {
+    .phone-image-wrapper {
+        transform: translateY(12px) scale(0.92);
+    }
+}
+
+@media (max-width: 576px) {
+    .phone-image-wrapper {
+        transform: translateY(14px) scale(0.90);
+    }
 }
 
 .hover-social-instagram:hover {
@@ -1159,3 +1200,26 @@ body::before {
         text-align: center !important;
     }
 }
+/* ===== Modal header: center title and keep close button on right ===== */
+.modal-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* center contents; title will be centered */
+}
+
+.modal-title {
+  flex: 1 1 auto;
+  text-align: center; /* center title text */
+  margin: 0;
+}
+
+.modal-header .btn-close {
+  position: absolute; /* keep close button at top-right */
+  right: 1rem;
+  top: 1rem;
+  margin: 0;
+}
+
+/* Ensure backdrop doesn't block header interactions unexpectedly */
+.modal-backdrop.show { opacity: 0.5; }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -71,6 +71,164 @@
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
     
     <style>
+        /* Payment Icons */
+        .payment-icons { display:flex; align-items:center; justify-content:flex-start; gap:14px; }
+        .payment-icons i { font-size: 1.6rem; color: #ffffff; opacity: 0.9; }
+        .payment-logo { height: 26px; width:auto; filter: brightness(1.1) contrast(1.05); }
+        .payment-badge { display:inline-block; background: rgba(255,255,255,0.15); color:#fff; padding:4px 8px; border-radius:6px; font-size:0.85rem; border:1px solid rgba(255,255,255,0.25); }
+
+        /* Animated White Wave Background */
+        /* ========== ENHANCED ANIMATED WHITE BACKGROUND WITH WAVE ICONS ========== */
+        .animated-white-bg { 
+            position: relative; 
+            overflow: hidden; 
+            background: #ffffff;
+        }
+        
+        /* Base animated layer with wave effect */
+        .animated-white-bg::before {
+            content: '';
+            position: absolute;
+            left: -150%;
+            top: 0;
+            width: 300%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(30, 19, 73, 0.06), transparent 36%),
+                radial-gradient(circle at 80% 50%, rgba(239, 72, 112, 0.04), transparent 36%);
+            animation: waveShift 14s ease-in-out infinite;
+            opacity: 1;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* Secondary wave layer for dual-color effect */
+        .animated-white-bg::after {
+            content: '';
+            position: absolute;
+            right: -150%;
+            bottom: 0;
+            width: 300%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 25% 50%, rgba(239, 72, 112, 0.05), transparent 40%),
+                radial-gradient(circle at 75% 50%, rgba(30, 19, 73, 0.04), transparent 40%);
+            animation: waveShiftReverse 16s ease-in-out infinite;
+            opacity: 1;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* Advanced wave shift animation */
+        @keyframes waveShift {
+            0% { transform: translateX(0) scaleY(1); }
+            25% { transform: translateX(10%) scaleY(1.02); }
+            50% { transform: translateX(25%) scaleY(0.98); }
+            75% { transform: translateX(15%) scaleY(1.01); }
+            100% { transform: translateX(0) scaleY(1); }
+        }
+        
+        /* Reverse wave animation for dual effect */
+        @keyframes waveShiftReverse {
+            0% { transform: translateX(0) scaleX(1); }
+            25% { transform: translateX(-12%) scaleX(1.01); }
+            50% { transform: translateX(-25%) scaleX(0.99); }
+            75% { transform: translateX(-15%) scaleX(1.02); }
+            100% { transform: translateX(0) scaleX(1); }
+        }
+        
+        /* Floating animated icons in background */
+        .animated-white-bg .float-icon {
+            position: absolute;
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .animated-white-bg .float-icon:nth-child(1) {
+            top: 10%;
+            left: 8%;
+            font-size: 4rem;
+            animation: float 8s ease-in-out infinite;
+            color: #1e1349;
+        }
+        
+        .animated-white-bg .float-icon:nth-child(2) {
+            top: 60%;
+            right: 12%;
+            font-size: 3.5rem;
+            animation: float 9s ease-in-out infinite 1s;
+            color: #ef4870;
+        }
+        
+        .animated-white-bg .float-icon:nth-child(3) {
+            bottom: 15%;
+            left: 15%;
+            font-size: 4.5rem;
+            animation: float 7s ease-in-out infinite 2s;
+            color: #1e1349;
+        }
+        
+        .animated-white-bg .float-icon:nth-child(4) {
+            top: 35%;
+            right: 8%;
+            font-size: 3.8rem;
+            animation: float 10s ease-in-out infinite 1.5s;
+            color: #ef4870;
+        }
+        
+        .animated-white-bg .float-icon:nth-child(5) {
+            bottom: 20%;
+            right: 18%;
+            font-size: 3.2rem;
+            animation: float 8.5s ease-in-out infinite 0.5s;
+            color: #1e1349;
+        }
+        
+        /* Floating animation with color gradient */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.06;
+            }
+            25% {
+                transform: translateY(-25px) rotate(8deg);
+                opacity: 0.08;
+            }
+            50% {
+                transform: translateY(-40px) rotate(0deg);
+                opacity: 0.1;
+            }
+            75% {
+                transform: translateY(-20px) rotate(-8deg);
+                opacity: 0.08;
+            }
+        }
+        
+        /* Wave pulse effect for icons */
+        @keyframes wavePulse {
+            0%, 100% {
+                filter: drop-shadow(0 0 0px rgba(30, 19, 73, 0.1));
+            }
+            50% {
+                filter: drop-shadow(0 0 15px rgba(239, 72, 112, 0.2));
+            }
+        }
+        
+        .animated-white-bg .float-icon:hover {
+            animation-play-state: paused;
+            opacity: 0.15;
+        }
+        
+        /* Ensure content stays above animated background */
+        .animated-white-bg > * {
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* عرض أرقام الهاتف من اليسار لليمين حتى في صفحات RTL */
+        .phone-ltr { direction: ltr; unicode-bidi: bidi-override; text-align: left; }
+        .phone-ltr span { white-space: nowrap; }
         /* Page-specific inline styles - فقط ما يحتاجه هذا الملف خصيصاً */
         
         /* Hero Background Image للصفحة الرئيسية */
@@ -1895,6 +2053,10 @@
             }
         }
     </style>
+    <style>
+        /* منع تمرير الصفحة عند فتح الدروار */
+        body.no-scroll { overflow: hidden; }
+    </style>
     
     @yield('styles')
     @stack('styles')
@@ -1915,12 +2077,12 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">
-                            <i class="fas fa-home me-1"></i>الرئيسية
+                            {{ __('nav.home') }}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('services.*') ? 'active' : '' }}" href="{{ route('services.index') }}">
-                            <i class="fas fa-cogs me-1"></i>خدماتنا
+                            {{ __('nav.services') }}
                         </a>
                     </li>
                     @if(\App\Models\Package::count() > 0)
@@ -1939,7 +2101,7 @@
                     @endif
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ route('contact') }}">
-                            <i class="fas fa-envelope me-1"></i>اتصل بنا
+                            {{ __('nav.contact') }}
                         </a>
                     </li>
                     
@@ -1954,8 +2116,10 @@
                             @endphp
                             @foreach($categories as $category)
                             <a class="nav-category-link" href="{{ route('services.index', ['category' => $category->id]) }}">
-                                <i class="{{ $category->icon }} me-2"></i>
-                                {{ $category->name }}
+                                <span class="category-mobile-wrapper">
+                                    <span class="category-mobile-icon"><i class="{{ $category->icon }} me-2"></i></span>
+                                    <span class="category-mobile-name">{{ $category->name }}</span>
+                                </span>
                             </a>
                             @endforeach
                         </div>
@@ -1970,7 +2134,7 @@
                                 <input type="text" 
                                        name="q" 
                                        class="form-control search-input" 
-                                       placeholder="ابحث عن خدمة أو باقة..." 
+                                       placeholder="{{ __('nav.search_placeholder') }}" 
                                        autocomplete="off"
                                        id="searchInput">
                                 <button type="submit" class="search-button">
@@ -2022,7 +2186,7 @@
                                 </div>
                                 <span class="user-name">{{ Auth::user()->name }}</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end enhanced-dropdown">
+                            <ul class="dropdown-menu dropdown-menu-end enhanced-dropdown animated-white-bg">
                                 <li><a class="dropdown-item" href="{{ route('profile.show') }}">
                                     <i class="fas fa-user-circle me-2"></i>الملف الشخصي
                                 </a></li>
@@ -2035,7 +2199,7 @@
                                 @if(Auth::user()->is_admin)
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">
-                                        <i class="fas fa-tachometer-alt me-2"></i>لوحة التحكم
+                                        <i class="fas fa-tachometer-alt me-2"></i>{{ __('common.dashboard') }}
                                     </a></li>
                                 @endif
                                 <li><hr class="dropdown-divider"></li>
@@ -2055,16 +2219,23 @@
                                 <i class="fas fa-sign-in-alt me-1"></i>تسجيل الدخول
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link register-link" href="{{ route('register') }}">
-                                <i class="fas fa-user-plus me-1"></i>إنشاء حساب
-                            </a>
-                        </li>
+                        
                     @endauth
+                    <!-- Language Switcher -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            @php $locale = app()->getLocale(); @endphp
+                            <i class="fas fa-language me-1"></i>{{ $locale === 'ar' ? __('nav.arabic') : __('nav.english') }}
+                        </a>
+                        <ul class="dropdown-menu animated-white-bg">
+                            <li><a class="dropdown-item" href="{{ route('lang.switch', ['locale' => 'ar']) }}">{{ __('nav.arabic') }}</a></li>
+                            <li><a class="dropdown-item" href="{{ route('lang.switch', ['locale' => 'en']) }}">{{ __('nav.english') }}</a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item">
-                        <a class="btn btn-gold ms-2 cta-button" href="{{ route('booking.create') }}">
+                        <a class="btn btn-gold ms-2 cta-button" href="{{ route('services.index') }}">
                             <span class="btn-text">
-                                <i class="fas fa-calendar-plus me-1"></i>احجز الآن
+                                <i class="fas fa-calendar-plus me-1"></i>{{ __('buttons.establish_event') }}
                             </span>
                             <div class="btn-glow"></div>
                         </a>
@@ -2146,53 +2317,58 @@
                     </div>
                 </div>
                 
-                <div class="col-lg-2 col-md-6 mb-4">
-                    <h6 class="mb-3 text-white">روابط سريعة</h6>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><a href="{{ route('home') }}" class="text-white text-decoration-none">الرئيسية</a></li>
-                        <li class="mb-2"><a href="{{ route('services.index') }}" class="text-white text-decoration-none">خدماتنا</a></li>
-                        <li class="mb-2"><a href="{{ route('packages.index') }}" class="text-white text-decoration-none">الباقات</a></li>
-                        <li class="mb-2"><a href="{{ route('gallery.index') }}" class="text-white text-decoration-none">المعرض</a></li>
-                        <li class="mb-2"><a href="{{ route('contact') }}" class="text-white text-decoration-none">اتصل بنا</a></li>
-                        <li class="mb-2">
-                            <a href="{{ route('terms') }}" class="text-white text-decoration-none">
-                                <i class="fas fa-file-contract me-1"></i>الشروط والأحكام
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <h6 class="mb-3 text-white">معلومات التواصل</h6>
-                    <ul class="list-unstyled">
-                        <li class="mb-2">
-                            <i class="fas fa-phone text-primary me-2"></i>
-                            <a href="tel:{{ \App\Models\Setting::get('contact_phone') }}" class="text-white text-decoration-none">
-                                {{ \App\Models\Setting::get('contact_phone') }}
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <i class="fas fa-envelope text-primary me-2"></i>
-                            <a href="mailto:{{ \App\Models\Setting::get('contact_email') }}" class="text-white text-decoration-none">
-                                {{ \App\Models\Setting::get('contact_email') }}
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <i class="fas fa-map-marker-alt text-primary me-2"></i>
-                            <span class="text-white">{{ \App\Models\Setting::get('contact_address', 'الرياض، المملكة العربية السعودية') }}</span>
-                        </li>
-                        <li class="mb-2">
-                            <i class="fas fa-clock text-primary me-2"></i>
-                            <span class="text-white">{{ \App\Models\Setting::get('working_hours', 'السبت - الخميس: 9:00 ص - 6:00 م') }}</span>
-                        </li>
-                    </ul>
+                <!-- روابط سريعة + معلومات التواصل جنبًا إلى جنب بشكل احترافي -->
+                <div class="col-lg-5 col-md-12 mb-4">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h6 class="mb-3 text-white">{{ __('common.quick_links') }}</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><a href="{{ route('home') }}" class="text-white text-decoration-none">{{ __('common.quick_links_home') }}</a></li>
+                                <li class="mb-2"><a href="{{ route('services.index') }}" class="text-white text-decoration-none">{{ __('common.quick_links_services') }}</a></li>
+                                <li class="mb-2"><a href="{{ route('packages.index') }}" class="text-white text-decoration-none">{{ __('common.quick_links_packages') }}</a></li>
+                                <li class="mb-2"><a href="{{ route('gallery.index') }}" class="text-white text-decoration-none">{{ __('common.quick_links_gallery') }}</a></li>
+                                <li class="mb-2"><a href="{{ route('contact') }}" class="text-white text-decoration-none">{{ __('common.quick_links_contact') }}</a></li>
+                                <li class="mb-2"><a href="{{ route('suppliers.register') }}" class="text-white text-decoration-none">سجل كمورد</a></li>
+                                <li class="mb-2">
+                                    <a href="{{ route('terms') }}" class="text-white text-decoration-none">
+                                        <i class="fas fa-file-contract me-1"></i>{{ __('common.quick_links_terms') }}
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="mb-3 text-white">{{ __('common.contact_info') }}</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2 d-flex align-items-center">
+                                    <i class="fas fa-phone text-primary me-2"></i>
+                                    <a href="tel:{{ preg_replace('/\s+/', '', \App\Models\Setting::get('contact_phone')) }}" class="text-white text-decoration-none phone-ltr" dir="ltr">
+                                        <span>{{ \App\Models\Setting::get('contact_phone') }}</span>
+                                    </a>
+                                </li>
+                                <li class="mb-2 d-flex align-items-center">
+                                    <i class="fas fa-envelope text-primary me-2"></i>
+                                    <a href="mailto:{{ \App\Models\Setting::get('contact_email') }}" class="text-white text-decoration-none">
+                                        {{ \App\Models\Setting::get('contact_email') }}
+                                    </a>
+                                </li>
+                                <li class="mb-2 d-flex align-items-start">
+                                    <i class="fas fa-map-marker-alt text-primary me-2 mt-1"></i>
+                                    <span class="text-white">{{ \App\Models\Setting::get('contact_address', 'الرياض، المملكة العربية السعودية') }}</span>
+                                </li>
+                                <!-- <li class="mb-2 d-flex align-items-center">
+                                    <i class="fas fa-clock text-primary me-2"></i>
+                                    <span class="text-white">{{ \App\Models\Setting::get('working_hours', 'السبت - الخميس: 9:00 ص - 6:00 م') }}</span>
+                                </li> -->
+                            </ul>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="col-lg-3 mb-4">
-                    <h6 class="mb-3 text-white">اشترك في النشرة الإخبارية</h6>
-                    <p class="text-white mb-3">احصل على آخر الأخبار والعروض الخاصة</p>
+                    <h6 class="mb-3 text-white">{{ __('common.newsletter') }}</h6>
+                    <p class="text-white mb-3">{{ __('common.newsletter_desc') }}</p>
                     <form class="d-flex">
-                        <input type="email" class="form-control me-2" placeholder="بريدك الإلكتروني">
+                        <input type="email" class="form-control me-2" placeholder="{{ __('common.email_placeholder') }}">
                         <button class="btn btn-primary" type="submit">
                             <i class="fas fa-paper-plane"></i>
                         </button>
@@ -2203,17 +2379,42 @@
             <hr class="my-4" style="border-color: var(--border-color);">
             
             <div class="row align-items-center">
-                <div class="col-md-6">
+                <div class="col-md-6 order-md-2 text-md-start">
                     <p class="text-white mb-0">
-                        &copy; {{ date('Y') }} Masar Digital Group. جميع الحقوق محفوظة.
+                        &copy; {{ date('Y') }} Your Events. {{ __('common.all_rights_reserved') }}.
                     </p>
                 </div>
-                <div class="col-md-6 text-md-end">
-                    <a href="{{ route('terms') }}" class="text-white text-decoration-none me-3 footer-link">
-                        <i class="fas fa-file-contract me-1"></i>الشروط والأحكام
-                    </a>
-                    <a href="#" class="text-white text-decoration-none me-3 footer-link">سياسة الخصوصية</a>
-                    <a href="#" class="text-white text-decoration-none footer-link">شروط الاستخدام</a>
+                <div class="col-md-6 order-md-1 text-md-end">
+                    <!-- Payment Icons Left (on RTL this appears left) -->
+                    <div class="payment-icons mb-3 text-end">
+                        <i class="fab fa-cc-visa" aria-label="Visa"></i>
+                        <i class="fab fa-cc-mastercard" aria-label="Mastercard"></i>
+                        <i class="fab fa-apple-pay" aria-label="Apple Pay"></i>
+                        @php
+                            $madaLogo = public_path('images/payments/mada.png');
+                            $stcPayLogo = public_path('images/payments/stc-pay.png');
+                        @endphp
+                        @if (file_exists($madaLogo))
+                            <img src="{{ asset('images/payments/mada.png') }}" alt="Mada" class="payment-logo">
+                        @else
+                            <span class="payment-badge">Mada</span>
+                        @endif
+                        @if (file_exists($stcPayLogo))
+                            <img src="{{ asset('images/payments/stc-pay.png') }}" alt="STC Pay" class="payment-logo">
+                        @else
+                            <span class="payment-badge">STC Pay</span>
+                        @endif
+                    </div>
+                    <!-- Links on same level -->
+                    <div class="footer-links text-end">
+                        <a href="{{ route('terms') }}" class="text-white text-decoration-none me-3 footer-link">
+                            الشروط و الأحكام
+                        </a>
+                        <span class="text-white mx-1">-</span>
+                        <a href="{{ route('privacy') }}" class="text-white text-decoration-none footer-link" target="_blank">
+                            سياسة الخصوصية
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2224,15 +2425,15 @@
         <div class="mobile-nav-items">
             <a href="{{ route('home') }}" class="mobile-nav-item {{ request()->routeIs('home') ? 'active' : '' }}">
                 <i class="fas fa-home"></i>
-                <span>الرئيسية</span>
+                <span>{{ __('nav.home') }}</span>
             </a>
             <a href="{{ route('services.index') }}" class="mobile-nav-item {{ request()->routeIs('services.*') ? 'active' : '' }}">
-                <i class="fas fa-cogs"></i>
-                <span>الخدمات</span>
+                <i class="fas fa-concierge-bell"></i>
+                <span>{{ __('nav.services') }}</span>
             </a>
             <a href="{{ route('cart.index') }}" class="mobile-nav-item {{ request()->routeIs('cart.*') ? 'active' : '' }}">
                 <i class="fas fa-shopping-cart"></i>
-                <span>السلة</span>
+                <span>{{ __('common.cart') }}</span>
                 @php
                     $cartCountMobile = \App\Models\CartItem::getCartCount();
                 @endphp
@@ -2242,7 +2443,7 @@
             </a>
             <a href="#" class="mobile-nav-item" onclick="toggleDrawer(); return false;">
                 <i class="fas fa-bars"></i>
-                <span>القائمة</span>
+                <span>{{ __('common.menu') }}</span>
             </a>
         </div>
     </div>
@@ -2251,7 +2452,7 @@
     <div class="drawer-overlay d-lg-none" id="drawerOverlay" onclick="toggleDrawer()"></div>
     
     <!-- Site Drawer (Mobile Menu) -->
-    <div class="site-drawer color-layout-white d-lg-none" id="siteDrawer">
+    <div class="site-drawer color-layout-white animated-white-bg d-lg-none" id="siteDrawer">
         <div class="drawer-header">
             <img src="{{ asset('images/logo/logo.png') }}" alt="Your Events" height="20">
             <button class="drawer-close" onclick="toggleDrawer()">
@@ -2279,12 +2480,12 @@
             <ul class="navbar-nav">
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">
-                        <i class="fas fa-home"></i>الرئيسية
+                        {{ __('nav.home') }}
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('services.*') ? 'active' : '' }}" href="{{ route('services.index') }}">
-                        <i class="fas fa-cogs"></i>خدماتنا
+                        {{ __('nav.services') }}
                     </a>
                 </li>
                 @if(\App\Models\Package::count() > 0)
@@ -2303,10 +2504,19 @@
                 @endif
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ route('contact') }}">
-                        <i class="fas fa-envelope"></i>اتصل بنا
+                        {{ __('nav.contact') }}
                     </a>
                 </li>
             </ul>
+
+            <!-- Language Switcher (Mobile) -->
+            <div class="drawer-section mt-3">
+                <h6 class="drawer-section-title"><i class="fas fa-language me-2"></i>{{ __('common.language') }}</h6>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('lang.switch', ['locale' => 'ar']) }}" class="btn btn-outline-primary flex-fill">العربية</a>
+                    <a href="{{ route('lang.switch', ['locale' => 'en']) }}" class="btn btn-outline-primary flex-fill">English</a>
+                </div>
+            </div>
             
             <!-- Categories Section -->
             @php
@@ -2315,13 +2525,15 @@
             @if($categories->count() > 0)
             <div class="drawer-section">
                 <h6 class="drawer-section-title">
-                    <i class="fas fa-folder me-2"></i>تصفح الأقسام
+                    <i class="fas fa-folder me-2"></i>{{ __('common.browse_categories') }}
                 </h6>
                 <div class="categories-grid">
                     @foreach($categories as $category)
                     <a href="{{ route('services.index', ['category' => $category->id]) }}" class="category-card">
-                        <i class="{{ $category->icon }}"></i>
-                        <span>{{ $category->name }}</span>
+                        <div class="category-mobile-wrapper">
+                            <div class="category-mobile-icon"><i class="{{ $category->icon }}"></i></div>
+                            <span class="category-mobile-name">{{ $category->name }}</span>
+                        </div>
                     </a>
                     @endforeach
                 </div>
@@ -2337,23 +2549,23 @@
                 @auth
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('profile.show') }}">
-                            <i class="fas fa-user-circle"></i>الملف الشخصي
+                            <i class="fas fa-user-circle"></i>{{ __('common.profile') }}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('booking.my-bookings') }}">
-                            <i class="fas fa-calendar-check"></i>حجوزاتي
+                            <i class="fas fa-calendar-check"></i>{{ __('common.my_bookings') }}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('quotes.index') }}">
-                            <i class="fas fa-file-invoice-dollar"></i>عروض الأسعار
+                            <i class="fas fa-file-invoice-dollar"></i>{{ __('common.quotes') }}
                         </a>
                     </li>
                     @if(Auth::user()->is_admin)
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('admin.dashboard') }}">
-                                <i class="fas fa-tachometer-alt"></i>لوحة التحكم
+                                <i class="fas fa-tachometer-alt"></i>{{ __('common.dashboard') }}
                             </a>
                         </li>
                     @endif
@@ -2361,26 +2573,21 @@
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="nav-link btn w-100 text-start border-0">
-                                <i class="fas fa-sign-out-alt"></i>تسجيل الخروج
+                                <i class="fas fa-sign-out-alt"></i>{{ __('common.logout') }}
                             </button>
                         </form>
                     </li>
                 @else
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('login') }}">
-                            <i class="fas fa-sign-in-alt"></i>تسجيل الدخول
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('register') }}">
-                            <i class="fas fa-user-plus"></i>إنشاء حساب
+                            <i class="fas fa-sign-in-alt"></i>{{ __('common.login') }}
                         </a>
                     </li>
                 @endauth
                 
                 <li class="nav-item mt-3">
                     <a href="{{ route('booking.create') }}" class="btn btn-primary w-100" style="border-radius: 12px;">
-                        <i class="fas fa-calendar-plus me-2"></i>احجز الآن
+                        <i class="fas fa-calendar-plus me-2"></i>{{ __('common.start_event') }}
                     </a>
                 </li>
             </ul>
@@ -2756,6 +2963,158 @@
                     }
                 });
             }
+        });
+    </script>
+    
+    <!-- Drawer Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const drawer = document.getElementById('siteDrawer');
+            const overlay = document.getElementById('drawerOverlay');
+            const navbar = document.querySelector('.navbar');
+
+            // إضافة/إزالة خلفية الهيدر عند التمرير
+            function updateNavbarOnScroll() {
+                if (!navbar) return;
+                if (window.scrollY > 10) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            }
+            updateNavbarOnScroll();
+            window.addEventListener('scroll', updateNavbarOnScroll);
+
+            // توفير الدالة للاستخدام من الزر
+            window.toggleDrawer = function(forceState = null) {
+                if (!drawer || !overlay) return;
+                const isOpen = drawer.classList.contains('show');
+                const shouldOpen = forceState === null ? !isOpen : !!forceState;
+
+                if (shouldOpen) {
+                    drawer.classList.add('show');
+                    overlay.classList.add('show');
+                    document.body.classList.add('no-scroll');
+                } else {
+                    drawer.classList.remove('show');
+                    overlay.classList.remove('show');
+                    document.body.classList.remove('no-scroll');
+                }
+            };
+
+            // إغلاق عند الضغط خارج القائمة أو زر ESC
+            if (overlay) {
+                overlay.addEventListener('click', function() { window.toggleDrawer(false); });
+            }
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') { window.toggleDrawer(false); }
+            });
+
+            // إغلاق عند تغيير الحجم إلى الديسكتوب
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 991) {
+                    window.toggleDrawer(false);
+                }
+            });
+
+            // إغلاق عند الضغط على روابط النافبار داخل الدروار
+            if (drawer) {
+                const navLinks = drawer.querySelectorAll('.nav-link');
+                navLinks.forEach(function(link) {
+                    link.addEventListener('click', function() { window.toggleDrawer(false); });
+                });
+            }
+        });
+    </script>
+
+    <!-- Bootstrap Bundle JS (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Universal Modal Close Fallback: ensures the × button closes media overlays -->
+    <script>
+        // Close modal when clicking on backdrop or outside the dialog
+        document.addEventListener('click', function(e) {
+            const openBackdrop = document.querySelector('.modal-backdrop');
+            const openModal = document.querySelector('.modal.show');
+            if (!openModal) return;
+
+            const dialog = openModal.querySelector('.modal-dialog, .modal-content');
+            const clickedInsideDialog = dialog && (dialog === e.target || dialog.contains(e.target));
+
+            // If backdrop is clicked OR any area outside the dialog is clicked
+            const backdropClicked = openBackdrop && (openBackdrop === e.target || openBackdrop.contains(e.target));
+            if (!clickedInsideDialog || backdropClicked) {
+                try {
+                    if (window.bootstrap && bootstrap.Modal) {
+                        const instance = bootstrap.Modal.getOrCreateInstance(openModal);
+                        instance.hide();
+                    } else {
+                        openModal.classList.remove('show');
+                        openModal.style.display = 'none';
+                        openModal.setAttribute('aria-hidden', 'true');
+                    }
+                } finally {
+                    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('padding-right');
+                }
+            }
+        }, true);
+
+        document.addEventListener('click', function(e) {
+            const closeTrigger = e.target.closest('.btn-close, [data-bs-dismiss="modal"], [data-dismiss="modal"]');
+            if (!closeTrigger) return;
+
+            const modalEl = closeTrigger.closest('.modal');
+            if (!modalEl) {
+                // If no modal container found, still remove any backdrops in case of stuck overlay
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                document.body.classList.remove('modal-open');
+                return;
+            }
+
+            try {
+                if (window.bootstrap && bootstrap.Modal) {
+                    const instance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    instance.hide();
+                } else {
+                    // Fallback if Bootstrap JS isn't available for any reason
+                    modalEl.classList.remove('show');
+                    modalEl.style.display = 'none';
+                    modalEl.setAttribute('aria-hidden', 'true');
+                    document.body.classList.remove('modal-open');
+                    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                }
+            } catch (err) {
+                // Hard fallback
+                modalEl.classList.remove('show');
+                modalEl.style.display = 'none';
+                modalEl.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('modal-open');
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            }
+        });
+
+        // ESC key closes visible modals as a safety net
+        document.addEventListener('keydown', function(e) {
+            if (e.key !== 'Escape') return;
+            const openModals = document.querySelectorAll('.modal.show');
+            openModals.forEach(modalEl => {
+                try {
+                    if (window.bootstrap && bootstrap.Modal) {
+                        const instance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                        instance.hide();
+                    } else {
+                        modalEl.classList.remove('show');
+                        modalEl.style.display = 'none';
+                    }
+                } catch (_) {
+                    modalEl.classList.remove('show');
+                    modalEl.style.display = 'none';
+                }
+            });
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
         });
     </script>
 </body>

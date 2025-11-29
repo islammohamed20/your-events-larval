@@ -6,6 +6,8 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\Models\Visit;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 
 class TrackVisit
 {
@@ -42,8 +44,34 @@ class TrackVisit
             return null;
         }
 
-        // Placeholder: If you add a GeoIP provider later, plug it here.
-        // For now, return null to avoid incorrect data.
+        // Cache per IP to avoid repeated external lookups (24h)
+        $cacheKey = 'geoip_country_' . $ip;
+        $cached = Cache::get($cacheKey);
+        if (is_string($cached)) {
+            return $cached;
+        }
+
+        // Try a fast, free GeoIP endpoint with tight timeout; ignore failures
+        try {
+            // ip-api.com: http://ip-api.com/json/{ip}?fields=country
+            $resp = Http::timeout(1)
+                ->retry(1, 200)
+                ->get('http://ip-api.com/json/' . $ip, [
+                    'fields' => 'country',
+                ]);
+
+            if ($resp->ok()) {
+                $country = (string) ($resp->json('country') ?? '');
+                $country = trim($country);
+                if ($country !== '') {
+                    Cache::put($cacheKey, $country, now()->addDay());
+                    return $country;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Swallow errors; we don't want tracking to affect UX
+        }
+
         return null;
     }
 }

@@ -121,8 +121,9 @@ class QuoteController extends Controller
      */
     public function downloadPdf(Quote $quote)
     {
-        // Ensure user can only download their own quotes
-        if ($quote->user_id !== Auth::id()) {
+        // Ensure user can only download their own quotes (or admin can download any)
+        $user = Auth::user();
+        if ($quote->user_id !== $user->id && !$user->is_admin) {
             abort(403, 'غير مصرح لك بتحميل هذا العرض');
         }
 
@@ -145,6 +146,18 @@ class QuoteController extends Controller
             'autoLangToFont' => true,
             'autoArabic' => true,
         ]);
+
+        // Set letter head PNG as full page background
+        $letterHeadPath = public_path('storage/extra/letter head.png');
+        if (file_exists($letterHeadPath)) {
+            $mpdf->SetWatermarkImage(
+                $letterHeadPath,
+                1,        // Opacity (1 = full opacity)
+                [210, 297],  // Size in mm (A4 full size)
+                [0, 0]    // Position
+            );
+            $mpdf->showWatermarkImage = true;
+        }
 
         // Write HTML to PDF
         $mpdf->WriteHTML($html);
@@ -245,7 +258,7 @@ class QuoteController extends Controller
             'payment_method' => $validated['payment_method'],
             'payment_status' => 'pending', // In real app, this would be 'paid' after payment gateway
             'status' => 'confirmed',
-            'booking_reference' => 'BK-' . strtoupper(uniqid()),
+            'booking_reference' => 'BOOK-YE-' . str_pad(Booking::count() + 1, 6, '0', STR_PAD_LEFT),
         ]);
 
         // Update payment notes with card info if card payment

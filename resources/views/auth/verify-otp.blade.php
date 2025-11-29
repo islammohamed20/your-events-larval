@@ -35,7 +35,7 @@
                     <!-- Info Box -->
                     <div class="alert alert-info border-0" style="border-right: 4px solid #667eea !important;">
                         <i class="fas fa-info-circle"></i>
-                        تم إرسال كود التحقق المكون من 6 أرقام إلى:
+                        ولا عليك أمر، ادخل الكود المؤقت اللي أرسلناه لإيميلك:
                         <br>
                         <strong class="text-primary">{{ $email }}</strong>
                     </div>

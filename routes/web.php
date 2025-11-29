@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\PackageController as AdminPackageController;
+use Illuminate\Support\Facades\Cookie;
 use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
 use App\Http\Controllers\Admin\GalleryController as AdminGalleryController;
@@ -24,9 +25,37 @@ use Illuminate\Support\Facades\Route;
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// Language Switch Route  
+Route::get('/lang/{locale}', function ($locale) {
+    $supported = ['ar', 'en'];
+    if (!in_array($locale, $supported)) {
+        return redirect()->back();
+    }
+    
+    // إعادة التوجيه مع حفظ اللغة في cookie
+    $response = redirect()->back();
+    return $response->withCookie(Cookie::make(
+        'app_locale',
+        $locale,
+        60 * 24 * 365, // سنة واحدة
+        '/',
+        null,
+        true,
+        false // بدون تشفير
+    ));
+})->name('lang.switch');
+
 // Search Routes
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::get('/search/autocomplete', [SearchController::class, 'autocomplete'])->name('search.autocomplete');
+
+// Supplier Registration Routes
+use App\Http\Controllers\SupplierController;
+Route::get('/suppliers/register', [SupplierController::class, 'create'])->name('suppliers.register');
+Route::post('/suppliers/register', [SupplierController::class, 'store'])->name('suppliers.store');
+Route::get('/suppliers/verify-otp', [SupplierController::class, 'showVerifyOtp'])->name('suppliers.verify-otp');
+Route::post('/suppliers/verify-otp', [SupplierController::class, 'verifyOtp'])->name('suppliers.verify-otp.post');
+Route::get('/suppliers/success', [SupplierController::class, 'success'])->name('suppliers.success');
 
 // Services Routes
 Route::get('/services', [ServicesController::class, 'index'])->name('services.index');
@@ -67,6 +96,11 @@ Route::get('/contact', function () {
 Route::get('/terms-and-conditions', function () {
     return view('terms');
 })->name('terms');
+
+// Privacy Policy Route
+Route::get('/privacy', function () {
+    return view('privacy');
+})->name('privacy');
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -224,6 +258,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // OTP Management Routes
     Route::get('otp', [\App\Http\Controllers\Admin\OtpManagementController::class, 'index'])->name('otp.index');
     Route::get('otp/{id}', [\App\Http\Controllers\Admin\OtpManagementController::class, 'show'])->name('otp.show');
+
+    // Reports Management
+    Route::get('reports', [\App\Http\Controllers\Admin\ReportsController::class, 'index'])->name('reports.index');
+    Route::get('reports/export', [\App\Http\Controllers\Admin\ReportsController::class, 'export'])->name('reports.export');
+    Route::get('reports/security', [\App\Http\Controllers\Admin\ReportsController::class, 'security'])->name('reports.security');
+    Route::get('reports/security/export', [\App\Http\Controllers\Admin\ReportsController::class, 'exportSecurity'])->name('reports.security.export');
     Route::post('otp/clean-expired', [\App\Http\Controllers\Admin\OtpManagementController::class, 'cleanExpired'])->name('otp.clean-expired');
     Route::post('otp/delete-old', [\App\Http\Controllers\Admin\OtpManagementController::class, 'deleteOld'])->name('otp.delete-old');
     Route::delete('otp/{id}', [\App\Http\Controllers\Admin\OtpManagementController::class, 'destroy'])->name('otp.destroy');
@@ -234,7 +274,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('services/{service}/variations', [AdminServiceVariationController::class, 'index'])->name('services.variations.index');
     Route::post('services/{service}/variations', [AdminServiceVariationController::class, 'store'])->name('services.variations.store');
     Route::post('services/{service}/variations/generate', [AdminServiceVariationController::class, 'generate'])->name('services.variations.generate');
-    Route::get('services/{service}/variations/{variation}/edit', [AdminServiceVariationController::class, 'edit'])->name('services.variations.edit');
+    Route::get('services/{service}/variations/{variation}', [AdminServiceVariationController::class, 'edit'])->name('services.variations.edit');
     Route::put('services/{service}/variations/{variation}', [AdminServiceVariationController::class, 'update'])->name('services.variations.update');
     Route::delete('services/{service}/variations/{variation}', [AdminServiceVariationController::class, 'destroy'])->name('services.variations.destroy');
     
@@ -250,6 +290,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::patch('quotes/{quote}/status', [\App\Http\Controllers\Admin\QuoteController::class, 'updateStatus'])->name('quotes.update-status');
     Route::post('quotes/{quote}/send-email', [\App\Http\Controllers\Admin\QuoteController::class, 'sendEmail'])->name('quotes.send-email');
     Route::delete('quotes/{quote}', [\App\Http\Controllers\Admin\QuoteController::class, 'destroy'])->name('quotes.destroy');
+
+    // Login Activities
+    Route::get('login-activities', [\App\Http\Controllers\Admin\LoginActivityController::class, 'index'])->name('login-activities.index');
     
     // Gallery Management
     Route::get('gallery', [AdminGalleryController::class, 'index'])->name('gallery.index');
@@ -282,4 +325,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('customers/{customer}/export', [CustomerManagementController::class, 'exportCustomerDetail'])->name('customers.export-detail');
     Route::get('customers/search', [CustomerManagementController::class, 'search'])->name('customers.search');
     Route::get('customers/analytics', [CustomerManagementController::class, 'analytics'])->name('customers.analytics');
+    
+    // Suppliers Management
+    Route::get('suppliers', [\App\Http\Controllers\Admin\SupplierController::class, 'index'])->name('suppliers.index');
+    Route::get('suppliers/{supplier}', [\App\Http\Controllers\Admin\SupplierController::class, 'show'])->name('suppliers.show');
+    Route::post('suppliers/{supplier}/approve', [\App\Http\Controllers\Admin\SupplierController::class, 'approve'])->name('suppliers.approve');
+    Route::post('suppliers/{supplier}/reject', [\App\Http\Controllers\Admin\SupplierController::class, 'reject'])->name('suppliers.reject');
+    Route::post('suppliers/{supplier}/suspend', [\App\Http\Controllers\Admin\SupplierController::class, 'suspend'])->name('suppliers.suspend');
+    Route::post('suppliers/{supplier}/activate', [\App\Http\Controllers\Admin\SupplierController::class, 'activate'])->name('suppliers.activate');
+    Route::delete('suppliers/{supplier}', [\App\Http\Controllers\Admin\SupplierController::class, 'destroy'])->name('suppliers.destroy');
+    Route::get('suppliers/{supplier}/download/{type}', [\App\Http\Controllers\Admin\SupplierController::class, 'downloadDocument'])->name('suppliers.download');
 });

@@ -380,6 +380,9 @@
     </div>
 </div>
 
+@php $logs = $quote->activityLogs()->latest()->limit(25)->get(); @endphp
+@include('admin.partials.activity-logs', ['logs' => $logs, 'title' => 'سجل نشاط عرض السعر'])
+
 <style>
 .timeline {
     list-style: none;

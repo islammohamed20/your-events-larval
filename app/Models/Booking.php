@@ -15,6 +15,7 @@ class Booking extends Model
         'quote_id',
         'package_id',
         'service_id',
+        'activity_name',
         'client_name',
         'client_email',
         'client_phone',
@@ -44,6 +45,26 @@ class Booking extends Model
         
         static::creating(function ($booking) {
             $booking->booking_reference = 'YE-' . strtoupper(Str::random(16));
+        });
+
+        // Logging events
+        static::created(function ($booking) {
+            \App\Models\ActivityLog::record($booking, 'created', 'تم إنشاء حجز جديد', [
+                'status' => $booking->status,
+                'total_amount' => $booking->total_amount,
+                'booking_reference' => $booking->booking_reference,
+            ]);
+        });
+
+        static::updated(function ($booking) {
+            $changes = $booking->getChanges();
+            // Avoid logging only timestamps updates with no meaningful changes
+            unset($changes['updated_at']);
+            if (!empty($changes)) {
+                \App\Models\ActivityLog::record($booking, 'updated', 'تم تعديل الحجز', [
+                    'changes' => $changes,
+                ]);
+            }
         });
     }
 
@@ -77,6 +98,14 @@ class Booking extends Model
     public function service()
     {
         return $this->belongsTo(Service::class);
+    }
+
+    /**
+     * Activity logs relation
+     */
+    public function activityLogs()
+    {
+        return $this->morphMany(\App\Models\ActivityLog::class, 'subject')->latest();
     }
 
     /**

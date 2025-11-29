@@ -305,9 +305,9 @@
                                     </button>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <button type="button" class="btn btn-secondary w-100" onclick="viewActivityLog()">
+                                    <a href="{{ route('admin.customers.show', $customer->id) }}#activity-log" class="btn btn-secondary w-100">
                                         <i class="fas fa-history"></i> سجل الأنشطة
-                                    </button>
+                                    </a>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <button type="button" class="btn btn-danger w-100" onclick="confirmDelete()">
@@ -372,9 +372,7 @@ function sendWelcomeEmail() {
     }
 }
 
-function viewActivityLog() {
-    alert('سيتم عرض سجل أنشطة العميل قريباً');
-}
+// تم ربط زر "سجل الأنشطة" مباشرةً بقسم activity-log في صفحة العرض
 
 function confirmDelete() {
     if (confirm('تحذير: هل أنت متأكد من حذف هذا الحساب؟ لا يمكن التراجع عن هذا الإجراء!')) {

@@ -52,7 +52,8 @@ class CartController extends Controller
             if (!$variation) {
                 return response()->json(['success' => false, 'message' => 'التركيبة المختارة غير متاحة.'], 422);
             }
-            $itemPrice = (float) $variation->price;
+            // استخدم السعر الفعّال للتنويعة (sale_price إن وجد وإلا السعر العادي)
+            $itemPrice = (float) ($variation->active_price ?? $variation->price);
             // Ensure selections include variation_id so identical items merge correctly
             if (!is_array($selections)) { $selections = []; }
             $selections['_variation_id'] = (string)$variationId;

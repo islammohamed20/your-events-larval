@@ -133,6 +133,16 @@
             <h5 class="mb-0">
                 <i class="fas fa-cogs me-2"></i>قائمة الخدمات ({{ $services->count() }})
             </h5>
+            <form method="GET" action="{{ route('admin.services.index') }}" class="d-flex align-items-center gap-2" id="servicesSearchForm">
+                <div class="input-group" style="min-width: 280px;">
+                    <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                    <input type="text" name="q" value="{{ request('q', $search ?? '') }}" class="form-control" placeholder="ابحث في اسم، وصف، نوع، فئة، السعر...">
+                </div>
+                <button type="submit" class="btn btn-light">بحث</button>
+                @if(($search ?? '') !== '')
+                    <a href="{{ route('admin.services.index') }}" class="btn btn-outline-secondary">مسح البحث</a>
+                @endif
+            </form>
             @if($services->count() > 0)
                 <form id="bulkDeleteToolbar" method="POST" action="{{ route('admin.services.bulk-delete') }}" onsubmit="return confirm('هل أنت متأكد من حذف الخدمات المحددة؟')">
                     @csrf
@@ -254,6 +264,16 @@
                     </tbody>
                     </table>
                 </form>
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="text-muted">
+                        @if(($search ?? '') !== '')
+                            النتائج لبحث: "{{ $search }}"
+                        @endif
+                    </div>
+                    <div>
+                        {{ $services->links() }}
+                    </div>
+                </div>
             </div>
         @else
             <div class="text-center py-5">

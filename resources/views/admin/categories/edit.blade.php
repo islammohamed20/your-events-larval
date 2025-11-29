@@ -85,6 +85,34 @@
                             </div>
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">أيقونة PNG</label>
+                                @if($category->icon_png)
+                                    <div class="mb-2 position-relative d-inline-block">
+                                        <img src="{{ Storage::url($category->icon_png) }}" alt="PNG Icon" class="img-thumbnail" style="max-width: 64px;">
+                                        <button type="button" 
+                                                class="btn btn-danger btn-sm position-absolute top-0 end-0" 
+                                                onclick="deletePngIcon()"
+                                                style="margin: 5px;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                        <p class="text-muted small mt-2">الأيقونة الحالية</p>
+                                    </div>
+                                    <input type="hidden" name="delete_icon_png" id="delete_icon_png" value="0">
+                                @endif
+                                <input type="file" 
+                                       class="form-control @error('icon_png') is-invalid @enderror" 
+                                       id="icon_png" 
+                                       name="icon_png"
+                                       accept="image/png">
+                                <small class="text-muted">يُقبل فقط PNG. يُفضّل 64×64 أو 128×128</small>
+                                @error('icon_png')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
                         <div class="mb-3">
                             <label for="image" class="form-label">صورة الفئة</label>
                             @if($category->image)
@@ -234,6 +262,19 @@ function deleteImage() {
             <button type="button" class="btn-close" onclick="cancelDeleteImage(this)"></button>
         `;
         label.insertAdjacentElement('afterend', confirmMsg);
+    }
+}
+
+function deletePngIcon() {
+    if (confirm('هل أنت متأكد من حذف أيقونة PNG؟')) {
+        document.getElementById('delete_icon_png').value = '1';
+        const imgContainer = event.target.closest('.position-relative');
+        imgContainer.style.display = 'none';
+        const label = document.querySelector('label.form-label');
+        const confirmMsg = document.createElement('div');
+        confirmMsg.className = 'alert alert-warning alert-dismissible fade show mt-2';
+        confirmMsg.innerHTML = '<i class="fas fa-info-circle me-2"></i> سيتم حذف الأيقونة عند الحفظ';
+        imgContainer.parentElement.appendChild(confirmMsg);
     }
 }
 

@@ -334,6 +334,117 @@
         </div>
     </div>
 
+    <!-- Employee Activity Monitor -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0"><i class="fas fa-user-clock me-2"></i>مراقبة حركات الموظفين</h5>
+                    <div class="d-flex gap-2">
+                        <select class="form-select form-select-sm" id="employeeFilter" style="width: auto;">
+                            <option value="">جميع الموظفين</option>
+                            @foreach($employees ?? [] as $employee)
+                                <option value="{{ $employee->id }}">{{ $employee->name }}</option>
+                            @endforeach
+                        </select>
+                        <button class="btn btn-outline-primary btn-sm" onclick="refreshEmployeeActivity()">
+                            <i class="fas fa-sync-alt"></i> تحديث
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>الموظف</th>
+                                    <th>النشاط</th>
+                                    <th>التفاصيل</th>
+                                    <th>الوقت</th>
+                                    <th>الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employeeActivityTable">
+                                @forelse($recent_employee_activities ?? [] as $activity)
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ $activity->employee->avatar_url ?? asset('images/default-avatar.png') }}" 
+                                                     alt="{{ $activity->employee->name }}" 
+                                                     class="rounded-circle me-2" 
+                                                     style="width: 35px; height: 35px; object-fit: cover;">
+                                                <div>
+                                                    <div class="fw-semibold">{{ $activity->employee->name }}</div>
+                                                    <small class="text-muted">{{ $activity->employee->role ?? 'موظف' }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ $activity->type_color }}">
+                                                <i class="{{ $activity->type_icon }}"></i>
+                                                {{ $activity->type_text }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="activity-details">
+                                                <div class="fw-medium">{{ $activity->description }}</div>
+                                                @if($activity->related_model)
+                                                <small class="text-muted">
+                                                    <i class="fas fa-link"></i> {{ $activity->related_model }}
+                                                </small>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="text-muted">
+                                                <div>{{ $activity->created_at->format('d/m/Y') }}</div>
+                                                <small>{{ $activity->created_at->format('H:i') }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if($activity->status === 'success')
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check"></i> ناجح
+                                                </span>
+                                            @elseif($activity->status === 'failed')
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times"></i> فشل
+                                                </span>
+                                            @else
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-clock"></i> قيد التنفيذ
+                                                </span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            <i class="fas fa-user-clock fa-2x mb-2"></i>
+                                            <p class="mb-0">لا توجد أنشطة حديثة للموظفين</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            يتم عرض آخر 10 أنشطة - 
+                            الموظفين النشطين الآن: <span class="badge bg-success" id="activeEmployeesCount">{{ $active_employees_count ?? 0 }}</span>
+                        </small>
+                        <small class="text-muted">
+                            آخر تحديث: <span id="lastUpdateTime">{{ now()->format('H:i:s') }}</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Recent Bookings -->
     <div class="row g-3">
         <div class="col-12">
@@ -380,4 +491,74 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('js')
+<script>
+    // Employee Activity Monitor Functions
+    function refreshEmployeeActivity() {
+        const employeeId = document.getElementById('employeeFilter').value;
+        const tableBody = document.getElementById('employeeActivityTable');
+        
+        // Show loading state
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">جاري التحديث...</span>
+                    </div>
+                    <p class="mt-2 text-muted">جاري تحديث البيانات...</p>
+                </td>
+            </tr>
+        `;
+        
+        // Simulate AJAX call (replace with actual API call)
+        setTimeout(() => {
+            updateLastUpdateTime();
+            // Here you would make an actual AJAX call to fetch updated data
+            // For now, we'll just update the timestamp
+            if (employeeId) {
+                console.log('Filtering by employee ID:', employeeId);
+            }
+        }, 1000);
+    }
+    
+    function updateLastUpdateTime() {
+        document.getElementById('lastUpdateTime').textContent = new Date().toLocaleTimeString('ar-SA');
+    }
+    
+    // Auto refresh every 30 seconds
+    setInterval(() => {
+        updateLastUpdateTime();
+        // Uncomment the next line to enable auto-refresh
+        // refreshEmployeeActivity();
+    }, 30000);
+    
+    // Employee filter change handler
+    document.getElementById('employeeFilter')?.addEventListener('change', function() {
+        refreshEmployeeActivity();
+    });
+    
+    // Activity type color mapping
+    const activityTypeColors = {
+        'login': 'primary',
+        'logout': 'secondary',
+        'create': 'success',
+        'update': 'warning',
+        'delete': 'danger',
+        'view': 'info',
+        'export': 'dark'
+    };
+    
+    // Activity type icon mapping
+    const activityTypeIcons = {
+        'login': 'fas fa-sign-in-alt',
+        'logout': 'fas fa-sign-out-alt',
+        'create': 'fas fa-plus',
+        'update': 'fas fa-edit',
+        'delete': 'fas fa-trash',
+        'view': 'fas fa-eye',
+        'export': 'fas fa-download'
+    };
+</script>
 @endsection

@@ -31,15 +31,16 @@
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th style="width: 5%;">#</th>
-                            <th style="width: 10%;">الصورة</th>
-                            <th style="width: 20%;">الاسم</th>
-                            <th style="width: 25%;">الوصف</th>
-                            <th style="width: 10%;">الأيقونة</th>
-                            <th style="width: 10%;" class="text-center">عدد الخدمات</th>
-                            <th style="width: 5%;" class="text-center">الترتيب</th>
-                            <th style="width: 10%;" class="text-center">الحالة</th>
-                            <th style="width: 10%;" class="text-center">الإجراءات</th>
+                            <th>#</th>
+                            <th>الصورة</th>
+                            <th>الاسم</th>
+                            <th>الوصف</th>
+                            <th>الأيقونة</th>
+                            <th>أيقونة PNG</th>
+                            <th class="text-center">عدد الخدمات</th>
+                            <th class="text-center">الترتيب</th>
+                            <th class="text-center">الحالة</th>
+                            <th class="text-center">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -51,10 +52,9 @@
                                     <img src="{{ Storage::url($category->image) }}" 
                                          alt="{{ $category->name }}" 
                                          class="img-thumbnail" 
-                                         style="width: 60px; height: 60px; object-fit: cover;">
+                                         width="60" height="60">
                                 @else
-                                    <div class="bg-light d-flex align-items-center justify-content-center" 
-                                         style="width: 60px; height: 60px; border-radius: 8px;">
+                                    <div class="bg-light d-flex align-items-center justify-content-center rounded">
                                         <i class="fas fa-image text-muted"></i>
                                     </div>
                                 @endif
@@ -70,7 +70,17 @@
                             </td>
                             <td class="text-center">
                                 @if($category->icon)
-                                    <i class="{{ $category->icon }} fa-2x" style="color: {{ $category->color }}"></i>
+                                    <i class="{{ $category->icon }} fa-2x"></i>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+                            <td class="text-center">
+                                @if($category->icon_png)
+                                    <img src="{{ Storage::url($category->icon_png) }}" 
+                                         alt="PNG Icon" 
+                                         class="img-thumbnail" 
+                                         width="40" height="40">
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
@@ -99,8 +109,8 @@
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button type="button" 
-                                            class="btn btn-sm btn-outline-danger"
-                                            onclick="confirmDelete({{ $category->id }})"
+                                            class="btn btn-sm btn-outline-danger js-delete-btn"
+                                            data-delete-id="{{ $category->id }}"
                                             title="حذف">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -116,7 +126,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="9" class="text-center py-5">
+                            <td colspan="10" class="text-center py-5">
                                 <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
                                 <p class="text-muted">لا توجد فئات حالياً</p>
                                 <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">
@@ -144,5 +154,14 @@ function confirmDelete(id) {
         document.getElementById('delete-form-' + id).submit();
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.js-delete-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var id = this.getAttribute('data-delete-id');
+            confirmDelete(id);
+        });
+    });
+});
 </script>
 @endsection

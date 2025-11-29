@@ -34,6 +34,7 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'activity_name' => 'required|string|max:255',
             'client_name' => 'required|string|max:255',
             'client_email' => 'required|email|max:255',
             'client_phone' => 'required|string|max:20',

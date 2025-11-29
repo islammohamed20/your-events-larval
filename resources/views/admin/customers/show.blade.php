@@ -169,6 +169,37 @@
         </div>
     </div>
 
+    <!-- Activity Log Section -->
+    <div class="row mb-4" id="activity-log">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">سجل الأنشطة</h5>
+                </div>
+                <div class="card-body">
+                    @php
+                        $quoteIds = $customer->quotes->pluck('id');
+                        $bookingIds = $customer->bookings->pluck('id');
+
+                        $logs = \App\Models\ActivityLog::where(function ($q) use ($quoteIds) {
+                                $q->where('subject_type', \App\Models\Quote::class)
+                                  ->whereIn('subject_id', $quoteIds);
+                            })
+                            ->orWhere(function ($q) use ($bookingIds) {
+                                $q->where('subject_type', \App\Models\Booking::class)
+                                  ->whereIn('subject_id', $bookingIds);
+                            })
+                            ->orderBy('created_at', 'desc')
+                            ->limit(50)
+                            ->get();
+                    @endphp
+
+                    @include('admin.partials.activity-logs', ['logs' => $logs, 'title' => 'سجل الأنشطة'])
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Payments Section -->
     <div class="row">
         <div class="col-12">
@@ -225,3 +256,9 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+/* تخصيصات عامة (إن وجدت) يمكن إبقاؤها هنا */
+</style>
+@endpush

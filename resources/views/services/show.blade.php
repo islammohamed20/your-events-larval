@@ -23,7 +23,7 @@
                         @endphp
                         <img id="mainImage" 
                              src="{{ $mainImage->image_url }}" 
-                             class="img-fluid rounded shadow" 
+                             class="img-fluid rounded shadow service-main-image service-image" 
                              alt="{{ $service->name }}"
                              style="width: 100%; height: 500px; object-fit: cover; cursor: pointer;">
                     </div>
@@ -45,12 +45,12 @@
                 </div>
                 @elseif($service->image)
                 <div class="mb-4" data-aos="fade-right">
-                    <img src="{{ Storage::url($service->image) }}" class="img-fluid rounded shadow" alt="{{ $service->name }}" style="width: 100%; height: 500px; object-fit: cover;">
+                    <img src="{{ Storage::url($service->image) }}" class="img-fluid rounded shadow service-main-image service-image" alt="{{ $service->name }}" style="width: 100%; height: 500px; object-fit: cover;">
                 </div>
                 @else
                 <div class="mb-4" data-aos="fade-right">
                     <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
-                         class="img-fluid rounded shadow" alt="{{ $service->name }}" style="width: 100%; height: 500px; object-fit: cover;">
+                         class="img-fluid rounded shadow service-main-image service-image" alt="{{ $service->name }}" style="width: 100%; height: 500px; object-fit: cover;">
                 </div>
                 @endif
                 
@@ -170,7 +170,7 @@
             <div class="col-lg-4">
                 <div class="card sticky-top" style="top: 100px;" data-aos="fade-left">
                     <div class="card-body">
-                        <h5 class="card-title mb-4">احجز هذه الخدمة</h5>
+                        
                         
                         @if($service->price || $service->isVariable() || $service->attributes->count() > 0)
                         <div class="text-center mb-3">
@@ -340,8 +340,8 @@
                         <ul class="list-unstyled mb-0">
                             <li class="mb-2">
                                 <i class="fas fa-phone text-primary me-2"></i>
-                                <a href="tel:{{ setting('contact_phone', '+966 50 123 4567') }}" class="text-decoration-none text-dark">
-                                    {{ setting('contact_phone', '+966 50 123 4567') }}
+                                <a href="tel:{{ preg_replace('/\s+/', '', setting('contact_phone', '+966 50 123 4567')) }}" class="text-decoration-none text-dark phone-ltr" dir="ltr">
+                                    <span>{{ setting('contact_phone', '+966 50 123 4567') }}</span>
                                 </a>
                             </li>
                             <li class="mb-2">
@@ -367,6 +367,99 @@
         </div>
     </div>
 </section>
+
+@if(isset($similar) && $similar->count() > 0)
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h3 class="mb-0">
+                <i class="fas fa-sparkles me-2"></i>خدمات مشابهة
+            </h3>
+            <a href="{{ route('services.index', ['category' => $service->category_id]) }}" class="btn btn-outline-primary">
+                المزيد من نفس الفئة
+            </a>
+        </div>
+
+        <div id="similar-slider" class="position-relative">
+            <div class="d-flex overflow-hidden products grid-column mobile-grid-2 column-5" style="scroll-behavior: smooth;" data-slider-track>
+                @foreach($similar as $s)
+                <div class="flex-shrink-0 p-2" style="width: 25%;">
+                    <div class="card h-100 shadow-sm">
+                        @php $thumb = $s->thumbnail_url; @endphp
+                        @if($thumb)
+                            <a href="{{ route('services.show', $s->id) }}" class="d-block">
+                                <img src="{{ $thumb }}" alt="{{ $s->name }}" class="card-img-top service-image" style="height: 160px; object-fit: cover;">
+                            </a>
+                        @endif
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title mb-1">
+                                <a href="{{ route('services.show', $s->id) }}" class="text-decoration-none">{{ $s->name }}</a>
+                            </h6>
+                            @if($s->category)
+                                <small class="text-muted mb-2">{{ $s->category->name }}</small>
+                            @endif
+                            {{-- إزالة العنوان الفرعي داخل الخدمات المشابهة لتقليل الازدحام --}}
+                            <div class="mt-auto">
+                                @if($s->isVariable())
+                                    <a href="{{ route('services.show', $s->id) }}" class="btn btn-sm btn-primary rounded-pill px-3 w-100">تحديد أحد الخيارات</a>
+                                @else
+                                    <form action="{{ route('cart.add', $s) }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="quantity" value="1">
+                                        <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 w-100">اضف للسلة</button>
+                                    </form>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+
+        <style>
+            #similar-slider [data-slider-track] { gap: 0; }
+            @media (max-width: 992px) { #similar-slider .flex-shrink-0 { width: 50% !important; } }
+            /* المطلوب للموبايل: عمودين */
+            @media (max-width: 576px) { #similar-slider .flex-shrink-0 { width: 50% !important; } }
+        </style>
+
+        @push('scripts')
+        <script>
+        document.addEventListener('DOMContentLoaded', function(){
+            const track = document.querySelector('#similar-slider [data-slider-track]');
+            if (!track) return;
+
+            function getItemWidth(){
+                return track.querySelector('.flex-shrink-0')?.getBoundingClientRect().width || 0;
+            }
+
+            let offset = 0;
+            const totalItems = track.children.length;
+
+            function slideNext(){
+                const itemWidth = getItemWidth();
+                if (!itemWidth) return;
+                const containerWidth = track.parentElement.getBoundingClientRect().width;
+                const visible = Math.max(1, Math.round(containerWidth / itemWidth));
+                const maxOffset = itemWidth * Math.max(0, (totalItems - visible));
+                offset = offset + itemWidth;
+                if (offset > maxOffset) { offset = 0; }
+                track.scrollTo({ left: offset, behavior: 'smooth' });
+            }
+
+            let autoTimer = setInterval(slideNext, 3000);
+            track.addEventListener('mouseenter', () => { if (autoTimer) { clearInterval(autoTimer); autoTimer = null; } });
+            track.addEventListener('mouseleave', () => { if (!autoTimer) { autoTimer = setInterval(slideNext, 3000); } });
+
+            // تحديث الحسابات عند تغيير الحجم
+            window.addEventListener('resize', () => { offset = 0; });
+        });
+        </script>
+        @endpush
+    </div>
+</section>
+@endif
 
 <style>
 .btn-success {
@@ -439,6 +532,27 @@
     transform: scale(1.05);
     border-color: #007bff;
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+</style>
+
+<style>
+/* تحسين عرض الصور على الموبايل: مربعة وتملأ الحاوية */
+@media (max-width: 768px) {
+    /* اجعل الحاوية الرئيسية مربعة */
+    #mainImageContainer { width: 100%; aspect-ratio: 1 / 1; }
+    /* اجعل الصورة تملأ المربع بالكامل */
+    .service-main-image,
+    .service-image {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        display: block;
+    }
+}
+@media (max-width: 576px) {
+    .service-image {
+        aspect-ratio: 1 / 1;
+    }
 }
 </style>
 

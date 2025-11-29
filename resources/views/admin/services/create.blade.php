@@ -133,13 +133,14 @@
                                 
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="duration" class="form-label">مدة الخدمة</label>
-                                        <input type="text" 
+                                        <label for="duration" class="form-label">مدة الخدمة (بالساعات)</label>
+                                        <input type="number" 
                                                class="form-control @error('duration') is-invalid @enderror" 
                                                id="duration" 
                                                name="duration" 
                                                value="{{ old('duration') }}" 
-                                               placeholder="مثال: 4 ساعات">
+                                               min="0" step="1" 
+                                               placeholder="مثال: 4">
                                         @error('duration')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror

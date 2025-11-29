@@ -39,6 +39,7 @@ class CategoryController extends Controller
             'name_en' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
+            'icon_png' => 'nullable|image|mimes:png|max:2048',
             'color' => 'nullable|string|max:20',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'order' => 'nullable|integer|min:0',
@@ -48,6 +49,11 @@ class CategoryController extends Controller
         // Handle image upload
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('categories', 'public');
+        }
+
+        // Handle PNG icon upload
+        if ($request->hasFile('icon_png')) {
+            $validated['icon_png'] = $request->file('icon_png')->store('category-icons', 'public');
         }
 
         Category::create($validated);
@@ -74,11 +80,13 @@ class CategoryController extends Controller
             'name_en' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
+            'icon_png' => 'nullable|image|mimes:png|max:2048',
             'color' => 'nullable|string|max:20',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
             'delete_image' => 'nullable|boolean',
+            'delete_icon_png' => 'nullable|boolean',
         ]);
 
         // Handle image deletion
@@ -96,8 +104,24 @@ class CategoryController extends Controller
             $validated['image'] = $request->file('image')->store('categories', 'public');
         }
 
+        // Handle PNG icon deletion
+        if ($request->input('delete_icon_png') == '1' && $category->icon_png) {
+            Storage::disk('public')->delete($category->icon_png);
+            $validated['icon_png'] = null;
+        }
+
+        // Handle PNG icon upload
+        if ($request->hasFile('icon_png')) {
+            // Delete old icon
+            if ($category->icon_png) {
+                Storage::disk('public')->delete($category->icon_png);
+            }
+            $validated['icon_png'] = $request->file('icon_png')->store('category-icons', 'public');
+        }
+
         // Remove delete_image from validated data before update
         unset($validated['delete_image']);
+        unset($validated['delete_icon_png']);
 
         $category->update($validated);
 
