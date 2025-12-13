@@ -166,12 +166,10 @@ body::before {
 .btn-gold {
     background: var(--gradient-gold);
     color: var(--primary-color);
-    box-shadow: 0 3px 12px rgba(240, 199, 29, 0.3);
 }
 
 .btn-gold:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(240, 199, 29, 0.4);
 }
 
 /* ============ Cards ============ */

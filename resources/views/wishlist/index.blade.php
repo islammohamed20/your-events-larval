@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'قائمة المفضلة - Your Events')
+@section('title', 'قائمة الأمنيات') 'قائمة المفضلة - Your Events')
 
 @section('content')
 <div class="container py-5">

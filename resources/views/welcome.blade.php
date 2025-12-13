@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Your Events - حوّل فعاليتك العادية إلى لحظة استثنائية')
+@section('title', 'الصفحة الرئيسية - Your Events')
 
 @push('styles')
 <style>
@@ -187,7 +187,6 @@
         border-radius: 8px;
         background: linear-gradient(135deg, #f0c71d 0%, #ffed4e 100%);
         border-color: rgba(255, 255, 255, 0.9);
-        box-shadow: 0 4px 15px rgba(240, 199, 29, 0.6);
     }
     
     .carousel-indicators [data-bs-target]:hover {
@@ -275,9 +274,9 @@
     }
 
     .section-tag-pill.teal {
-        background: rgba(45, 188, 174, 0.12);
-        border-color: rgba(45, 188, 174, 0.35);
-        color: var(--secondary-color);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: rgba(102, 126, 234, 0.3);
+        color: #ffffff;
     }
 
     .section-tag-pill.purple {
@@ -312,9 +311,9 @@
 
     .section-body-text {
         color: #2d3748;
-        line-height: 2;
+        line-height: 1.7;
         font-size: 1.08rem;
-        margin-bottom: 1.25rem;
+        margin-bottom: 1rem;
         font-weight: 400;
     }
 
@@ -774,7 +773,7 @@
         }
         
         .min-vh-75 {
-            min-height: 100vh !important;
+            min-height: 60vh !important;
         }
     }
     
@@ -826,6 +825,13 @@
         
         .carousel-indicators .active {
             width: 18px;
+        }
+
+        /* Hide carousel controls and indicators on small screens to avoid text overlap */
+        .carousel-control-prev,
+        .carousel-control-next,
+        .carousel-indicators {
+            display: none !important;
         }
     }
     
@@ -1150,7 +1156,11 @@
 
                             <!-- Icon -->
                             <div class="category-mobile-icon">
-                                @if($category->icon)
+                                @if($category->icon_png)
+                                    <img src="{{ asset('storage/' . $category->icon_png) }}" 
+                                         alt="{{ $category->name }}" 
+                                         style="width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));">
+                                @elseif($category->icon)
                                     <i class="{{ $category->icon }}" style="font-size: 2.5rem; color: white;"></i>
                                 @else
                                     <i class="fas fa-star" style="font-size: 2.5rem; color: white;"></i>
@@ -1226,7 +1236,7 @@
                 <div class="h-100 card border-0 shadow-sm" style="border-radius: 18px; overflow: hidden;">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
-                            <div style="width:42px; height:42px; border-radius: 12px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, var(--secondary-color), #3cc7b8); color:#fff; box-shadow: 0 8px 20px rgba(45,188,174,0.3);">1️⃣</div>
+                            <div style="width:42px; height:42px; border-radius: 12px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #667eea, #764ba2); color:#fff; box-shadow: 0 8px 20px rgba(45,188,174,0.3);">1️⃣</div>
                             <h5 class="arabic-text mb-0 me-3" style="color:#1a202c; font-weight:800;">{{ __('common.browse_services') }}</h5>
                         </div>
                         <p class="arabic-text mb-0" style="color:#2d3748; line-height:1.9;">{{ __('common.choose_services') }}</p>
@@ -1252,7 +1262,7 @@
                 <div class="h-100 card border-0 shadow-sm" style="border-radius: 18px; overflow: hidden;">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
-                            <div style="width:42px; height:42px; border-radius: 12px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #ef4870, #f56b8a); color:#fff; box-shadow: 0 8px 20px rgba(239, 72, 112, 0.3);">3️⃣</div>
+                            <div style="width:42px; height:42px; border-radius: 12px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #667eea, #764ba2); color:#fff; box-shadow: 0 8px 20px rgba(239, 72, 112, 0.3);">3️⃣</div>
                             <h5 class="arabic-text mb-0 me-3" style="color:#1a202c; font-weight:800;">تختار الطريقة اللي تريحك</h5>
                         </div>
                         <p class="arabic-text mb-0" style="color:#2d3748; line-height:1.9;">تطلب عرض سعر… أو تدفع مباشرة وتبدأ التنفيذ.</p>
@@ -1265,7 +1275,7 @@
                 <div class="h-100 card border-0 shadow-sm" style="border-radius: 18px; overflow: hidden;">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
-                            <div style="width:42px; height:42px; border-radius: 12px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #4facfe, #00f2fe); color:#fff; box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3);">4️⃣</div>
+                            <div style="width:42px; height:42px; border-radius: 12px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #667eea, #764ba2); color:#fff; box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3);">4️⃣</div>
                             <h5 class="arabic-text mb-0 me-3" style="color:#1a202c; font-weight:800;">توصلك التفاصيل على طول</h5>
                         </div>
                         <p class="arabic-text mb-0" style="color:#2d3748; line-height:1.9;">كل شي يوصلك في إيميلك واضح ومرتب.</p>
@@ -1278,7 +1288,7 @@
                 <div class="h-100 card border-0 shadow-sm" style="border-radius: 18px; overflow: hidden;">
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
-                            <div style="width:42px; height:42px; border-radius: 12px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, var(--accent-color), #ef4870); color:#fff; box-shadow: 0 8px 20px rgba(214, 60, 94, 0.3);">5️⃣</div>
+                            <div style="width:42px; height:42px; border-radius: 12px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #667eea, #764ba2); color:#fff; box-shadow: 0 8px 20px rgba(214, 60, 94, 0.3);">5️⃣</div>
                             <h5 class="arabic-text mb-0 me-3" style="color:#1a202c; font-weight:800;">ونبدأ نجهّز لك الفعالية</h5>
                         </div>
                         <p class="arabic-text mb-0" style="color:#2d3748; line-height:1.9;">بسرعة، دقّة، ونتيجة تخلّيك تقول: “ليه ما كانت الفعاليات كذا من زمان؟” 🎉</p>
@@ -2507,7 +2517,6 @@ function scrollCarousel(carouselId, direction) {
                                 color: #f0c71d;
                                 font-weight: 700;
                                 font-size: 1.2rem;
-                                box-shadow: 0 2px 8px rgba(240, 199, 29, 0.2);
                             ">✓</div>
                             <p class="arabic-text mb-0" style="color: #2d3748; font-size: 1.05rem; line-height: 1.7; font-weight: 500;">
                                 الأسعار واضحة من البداية، والدفع إلكتروني وسريع.
@@ -2558,7 +2567,6 @@ function scrollCarousel(carouselId, direction) {
                     <!-- CTA Buttons -->
                     <div class="d-flex gap-3 flex-wrap">
                         <a href="{{ route('booking.create') }}" class="btn btn-gold" style="
-                            box-shadow: 0 8px 25px rgba(240, 199, 29, 0.4);
                             border-radius: 25px;
                             padding: 14px 32px;
                             font-weight: 700;
@@ -2668,7 +2676,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         color: #f0c71d;
                         margin-bottom: 22px;
                         font-weight: 600;
-                        font-style: italic;
+                        
                     ">
                         خلاص لا تشيل هم ولا تضيع وقتك، كل شي جاهز، وكل خطوة أسهل من اللي قبلها. تختار وتطلب، وتبدأ.. والباقي على Your Events.
                     </p>
@@ -2680,13 +2688,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         color: #ffffff;
                         margin-bottom: 28px;
                         font-weight: 700;
-                        letter-spacing: 0.5px;
                     ">
                         فعالياتك تستاهل البداية الصح و Your Events دايم تبدأها معك.
                     </p>
 
                     <!-- CTA Buttons -->
-                    <div class="d-flex gap-3 flex-wrap" style="align-items: center; margin-top: 8px;">
+                    <div class="d-flex gap-3 flex-wrap" style="align-items: center; margin-top: 8px; justify-content: center;">
                         <!-- Primary Button - Book Now -->
                         <a href="{{ route('services.index') }}" class="btn-cta-primary" style="
                             display: inline-flex;
@@ -2701,7 +2708,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             font-weight: 700;
                             border: none;
                             text-decoration: none;
-                            box-shadow: 0 12px 35px rgba(240, 199, 29, 0.4);
                             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                             cursor: pointer;
                             white-space: nowrap;
@@ -2735,7 +2741,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
 
             <!-- Right Image - Hand with Phone -->
-            <div class="col-lg-6 col-12 d-flex align-items-center justify-content-center" data-aos="fade-left" style="margin-top: 40px;">
+            <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center" data-aos="fade-left" style="margin-top: 40px;">
                 <div class="phone-image-wrapper" style="position: relative; display: inline-block; width: 100%; max-width: 480px; height: auto;">
                     <img src="{{ asset('images/vr/hand.png') }}" 
                          alt="تطبيق Your Events على الهاتف الذكي - يد تمسك هاتفًا ذكيًا" 
@@ -2771,7 +2777,6 @@ document.addEventListener('DOMContentLoaded', function() {
         /* Button Hover Effects */
         .btn-cta-primary:hover {
             transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(240, 199, 29, 0.45);
             background: linear-gradient(135deg, #f5a623 0%, #f0c71d 100%);
         }
 
@@ -2800,12 +2805,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             .cta-content-refactored {
-                text-align: center;
-                direction: ltr;
+                text-align: center !important;
+                direction: rtl !important;
             }
 
             .cta-content-refactored h1 {
                 margin-bottom: 12px;
+            }
+            
+            .cta-content-refactored .d-flex.gap-3.flex-wrap {
+                justify-content: center !important;
             }
 
             .phone-image-wrapper {
@@ -2826,79 +2835,103 @@ document.addEventListener('DOMContentLoaded', function() {
             .cta-content-refactored {
                 margin-bottom: 20px;
                 padding: 0 20px !important;
+                text-align: center !important;
+                direction: rtl !important;
+                font-weight: 600;
+                letter-spacing: normal !important;
             }
 
             .cta-content-refactored h1 {
                 font-size: 1.8rem !important;
-                margin-bottom: 8px;
+                margin-bottom: 12px;
             }
 
             .cta-content-refactored p:first-of-type {
-                font-size: 0.9rem !important;
-                margin-bottom: 12px;
+                font-size: 0.95rem !important;
+                margin-bottom: 14px;
+                line-height: 1.7;
+                letter-spacing: normal !important;
             }
 
             .cta-content-refactored p:nth-of-type(2) {
                 font-size: 1rem !important;
-                margin-bottom: 16px;
+                margin-bottom: 18px;
+                line-height: 1.6;
+                letter-spacing: normal !important;
             }
-
             .d-flex.gap-3.flex-wrap {
-                flex-direction: column !important;
+                flex-direction: row !important;
                 width: 100%;
-                gap: 10px !important;
+                gap: 8px !important;
+                align-items: center !important;
+                justify-content: center !important;
             }
 
             .btn-cta-primary,
             .btn-cta-secondary {
-                width: 100%;
-                padding: 12px 28px !important;
+                width: auto;
+                min-width: 120px;
+                padding: 12px 18px !important;
                 font-size: 0.9rem !important;
+                justify-content: center !important;
             }
 
             .phone-image-wrapper {
-                max-width: 80%;
-                width: 100%;
+                display: none !important;
             }
         }
 
         @media (max-width: 576px) {
             .cta-section-refactored {
                 height: auto;
-                min-height: 350px;
-                padding: 1.5rem 0 !important;
+                min-height: auto;
+                padding: 2rem 0 !important;
+            }
+
+            .phone-image-wrapper {
+                display: none !important;
             }
 
             .cta-content-refactored {
                 padding: 0 16px !important;
+                text-align: center !important;
+                direction: rtl !important;
             }
 
             .cta-content-refactored h1 {
-                font-size: 1.6rem !important;
+                font-size: 1.7rem !important;
+                margin-bottom: 10px;
             }
 
             .cta-content-refactored p:first-of-type {
-                font-size: 0.85rem !important;
-                line-height: 1.5;
+                font-size: 0.9rem !important;
+                line-height: 1.6;
+                margin-bottom: 12px;
             }
 
             .cta-content-refactored p:nth-of-type(2) {
                 font-size: 0.95rem !important;
+                line-height: 1.5;
+                margin-bottom: 16px;
+                letter-spacing: normal !important;
             }
 
             .btn-cta-primary,
             .btn-cta-secondary {
-                font-size: 0.85rem !important;
-                padding: 10px 20px !important;
+                font-size: 0.95rem !important;
+                padding: 12px 24px !important;
+                width: 90%;
+                max-width: 260px;
             }
 
             .btn-cta-primary i,
             .btn-cta-secondary i {
-                font-size: 0.8rem;
+                font-size: 0.9rem;
             }
 
             .phone-image-wrapper {
-                max-width: 90%;
+                max-width: 85%;
+                margin-top: 15px;
             }
         }
     </style>

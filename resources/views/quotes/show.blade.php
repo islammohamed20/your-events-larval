@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'عرض السعر #' . $quote->quote_number . ' - Your Events')
+@section('title', 'تفاصيل الطلب') 'عرض السعر #' . $quote->quote_number . ' - Your Events')
 
 @section('content')
 <div class="container py-5" style="margin-top: 100px;">

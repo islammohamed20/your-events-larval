@@ -25,6 +25,7 @@ class User extends Authenticatable
         'role',
         'is_admin',
         'status',
+        'registration_source',
         'card_type',
         'card_holder_name',
         'card_last_four',
@@ -62,6 +63,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
         ];
@@ -121,5 +123,45 @@ class User extends Authenticatable
     public function hasInWishlist($serviceId)
     {
         return $this->wishlists()->where('service_id', $serviceId)->exists();
+    }
+
+    /**
+     * Get supplier services (services provided by this supplier)
+     */
+    public function services()
+    {
+        return $this->hasMany(\App\Models\SupplierService::class);
+    }
+
+    /**
+     * Orders created by this customer
+     */
+    public function customersOrders()
+    {
+        return $this->hasMany(\App\Models\Order::class, 'customer_id');
+    }
+
+    /**
+     * Orders assigned to this supplier
+     */
+    public function supplierOrders()
+    {
+        return $this->hasMany(\App\Models\Order::class, 'supplier_id');
+    }
+
+    /**
+     * Supplier order statuses (orders sent to this supplier)
+     */
+    public function orderStatuses()
+    {
+        return $this->hasMany(\App\Models\SupplierOrderStatus::class, 'supplier_id');
+    }
+
+    /**
+     * Customer profile (if this user is a customer)
+     */
+    public function customerProfile()
+    {
+        return $this->hasOne(Customer::class);
     }
 }

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Our Gallery - Your Events')
+@section('title', 'المعرض - Your Events')
 
 @section('content')
 <!-- Page Header -->

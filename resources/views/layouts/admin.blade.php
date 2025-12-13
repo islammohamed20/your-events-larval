@@ -370,6 +370,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}" 
+                       href="{{ route('admin.payments.index') }}">
+                        <i class="fas fa-credit-card me-2"></i>المدفوعات
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('admin.gallery.*') ? 'active' : '' }}" 
                        href="{{ route('admin.gallery.index') }}">
                         <i class="fas fa-images me-2"></i>المعرض
@@ -446,7 +452,7 @@
                         <small>القوالب</small>
                     </a>
                 </li>
-                <li class="nav-item ms-3">
+                <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('admin.otp.*') ? 'active' : '' }}" 
                        href="{{ route('admin.otp.index') }}">
                         <i class="fas fa-shield-alt me-2 text-muted"></i>

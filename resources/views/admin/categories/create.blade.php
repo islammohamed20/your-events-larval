@@ -98,6 +98,26 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="banner" class="form-label">صورة البانر (966×205 بكسل)</label>
+                            <input type="file" 
+                                   class="form-control @error('banner') is-invalid @enderror" 
+                                   id="banner" 
+                                   name="banner"
+                                   accept="image/*"
+                                   onchange="previewBanner(event)">
+                            <small class="text-muted d-block mt-2">
+                                <i class="fas fa-info-circle me-1"></i>الحجم الموصى به: 966×205 بكسل<br>
+                                سيتم عرضه عند اختيار هذه الفئة من الفلاتر
+                            </small>
+                            @error('banner')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                            <div id="bannerPreview" class="mt-3" style="display: none;">
+                                <img id="bannerImg" src="" alt="Banner Preview" class="img-thumbnail" style="max-width: 100%; height: auto;">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="image" class="form-label">صورة الفئة</label>
                             <input type="file" 
                                    class="form-control @error('image') is-invalid @enderror" 
@@ -213,6 +233,18 @@ function previewImage(event) {
 
 function setIcon(iconClass) {
     document.getElementById('icon').value = iconClass;
+}
+
+function previewBanner(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('bannerImg').src = e.target.result;
+            document.getElementById('bannerPreview').style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+    }
 }
 </script>
 @endsection

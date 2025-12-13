@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تفاصيل المستخدم: ' . $user->name)
+@section('title', 'تفاصيل المستخدم')
 
 @section('content')
 <div class="container-fluid">

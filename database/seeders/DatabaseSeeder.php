@@ -179,5 +179,8 @@ class DatabaseSeeder extends Seeder
         foreach ($reviews as $review) {
             Review::create($review);
         }
+
+        // Seed Email Templates (booking, welcome, supplier approval)
+        $this->call(EmailTemplatesSeeder::class);
     }
 }

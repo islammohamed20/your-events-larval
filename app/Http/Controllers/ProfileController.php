@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use App\Models\Quote;
+use App\Models\Booking;
 
 class ProfileController extends Controller
 {
@@ -19,9 +21,10 @@ class ProfileController extends Controller
      */
     public function show()
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
-        $bookings = $user->bookings()
-            ->with(['package', 'services'])
+        $bookings = Booking::where('user_id', $user->id)
+            ->with(['package', 'service'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
             
@@ -33,6 +36,7 @@ class ProfileController extends Controller
      */
     public function edit()
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         return view('profile.edit', compact('user'));
     }
@@ -42,6 +46,7 @@ class ProfileController extends Controller
      */
     public function update(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         $validated = $request->validate([
@@ -97,12 +102,51 @@ class ProfileController extends Controller
             'password.confirmed' => 'كلمة المرور غير متطابقة',
         ]);
 
-        Auth::user()->update([
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->update([
             'password' => Hash::make($validated['password']),
         ]);
 
         return redirect()->route('profile.show')
             ->with('success', 'تم تغيير كلمة المرور بنجاح');
     }
-}
 
+    /**
+     * Delete the authenticated user's account with validations.
+     */
+    public function destroy(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // لا تسمح بحذف مسؤولي النظام
+        if ($user->is_admin) {
+            return redirect()->back()->with('error', 'لا يمكن حذف حساب مدير النظام.');
+        }
+
+        // منع حذف عميل لديه حجوزات حالية أو مؤكدة
+        $hasActiveBookings = Booking::where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->exists();
+        if ($hasActiveBookings) {
+            return redirect()->back()->with('error', 'لا يمكن حذف حساب لديه حجوزات نشطة أو مؤكدة.');
+        }
+
+        try {
+            // حذف عروض الأسعار المرتبطة غير المعتمدة لتفادي قيود العلاقات
+            Quote::where('user_id', $user->id)->where('status', 'pending')->delete();
+
+            // تنفيذ الحذف
+            $user->delete();
+
+            // تسجيل خروج المستخدم بعد حذف حسابه
+            Auth::logout();
+
+            // إعادة توجيه إلى الصفحة الرئيسية مع رسالة نجاح
+            return redirect()->route('home')->with('success', 'تم حذف الحساب بنجاح.');
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'فشل حذف الحساب: ' . $e->getMessage());
+        }
+    }
+}

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إضافة قالب بريد إلكتروني')
+@section('title', 'إضافة قالب بريد')
 
 @section('content')
 <div class="container-fluid px-4">

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'عرض السعر #' . $quote->quote_number)
+@section('title', 'تفاصيل السعر')
 
 @section('content')
 <div class="container-fluid py-4">
@@ -236,6 +236,56 @@
 
         <!-- Sidebar -->
         <div class="col-lg-4">
+            {{-- Supplier Acceptance Status --}}
+            @if($quote->accepted_by_supplier_id && $quote->acceptedBySupplier)
+                <div class="card border-0 shadow-sm mb-4 border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-user-check me-2"></i>المورد المقبول</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="text-muted small">اسم المورد</label>
+                            <p class="mb-0 fw-bold">{{ $quote->acceptedBySupplier->name }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">البريد الإلكتروني</label>
+                            <p class="mb-0">
+                                <a href="mailto:{{ $quote->acceptedBySupplier->email }}">
+                                    {{ $quote->acceptedBySupplier->email }}
+                                </a>
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">رقم الهاتف</label>
+                            <p class="mb-0">
+                                <a href="tel:{{ $quote->acceptedBySupplier->primary_phone }}">
+                                    {{ $quote->acceptedBySupplier->primary_phone }}
+                                </a>
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">تاريخ القبول</label>
+                            <p class="mb-0">{{ optional($quote->supplier_accepted_at)->format('Y-m-d H:i') }}</p>
+                        </div>
+                        @if($quote->supplier_notes)
+                            <div class="mb-0">
+                                <label class="text-muted small">ملاحظات المورد</label>
+                                <p class="mb-0" style="white-space: pre-wrap;">{{ $quote->supplier_notes }}</p>
+                            </div>
+                        @endif
+                        <a href="{{ route('admin.suppliers.show', $quote->acceptedBySupplier) }}" class="btn btn-outline-success w-100 mt-3">
+                            <i class="fas fa-eye me-2"></i>عرض ملف المورد
+                        </a>
+                    </div>
+                </div>
+            @elseif($quote->status === 'approved')
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>في انتظار قبول المورد</strong><br>
+                    <small>تم إشعار الموردين المعنيين، في انتظار القبول السريع</small>
+                </div>
+            @endif
+
             <!-- Update Status -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white">

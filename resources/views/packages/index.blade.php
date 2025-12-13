@@ -4,13 +4,7 @@
 
 @section('content')
 <!-- Page Header -->
-<section class="hero-section" style="padding: 40px 0;">
-    <div class="container">
-        <div class="text-center">
-            <h1 class="display-4 fw-bold mb-3" style="color: var(--primary-color);">باقاتنا المميزة</h1>
-            <p class="lead" style="color: var(--text-color);">اختر الباقة التي تناسب مناسبتك واحتياجاتك</p>
-        </div>
-    </div>
+<section class="hero-section" style="padding: 0; background-image: url({{ Storage::url('extra/packetge-banner.jpg') }}); background-position: center; background-size: cover; background-repeat: no-repeat; min-height: 205px; display: flex; align-items: center;">
 </section>
 
 <!-- Packages Grid -->
@@ -18,22 +12,26 @@
     <div class="container">
         <div class="row">
             @forelse($packages as $package)
-                <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
-                    <div class="card h-100">
-                        @if($package->image)
-                            <img src="{{ Storage::url($package->image) }}" class="card-img-top" alt="{{ $package->name }}">
-                        @else
-                            <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" 
-                                 class="card-img-top" alt="{{ $package->name }}">
-                        @endif
+                <div class="col-6 col-md-6 col-lg-4 mb-4" data-aos="fade-up" data-aos-delay="{{ $loop->index * 100 }}">
+                    <div class="card h-100 package-card">
+                        <div class="package-image-wrapper">
+                            <img src="{{ $package->thumbnail_url }}" 
+                                 class="card-img-top package-image" 
+                                 alt="{{ $package->name }}">
+                        </div>
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title">{{ $package->name }}</h5>
-                            <p class="card-text">{{ Str::limit($package->description, 150) }}</p>
+                        
                             
-                            @if($package->features)
+                            @php
+                                $validFeatures = collect($package->features ?? [])->filter(function($feature) {
+                                    return !empty(trim($feature));
+                                });
+                            @endphp
+                            @if($validFeatures->count() > 0)
                                 <h6 class="mt-3 mb-2">المميزات:</h6>
                                 <ul class="list-unstyled mb-3">
-                                    @foreach($package->features as $feature)
+                                    @foreach($validFeatures as $feature)
                                         <li class="mb-1">
                                             <i class="fas fa-check text-primary me-2"></i>{{ $feature }}
                                         </li>
@@ -71,10 +69,34 @@
     </div>
 </section>
 
+<style>
+.package-card .package-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .package-card .package-image-wrapper {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+    }
+    .package-card .package-image {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+    }
+    .hero-section {
+        min-height: 85px !important;
+    }
+}
+</style>
+
 <!-- Package Benefits -->
 <section class="py-4 bg-secondary-custom">
     <div class="container">
-        <h2 class="section-title" data-aos="fade-up" style="margin-bottom: 2rem;">مميزات باقاتنا</h2>
+        <h2 class="section-title" data-aos="fade-up" style="margin-bottom: 2rem; background: none; -webkit-text-fill-color: #000000; color: #000000;">مميزات باقاتنا</h2>
         <div class="row">
             <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="100">
                 <div class="text-center">

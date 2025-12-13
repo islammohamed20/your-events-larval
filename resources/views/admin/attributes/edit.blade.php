@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تعديل الخاصية - Your Events')
+@section('title', 'تعديل الخاصية')
 @section('page-title', 'تعديل الخاصية: ' . $attribute->name)
 @section('page-description', 'تعديل بيانات الخاصية وإدارة قيمها')
 

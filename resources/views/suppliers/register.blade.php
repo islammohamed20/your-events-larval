@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'تسجيل مورد جديد')
+
 @section('content')
 <div class="min-vh-100 bg-light py-5">
     <div class="container">
@@ -19,7 +21,7 @@
             <div class="col-lg-10">
                 <div class="card shadow-lg border-0 rounded-4">
                     <div class="card-body p-4 p-md-5">
-                        <form method="POST" action="{{ route('suppliers.register') }}" enctype="multipart/form-data" id="supplierRegisterForm">
+                        <form method="POST" action="{{ route('suppliers.store') }}" enctype="multipart/form-data" id="supplierRegisterForm">
                             @csrf
 
                             <!-- Section 1: معلومات المنشأة -->
@@ -92,122 +94,80 @@
                                 <!-- Description -->
                                 <div class="mb-4">
                                     <label for="description" class="form-label fw-semibold text-dark">نبذة عن المنشأة <span class="text-danger">*</span></label>
-                                    <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="5" required>{{ old('description') }}</textarea>
-                                    <small class="text-muted">وصف تفصيلي عن خدماتك وخبراتك (500 حرف على الأقل)</small>
+                                    <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="5" minlength="50" required>{{ old('description') }}</textarea>
+                                    <small class="text-muted">وصف تفصيلي عن خدماتك وخبراتك (50 حرف على الأقل)</small>
                                     @error('description')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
 
-                            <!-- Section 2: الخدمات المقدمة -->
+                            <!-- Section 2: الفئات والخدمات -->
                             <div class="mb-5">
                                 <h3 class="h4 fw-bold text-dark mb-4 pb-2 border-bottom border-warning border-3">
-                                    <i class="fas fa-concierge-bell text-warning me-2"></i>الخدمات المقدمة
+                                    <i class="fas fa-concierge-bell text-warning me-2"></i>اختر الفئات والخدمات
                                 </h3>
-                                <p class="text-muted mb-4">اختر الخدمات التي تقدمها (يمكنك اختيار أكثر من خدمة)</p>
 
-                                <div class="row g-4">
-                                    <!-- Photography -->
-                                    <div class="col-md-6">
-                                        <div class="form-check border rounded-3 p-3 h-100 service-checkbox">
-                                            <input class="form-check-input" type="checkbox" name="services_offered[]" value="photography" id="service_photography" {{ in_array('photography', old('services_offered', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label w-100 cursor-pointer" for="service_photography">
-                                                <div class="d-flex align-items-start">
-                                                    <i class="fas fa-camera text-warning fs-3 me-3 mt-1"></i>
-                                                    <div>
-                                                        <h5 class="mb-1">التصوير الفوتوغرافي</h5>
-                                                        <p class="text-muted small mb-0">تصوير الفعاليات، حفلات الزفاف، المؤتمرات، والمناسبات الخاصة بجودة احترافية</p>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
+                                <!-- اختيار الفئات -->
+                                <div class="mb-5">
+                                    <h5 class="fw-bold text-dark mb-3">
+                                        <i class="fas fa-list me-2"></i> الخطوة 1: اختر الفئات <span class="text-danger">*</span>
+                                    </h5>
+                                    <p class="text-muted mb-4">اختر جميع الفئات التي تستطيع تقديم خدمات فيها</p>
 
-                                    <!-- Catering -->
-                                    <div class="col-md-6">
-                                        <div class="form-check border rounded-3 p-3 h-100 service-checkbox">
-                                            <input class="form-check-input" type="checkbox" name="services_offered[]" value="catering" id="service_catering" {{ in_array('catering', old('services_offered', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label w-100 cursor-pointer" for="service_catering">
-                                                <div class="d-flex align-items-start">
-                                                    <i class="fas fa-utensils text-warning fs-3 me-3 mt-1"></i>
-                                                    <div>
-                                                        <h5 class="mb-1">تقديم الطعام والضيافة</h5>
-                                                        <p class="text-muted small mb-0">خدمات الكيترينج، بوفيهات مفتوحة، وجبات فاخرة، وضيافة متكاملة للفعاليات</p>
+                                    <div class="row g-4" id="categoriesContainer">
+                                        @foreach($categories as $category)
+                                        <div class="col-md-6">
+                                            <div class="form-check border rounded-3 p-3 h-100 category-checkbox">
+                                                <input class="form-check-input category-checkbox-input" 
+                                                       type="checkbox" 
+                                                       name="categories[]" 
+                                                       value="{{ $category->id }}" 
+                                                       id="category_{{ $category->id }}"
+                                                       data-category-id="{{ $category->id }}"
+                                                       {{ in_array($category->id, old('categories', [])) ? 'checked' : '' }}>
+                                                <label class="form-check-label w-100 cursor-pointer" for="category_{{ $category->id }}">
+                                                    <div class="d-flex align-items-start">
+                                                        <div class="flex-shrink-0">
+                                                            @if($category->icon_png)
+                                                                <img src="{{ Storage::url($category->icon_png) }}" alt="{{ $category->name }}" width="40" height="40" class="me-3">
+                                                            @elseif($category->icon)
+                                                                <i class="{{ $category->icon }} text-warning fs-3 me-3 mt-1"></i>
+                                                            @else
+                                                                <i class="fas fa-cube text-warning fs-3 me-3 mt-1"></i>
+                                                            @endif
+                                                        </div>
+                                                        <div>
+                                                            <h5 class="mb-1">{{ $category->name }}</h5>
+                                                            <p class="text-muted small mb-0">{{ $category->description }}</p>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </label>
+                                                </label>
+                                            </div>
                                         </div>
+                                        @endforeach
                                     </div>
-
-                                    <!-- Entertainment -->
-                                    <div class="col-md-6">
-                                        <div class="form-check border rounded-3 p-3 h-100 service-checkbox">
-                                            <input class="form-check-input" type="checkbox" name="services_offered[]" value="entertainment" id="service_entertainment" {{ in_array('entertainment', old('services_offered', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label w-100 cursor-pointer" for="service_entertainment">
-                                                <div class="d-flex align-items-start">
-                                                    <i class="fas fa-music text-warning fs-3 me-3 mt-1"></i>
-                                                    <div>
-                                                        <h5 class="mb-1">الترفيه والتنشيط</h5>
-                                                        <p class="text-muted small mb-0">فرق موسيقية، منشطين، ألعاب، عروض حية، وأنشطة ترفيهية متنوعة</p>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <!-- Gifts -->
-                                    <div class="col-md-6">
-                                        <div class="form-check border rounded-3 p-3 h-100 service-checkbox">
-                                            <input class="form-check-input" type="checkbox" name="services_offered[]" value="gifts" id="service_gifts" {{ in_array('gifts', old('services_offered', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label w-100 cursor-pointer" for="service_gifts">
-                                                <div class="d-flex align-items-start">
-                                                    <i class="fas fa-gift text-warning fs-3 me-3 mt-1"></i>
-                                                    <div>
-                                                        <h5 class="mb-1">الهدايا والتوزيعات</h5>
-                                                        <p class="text-muted small mb-0">هدايا فاخرة، توزيعات مخصصة، سلال هدايا، وتغليف احترافي للمناسبات</p>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <!-- Logistics -->
-                                    <div class="col-md-6">
-                                        <div class="form-check border rounded-3 p-3 h-100 service-checkbox">
-                                            <input class="form-check-input" type="checkbox" name="services_offered[]" value="logistics" id="service_logistics" {{ in_array('logistics', old('services_offered', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label w-100 cursor-pointer" for="service_logistics">
-                                                <div class="d-flex align-items-start">
-                                                    <i class="fas fa-truck text-warning fs-3 me-3 mt-1"></i>
-                                                    <div>
-                                                        <h5 class="mb-1">اللوجستيات والنقل</h5>
-                                                        <p class="text-muted small mb-0">خدمات النقل، تأجير حافلات، تنسيق الانتقالات، وإدارة المواصلات للفعاليات</p>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <!-- Handicrafts -->
-                                    <div class="col-md-6">
-                                        <div class="form-check border rounded-3 p-3 h-100 service-checkbox">
-                                            <input class="form-check-input" type="checkbox" name="services_offered[]" value="handicrafts" id="service_handicrafts" {{ in_array('handicrafts', old('services_offered', [])) ? 'checked' : '' }}>
-                                            <label class="form-check-label w-100 cursor-pointer" for="service_handicrafts">
-                                                <div class="d-flex align-items-start">
-                                                    <i class="fas fa-palette text-warning fs-3 me-3 mt-1"></i>
-                                                    <div>
-                                                        <h5 class="mb-1">الأعمال والحرف اليدوية</h5>
-                                                        <p class="text-muted small mb-0">منتجات يدوية مخصصة، ديكورات فنية، لوحات، وأعمال حرفية تراثية وعصرية</p>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
+                                    @error('categories')
+                                        <div class="text-danger small mt-3">{{ $message }}</div>
+                                    @enderror
                                 </div>
-                                
-                                @error('services_offered')
-                                    <div class="text-danger small mt-2">{{ $message }}</div>
-                                @enderror
+
+                                <!-- اختيار الخدمات -->
+                                <div class="mb-5">
+                                    <h5 class="fw-bold text-dark mb-3">
+                                        <i class="fas fa-cogs me-2"></i> الخطوة 2: اختر الخدمات <span class="text-danger">*</span>
+                                    </h5>
+                                    <p class="text-muted mb-4">ستظهر الخدمات بناءً على الفئات المختارة</p>
+
+                                    <div id="servicesContainer">
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle me-2"></i> اختر الفئات أولاً لعرض الخدمات المتاحة
+                                        </div>
+                                    </div>
+                                    @error('services')
+                                        <div class="text-danger small mt-3">{{ $message }}</div>
+                                    @enderror
+                                </div>
                             </div>
 
                             <!-- Section 3: المرفقات والوثائق -->
@@ -494,7 +454,14 @@
 @endpush
 
 @push('scripts')
+<script type="application/json" id="allServicesData">@json($allServices ?? [])</script>
+<script type="application/json" id="selectedCategoriesData">@json(old('categories', []))</script>
+<script type="application/json" id="selectedServicesData">@json(old('services', []))</script>
 <script>
+const allServices = JSON.parse(document.getElementById('allServicesData').textContent || '[]');
+const selectedCategories = JSON.parse(document.getElementById('selectedCategoriesData').textContent || '[]');
+const selectedServices = JSON.parse(document.getElementById('selectedServicesData').textContent || '[]');
+
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('supplierRegisterForm');
     const submitBtn = document.getElementById('submitBtn');
@@ -504,7 +471,127 @@ document.addEventListener('DOMContentLoaded', function() {
     const commercialRegisterInput = document.getElementById('commercial_register');
     const commercialRegisterFileInput = document.getElementById('commercial_register_file');
 
-    // Toggle commercial register visibility based on supplier type
+    // ===== إدارة الفئات والخدمات الديناميكية =====
+    const categoryCheckboxes = document.querySelectorAll('.category-checkbox-input');
+    
+    categoryCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateServices);
+    });
+
+    function updateServices() {
+        // الحصول على الفئات المختارة
+        const selected = Array.from(document.querySelectorAll('.category-checkbox-input:checked'))
+            .map(c => parseInt(c.value));
+
+        if (selected.length === 0) {
+            document.getElementById('servicesContainer').innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> اختر الفئات أولاً لعرض الخدمات المتاحة
+                </div>
+            `;
+            return;
+        }
+
+        // فلترة الخدمات حسب الفئات المختارة
+        const filteredServices = allServices.filter(service => 
+            selected.includes(service.category_id)
+        );
+
+        // تجميع الخدمات حسب الفئة
+        const servicesByCategory = {};
+        filteredServices.forEach(service => {
+            if (!servicesByCategory[service.category_id]) {
+                servicesByCategory[service.category_id] = [];
+            }
+            servicesByCategory[service.category_id].push(service);
+        });
+
+        // بناء HTML
+        let html = '';
+        selected.forEach(categoryId => {
+            const categoryLabel = document.querySelector(`label[for="category_${categoryId}"]`);
+            const categoryName = categoryLabel ? categoryLabel.textContent.trim().split('\n')[0] : 'غير محدد';
+            const services = servicesByCategory[categoryId] || [];
+
+            if (services.length > 0) {
+                html += `<div class="mb-4">
+                    <h6 class="text-muted mb-3 pb-2 border-bottom">
+                        <i class="fas fa-folder me-2"></i> ${categoryName}
+                    </h6>
+                    <div class="row g-3">`;
+
+                services.forEach(service => {
+                    const isChecked = selectedServices.includes(service.id);
+                    const displayText = service.subtitle && service.subtitle.trim() !== '' ? service.subtitle : service.name;
+                    html += `
+                        <div class="col-md-6">
+                            <div class="form-check border rounded-3 p-3 service-checkbox">
+                                <input class="form-check-input service-checkbox-input" 
+                                       type="checkbox" 
+                                       name="services[]" 
+                                       value="${service.id}" 
+                                       id="service_${service.id}"
+                                       data-category-id="${service.category_id}"
+                                       ${isChecked ? 'checked' : ''}>
+                                <label class="form-check-label w-100 cursor-pointer" for="service_${service.id}">
+                                    <div class="fw-500">${displayText}</div>
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div></div>';
+            }
+        });
+
+        document.getElementById('servicesContainer').innerHTML = html || 
+            '<div class="alert alert-warning">لا توجد خدمات متاحة للفئات المختارة</div>';
+
+        // منع اختيار خدمات من فئات غير مختارة
+        validateServices();
+    }
+
+    function validateServices() {
+        const selected = Array.from(document.querySelectorAll('.category-checkbox-input:checked'))
+            .map(c => parseInt(c.value));
+
+        document.querySelectorAll('.service-checkbox-input').forEach(checkbox => {
+            const categoryId = parseInt(checkbox.getAttribute('data-category-id'));
+            const isAllowed = selected.includes(categoryId);
+            
+            if (!isAllowed && checkbox.checked) {
+                checkbox.checked = false;
+            }
+        });
+    }
+
+    // تهيئة عند التحميل
+    if (selectedCategories.length > 0) {
+        updateServices();
+    }
+
+    // منع الإرسال إذا لم يتم اختيار خدمات
+    form.addEventListener('submit', (e) => {
+        const servicesChecked = document.querySelectorAll('.service-checkbox-input:checked').length > 0;
+        const categoriesChecked = document.querySelectorAll('.category-checkbox-input:checked').length > 0;
+
+        if (!categoriesChecked) {
+            e.preventDefault();
+            alert('يرجى اختيار فئة واحدة على الأقل');
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return false;
+        }
+
+        if (!servicesChecked) {
+            e.preventDefault();
+            alert('يرجى اختيار خدمة واحدة على الأقل من الفئات المختارة');
+            document.getElementById('servicesContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return false;
+        }
+    });
+
+    // ===== الكود الأصلي لإدارة نوع المورد =====
     function toggleCommercialRegister() {
         const supplierType = document.querySelector('input[name="supplier_type"]:checked')?.value;
         
@@ -527,7 +614,6 @@ document.addEventListener('DOMContentLoaded', function() {
         radio.addEventListener('change', toggleCommercialRegister);
     });
 
-    // Initialize on page load
     toggleCommercialRegister();
 
     // File upload preview
@@ -555,37 +641,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const spinner = submitBtn.querySelector('.spinner-border');
         submitBtn.disabled = true;
         spinner.classList.remove('d-none');
-    });
-
-    // Service checkbox selection validation
-    const serviceCheckboxes = document.querySelectorAll('input[name="services_offered[]"]');
-    const servicesError = document.createElement('div');
-    servicesError.className = 'text-danger small mt-2 d-none';
-    servicesError.textContent = 'يرجى اختيار خدمة واحدة على الأقل';
-    
-    form.addEventListener('submit', function(e) {
-        const checkedServices = document.querySelectorAll('input[name="services_offered[]"]:checked');
-        
-        if (checkedServices.length === 0) {
-            e.preventDefault();
-            const servicesContainer = document.querySelector('input[name="services_offered[]"]').closest('.mb-5');
-            if (!servicesContainer.querySelector('.text-danger')) {
-                servicesContainer.appendChild(servicesError);
-            }
-            servicesError.classList.remove('d-none');
-            
-            // Scroll to error
-            servicesContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    });
-
-    serviceCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            const checkedServices = document.querySelectorAll('input[name="services_offered[]"]:checked');
-            if (checkedServices.length > 0) {
-                servicesError.classList.add('d-none');
-            }
-        });
     });
 });
 </script>

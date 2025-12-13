@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إضافة عنصر جديد - المعرض - Your Events')
+@section('title', 'إضافة عنصر جديد')
 @section('page-title', 'إضافة عنصر جديد للمعرض')
 @section('page-description', 'إضافة صورة أو فيديو جديد للمعرض')
 

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'الدفع وتأكيد الحجز - Your Events')
+@section('title', 'الدفع') 'الدفع وتأكيد الحجز - Your Events')
 
 @section('content')
 <div class="container py-5" style="margin-top: 100px;">

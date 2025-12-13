@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إدارة تنويعات الخدمة - ' . $service->name)
+@section('title', 'إدارة تنويعات الخدمة')
 @section('page-title', 'إدارة تنويعات الخدمة')
 @section('page-description', $service->name)
 

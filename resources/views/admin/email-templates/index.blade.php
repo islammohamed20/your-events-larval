@@ -27,6 +27,14 @@
         </div>
     @endif
 
+    <!-- ملاحظة مهمة -->
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>ملاحظة:</strong> بعض القوالب الأساسية تستخدم ملفات Blade مخصصة بثيم موحد (مثل: قبول المورد، تأكيد الحجز، عرض السعر). 
+        التعديل من هنا قد لا يؤثر على هذه القوالب. لتعديل التصميم، يُرجى تحرير الملفات في <code>resources/views/emails/</code>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
     <div class="row">
         <div class="col-12">
             <div class="card shadow">
@@ -67,6 +75,7 @@
                                                         'welcome' => ['label' => 'ترحيب', 'color' => 'info', 'icon' => 'user-plus'],
                                                         'reset_password' => ['label' => 'إعادة كلمة المرور', 'color' => 'warning', 'icon' => 'key'],
                                                         'invoice' => ['label' => 'فاتورة', 'color' => 'primary', 'icon' => 'file-invoice'],
+                                                        'supplier_approval' => ['label' => 'قبول المورد', 'color' => 'success', 'icon' => 'user-check'],
                                                         'custom' => ['label' => 'مخصص', 'color' => 'secondary', 'icon' => 'cog'],
                                                     ];
                                                     $typeData = $typeLabels[$template->type] ?? $typeLabels['custom'];

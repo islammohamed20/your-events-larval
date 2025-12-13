@@ -1,28 +1,26 @@
 @extends('layouts.app')
 
-@section('title', ($selectedCategory ? $selectedCategory->name : 'خدماتنا') . ' - Your Events')
+@section('title', 'الخدمات - Your Events')
 
 @section('content')
 <!-- Page Header -->
-<section class="hero-section" style="padding: 40px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-    <div class="container">
-        <div class="text-center">
-            <h1 class="display-4 fw-bold mb-3 text-white">
+<section class="hero-section" @if($selectedCategory && $selectedCategory->banner)
+    style="padding: 0; background-image: url('{{ Storage::url($selectedCategory->banner) }}'); background-position: center; background-size: cover; background-repeat: no-repeat; min-height: 205px; display: flex; align-items: center;"
+@else
+    style="padding: 47px 0; background-image: url('/images/services/service_bannar.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat;"
+@endif>
+    @if(!$selectedCategory || !$selectedCategory->banner)
+        <div class="container">
+            <div class="text-center">
                 @if($selectedCategory)
-                    {{ $selectedCategory->name }}
-                @else
-                    خدماتنا
+                    <h1 class="display-4 fw-bold mb-3 text-white">{{ $selectedCategory->name }}</h1>
+                    @if($selectedCategory->description)
+                        <p class="lead text-white-50">{{ $selectedCategory->description }}</p>
+                    @endif
                 @endif
-            </h1>
-            <p class="lead text-white-50">
-                @if($selectedCategory && $selectedCategory->description)
-                    {{ $selectedCategory->description }}
-                @else
-                    نقدم مجموعة شاملة من الخدمات لجعل مناسبتك مميزة ولا تُنسى
-                @endif
-            </p>
+            </div>
         </div>
-    </div>
+    @endif
 </section>
 
 <!-- Services Section with Sidebar Filter -->
@@ -61,6 +59,9 @@
                                     @endforeach
                                 </div>
                             </div>
+
+                            <!-- Service Type Filter -->
+                            
 
                             <!-- Price Range Filter -->
                             <div class="filter-group mb-4">
@@ -145,6 +146,7 @@
                         <div class="service-item mb-4" 
                              data-price="{{ $service->price }}" 
                              data-name="{{ $service->name }}"
+                             data-type="{{ Str::lower($service->type ? $service->type : 'أخرى') }}"
                              data-aos="fade-up" 
                              data-aos-delay="{{ $loop->index * 50 }}">
                             <div class="card h-100 service-card">
@@ -242,6 +244,25 @@
 </section>
 
 <style>
+/* Hero Section Banner Responsive */
+.hero-section {
+    width: 100%;
+}
+
+/* Mobile View - Banner takes full width */
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: 90px !important;
+    }
+}
+
+/* Desktop View - Banner fixed height */
+@media (min-width: 769px) {
+    .hero-section {
+        min-height: 205px !important;
+    }
+}
+
 /* الحفاظ على ارتفاع ثابت على الشاشات الكبيرة لتناسق الكروت */
 .service-card .service-image { width: 100%; height: 250px; object-fit: cover; display: block; }
 
@@ -261,7 +282,7 @@
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
-    <div class="offcanvas-body">
+<div class="offcanvas-body">
         <!-- Same filters as sidebar -->
         <div class="filter-group mb-4">
             <h6 class="fw-bold mb-3">الفئات</h6>
@@ -280,6 +301,8 @@
                 @endforeach
             </div>
         </div>
+
+        
 
         <div class="filter-group mb-4">
             <h6 class="fw-bold mb-3">السعر</h6>
@@ -560,6 +583,17 @@
 document.addEventListener('DOMContentLoaded', function() {
     const servicesContainer = document.getElementById('servicesContainer');
     const serviceItems = document.querySelectorAll('.service-item');
+
+    // Normalize Arabic text differences (e.g., أ/ا، ى/ي)
+    function normalizeArabic(text) {
+        return (text || '')
+            .replace(/[أإآ]/g, 'ا')
+            .replace(/ى/g, 'ي')
+            .replace(/ؤ/g, 'و')
+            .replace(/ئ/g, 'ي')
+            .replace(/ة/g, 'ه')
+            .toLowerCase().trim();
+    }
     
     // Price Filter
     document.querySelectorAll('.price-filter, .price-filter-mobile').forEach(checkbox => {
@@ -590,18 +624,20 @@ document.addEventListener('DOMContentLoaded', function() {
     function filterServices() {
         const selectedPrices = Array.from(document.querySelectorAll('.price-filter:checked, .price-filter-mobile:checked'))
             .map(cb => cb.value);
-        
+
         serviceItems.forEach(item => {
             const price = parseFloat(item.dataset.price);
-            let show = selectedPrices.length === 0;
-            
+
+            // Price matching فقط
+            let priceMatch = selectedPrices.length === 0;
             selectedPrices.forEach(range => {
-                if (range === '0-500' && price < 500) show = true;
-                else if (range === '500-1000' && price >= 500 && price < 1000) show = true;
-                else if (range === '1000-2000' && price >= 1000 && price < 2000) show = true;
-                else if (range === '2000+' && price >= 2000) show = true;
+                if (range === '0-500' && price < 500) priceMatch = true;
+                else if (range === '500-1000' && price >= 500 && price < 1000) priceMatch = true;
+                else if (range === '1000-2000' && price >= 1000 && price < 2000) priceMatch = true;
+                else if (range === '2000+' && price >= 2000) priceMatch = true;
             });
-            
+
+            const show = priceMatch;
             item.style.display = show ? 'block' : 'none';
         });
     }

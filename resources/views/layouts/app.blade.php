@@ -13,23 +13,35 @@
         $metaKeywords = \App\Models\Setting::get('meta_keywords');
         $ogImage = \App\Models\Setting::get('og_image');
         $logo = \App\Models\Setting::get('logo');
+        // Build resilient logo and OG image URLs with safe fallback
+        $defaultLogoAsset = asset('images/logo/logo.png');
+        $logoUrl = $logo
+            ? (filter_var($logo, FILTER_VALIDATE_URL) ? $logo : url(\Illuminate\Support\Facades\Storage::url($logo)))
+            : $defaultLogoAsset;
+        $ogImageUrl = $ogImage
+            ? (filter_var($ogImage, FILTER_VALIDATE_URL) ? $ogImage : url(\Illuminate\Support\Facades\Storage::url($ogImage)))
+            : $logoUrl;
         $canonical = url()->current();
     @endphp
     <meta name="description" content="{{ $siteDescription }}">
+    <meta name="robots" content="@yield('robotsMeta', 'index,follow')">
     @if($metaKeywords)
     <meta name="keywords" content="{{ $metaKeywords }}">
     @endif
     <link rel="canonical" href="{{ $canonical }}">
 
+    @php
+        $gsv = \App\Models\Setting::get('google_site_verification');
+    @endphp
+    @if($gsv)
+    <meta name="google-site-verification" content="{{ $gsv }}">
+    @endif
+
     <!-- Open Graph -->
     <meta property="og:title" content="@yield('title', $siteName)">
     <meta property="og:description" content="{{ $siteDescription }}">
     <meta property="og:url" content="{{ $canonical }}">
-    @if($ogImage)
-    <meta property="og:image" content="{{ Storage::url($ogImage) }}">
-    @elseif($logo)
-    <meta property="og:image" content="{{ Storage::url($logo) }}">
-    @endif
+    <meta property="og:image" content="{{ $ogImageUrl }}">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="{{ $siteName }}">
 
@@ -37,12 +49,38 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="@yield('title', $siteName)">
     <meta name="twitter:description" content="{{ $siteDescription }}">
-    @if($ogImage)
-    <meta name="twitter:image" content="{{ Storage::url($ogImage) }}">
-    @elseif($logo)
-    <meta name="twitter:image" content="{{ Storage::url($logo) }}">
-    @endif
+    <meta name="twitter:image" content="{{ $ogImageUrl }}">
     
+    @php
+        $siteUrl = url('/');
+        $facebook = \App\Models\Setting::get('facebook_url');
+        $twitter = \App\Models\Setting::get('twitter_url');
+        $instagram = \App\Models\Setting::get('instagram_url');
+        $linkedin = \App\Models\Setting::get('linkedin_url');
+        $sameAs = array_values(array_filter([$facebook, $twitter, $instagram, $linkedin]));
+        $orgSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            'name' => $siteName,
+            'url' => $siteUrl,
+            'logo' => $logoUrl,
+            'sameAs' => $sameAs,
+        ];
+        $websiteSchema = [
+            '@context' => 'https://schema.org',
+            '@type' => 'WebSite',
+            'url' => $siteUrl,
+            'name' => $siteName,
+            'potentialAction' => [
+                '@type' => 'SearchAction',
+                'target' => url('/search') . '?q={search_term_string}',
+                'query-input' => 'required name=search_term_string',
+            ],
+        ];
+    @endphp
+    <script type="application/ld+json">@json(array_filter($orgSchema))</script>
+    <script type="application/ld+json">@json(array_filter($websiteSchema))</script>
+
     <!-- Favicon -->
     @php
         $favicon = \App\Models\Setting::get('favicon');
@@ -464,14 +502,19 @@
             }
             
             .navbar .dropdown-menu {
-                position: static !important;
+                position: relative !important;
                 float: none;
                 width: 100%;
                 margin-top: 0;
-                border-radius: 0;
-                box-shadow: none;
+                border-radius: 10px;
+                box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
                 background: rgba(255, 255, 255, 0.95);
                 backdrop-filter: blur(10px);
+                display: none;
+            }
+            
+            .navbar .dropdown-menu.show {
+                display: block !important;
             }
             
             .navbar .dropdown-item {
@@ -1033,29 +1076,32 @@
             font-weight: 500;
             color: white;
             font-size: 0.9rem;
-            max-width: 100px;
+            max-width: 150px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
         
         .enhanced-dropdown {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.98) !important;
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            margin-top: 10px;
-            position: absolute !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+            margin-top: 10px !important;
             z-index: 9999 !important;
-            display: none;
+            min-width: 200px;
         }
         
-        .enhanced-dropdown.show {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            transform: translateY(0) !important;
+        .nav-item.dropdown {
+            position: relative;
+        }
+        
+        .nav-item.dropdown .dropdown-menu {
+            position: absolute !important;
+            top: 100% !important;
+            right: 0 !important;
+            left: auto !important;
         }
         
         .enhanced-dropdown .dropdown-item {
@@ -1114,7 +1160,6 @@
         
         .cta-button:hover {
             transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 8px 25px rgba(240, 199, 29, 0.6);
         }
         
         .btn-text {
@@ -1140,7 +1185,6 @@
             font-size: 0.95rem;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(240, 199, 29, 0.4);
             color: var(--primary-color);
             transition: all 0.3s ease;
             white-space: nowrap;
@@ -1163,7 +1207,6 @@
 
         .btn-gold:hover {
             transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 15px 50px rgba(240, 199, 29, 0.5);
         }
         
         .btn-secondary:hover {
@@ -1532,6 +1575,14 @@
                 margin-bottom: 4px;
             }
             
+            .mobile-nav-item .mobile-nav-icon {
+                width: 1.5rem;
+                height: 1.5rem;
+                margin-bottom: 4px;
+                object-fit: contain;
+                filter: brightness(0) invert(1);
+            }
+            
             .mobile-nav-item span {
                 font-size: 0.7rem;
                 font-weight: 500;
@@ -1868,16 +1919,72 @@
             }
         }
         
-        .navbar-collapse {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 20px 15px;
-            border-radius: 15px;
-            margin-top: 15px;
-            margin-left: -15px;
-            margin-right: -15px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        /* Desktop navbar-collapse styling */
+        @media (min-width: 992px) {
+            .navbar-collapse {
+                background: transparent;
+                backdrop-filter: none;
+                padding: 0;
+                border-radius: 0;
+                margin-top: 0;
+                margin-left: 0;
+                margin-right: 0;
+                box-shadow: none;
+            }
+            
+            .navbar-nav {
+                gap: 5px;
+                text-align: right;
+            }
+            
+            .nav-item.dropdown {
+                position: relative;
+            }
+            
+            .nav-item.dropdown .dropdown-menu {
+                position: absolute !important;
+                top: 100% !important;
+                left: auto !important;
+                right: 0 !important;
+                display: none;
+                min-width: 200px;
+                background: rgba(255, 255, 255, 0.98) !important;
+                border: 1px solid rgba(0, 0, 0, 0.1) !important;
+                border-radius: 12px !important;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+                padding: 10px !important;
+            }
+            
+            .nav-item.dropdown .dropdown-menu.show {
+                display: block !important;
+            }
+            
+            .nav-item.dropdown .dropdown-menu .dropdown-item {
+                color: var(--primary-color) !important;
+                padding: 10px 15px;
+                border-radius: 8px;
+                transition: all 0.3s ease;
+            }
+            
+            .nav-item.dropdown .dropdown-menu .dropdown-item:hover {
+                background: rgba(45, 188, 174, 0.1) !important;
+                transform: translateX(-5px);
+            }
         }
+            
+        /* Mobile styles for navbar-collapse */
+        @media (max-width: 991px) {
+            .navbar-collapse.show {
+                display: block !important;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+                padding: 20px 15px;
+                border-radius: 15px;
+                margin-top: 15px;
+                margin-left: -15px;
+                margin-right: -15px;
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            }
             
             .navbar-nav {
                 gap: 10px;
@@ -2326,12 +2433,15 @@
                                 <li class="mb-2"><a href="{{ route('home') }}" class="text-white text-decoration-none">{{ __('common.quick_links_home') }}</a></li>
                                 <li class="mb-2"><a href="{{ route('services.index') }}" class="text-white text-decoration-none">{{ __('common.quick_links_services') }}</a></li>
                                 <li class="mb-2"><a href="{{ route('packages.index') }}" class="text-white text-decoration-none">{{ __('common.quick_links_packages') }}</a></li>
+                                @if(\App\Models\Gallery::count() > 0)
                                 <li class="mb-2"><a href="{{ route('gallery.index') }}" class="text-white text-decoration-none">{{ __('common.quick_links_gallery') }}</a></li>
+                                @endif
                                 <li class="mb-2"><a href="{{ route('contact') }}" class="text-white text-decoration-none">{{ __('common.quick_links_contact') }}</a></li>
                                 <li class="mb-2"><a href="{{ route('suppliers.register') }}" class="text-white text-decoration-none">سجل كمورد</a></li>
+                                <li class="mb-2"><a href="{{ route('supplier.login') }}" class="text-white text-decoration-none">تسجيل دخول الموردين</a></li>
                                 <li class="mb-2">
                                     <a href="{{ route('terms') }}" class="text-white text-decoration-none">
-                                        <i class="fas fa-file-contract me-1"></i>{{ __('common.quick_links_terms') }}
+                                        {{ __('common.quick_links_terms') }}
                                     </a>
                                 </li>
                             </ul>
@@ -2339,20 +2449,17 @@
                         <div class="col-md-6">
                             <h6 class="mb-3 text-white">{{ __('common.contact_info') }}</h6>
                             <ul class="list-unstyled">
-                                <li class="mb-2 d-flex align-items-center">
-                                    <i class="fas fa-phone text-primary me-2"></i>
+                                <li class="mb-2">
                                     <a href="tel:{{ preg_replace('/\s+/', '', \App\Models\Setting::get('contact_phone')) }}" class="text-white text-decoration-none phone-ltr" dir="ltr">
                                         <span>{{ \App\Models\Setting::get('contact_phone') }}</span>
                                     </a>
                                 </li>
-                                <li class="mb-2 d-flex align-items-center">
-                                    <i class="fas fa-envelope text-primary me-2"></i>
+                                <li class="mb-2">
                                     <a href="mailto:{{ \App\Models\Setting::get('contact_email') }}" class="text-white text-decoration-none">
                                         {{ \App\Models\Setting::get('contact_email') }}
                                     </a>
                                 </li>
-                                <li class="mb-2 d-flex align-items-start">
-                                    <i class="fas fa-map-marker-alt text-primary me-2 mt-1"></i>
+                                <li class="mb-2">
                                     <span class="text-white">{{ \App\Models\Setting::get('contact_address', 'الرياض، المملكة العربية السعودية') }}</span>
                                 </li>
                                 <!-- <li class="mb-2 d-flex align-items-center">
@@ -2428,7 +2535,7 @@
                 <span>{{ __('nav.home') }}</span>
             </a>
             <a href="{{ route('services.index') }}" class="mobile-nav-item {{ request()->routeIs('services.*') ? 'active' : '' }}">
-                <i class="fas fa-concierge-bell"></i>
+                <img src="{{ asset('images/logo/White.png') }}" alt="Services" class="mobile-nav-icon">
                 <span>{{ __('nav.services') }}</span>
             </a>
             <a href="{{ route('cart.index') }}" class="mobile-nav-item {{ request()->routeIs('cart.*') ? 'active' : '' }}">
@@ -3029,6 +3136,56 @@
 
     <!-- Bootstrap Bundle JS (includes Popper) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Fix Dropdown Click -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize all dropdowns
+            var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+            dropdownElementList.forEach(function(dropdownToggleEl) {
+                // Create Bootstrap dropdown instance
+                new bootstrap.Dropdown(dropdownToggleEl);
+            });
+            
+            // Manual click handler for dropdowns that might not work
+            document.querySelectorAll('.nav-item.dropdown .dropdown-toggle').forEach(function(toggle) {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    var dropdownMenu = this.nextElementSibling;
+                    if (!dropdownMenu || !dropdownMenu.classList.contains('dropdown-menu')) {
+                        dropdownMenu = this.parentElement.querySelector('.dropdown-menu');
+                    }
+                    
+                    if (dropdownMenu) {
+                        // Close all other dropdowns first
+                        document.querySelectorAll('.dropdown-menu.show').forEach(function(menu) {
+                            if (menu !== dropdownMenu) {
+                                menu.classList.remove('show');
+                            }
+                        });
+                        
+                        // Toggle current dropdown
+                        dropdownMenu.classList.toggle('show');
+                        this.setAttribute('aria-expanded', dropdownMenu.classList.contains('show'));
+                    }
+                });
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.nav-item.dropdown')) {
+                    document.querySelectorAll('.nav-item.dropdown .dropdown-menu.show').forEach(function(menu) {
+                        menu.classList.remove('show');
+                    });
+                    document.querySelectorAll('.nav-item.dropdown .dropdown-toggle').forEach(function(toggle) {
+                        toggle.setAttribute('aria-expanded', 'false');
+                    });
+                }
+            });
+        });
+    </script>
 
     <!-- Universal Modal Close Fallback: ensures the × button closes media overlays -->
     <script>

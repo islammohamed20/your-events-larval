@@ -245,4 +245,35 @@ class CustomerManagementController extends Controller
 
         return redirect()->back()->with('success', 'تم تحديث بيانات العميل بنجاح');
     }
+
+    /**
+     * Delete a customer (with validations)
+     */
+    public function destroy($id)
+    {
+        // لا تسمح بحذف مسؤولي النظام
+        $customer = User::where('is_admin', false)->findOrFail($id);
+
+        // منع حذف عميل لديه حجوزات حالية أو مؤكدة
+        $hasActiveBookings = $customer->bookings()->whereIn('status', ['pending', 'confirmed'])->exists();
+        if ($hasActiveBookings) {
+            return redirect()->back()->with('error', 'لا يمكن حذف عميل لديه حجوزات نشطة أو مؤكدة.');
+        }
+
+        // إذا كان لديه عروض أسعار غير مكتملة يمكن فقط الأرشفه (Soft Delete) إن كانت مدعومة
+        // هنا سنجري حذف دائم مع التأكد من عدم وجود قيود
+
+        try {
+            // حذف عروض الأسعار المرتبطة غير المعتمدة لتفادي قيود العلاقات
+            Quote::where('user_id', $customer->id)->where('status', 'pending')->delete();
+
+            // تأكد من عدم وجود حجوزات نشطة، الحجوزات الملغاة لا تعيق الحذف
+            // تنفيذ الحذف
+            $customer->delete();
+
+            return redirect()->route('admin.customers.index')->with('success', 'تم حذف العميل بنجاح.');
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', 'فشل حذف العميل: ' . $e->getMessage());
+        }
+    }
 }

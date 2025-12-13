@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إدارة الخدمات - Your Events')
+@section('title', 'إدارة الخدمات')
 @section('page-title', 'إدارة الخدمات')
 @section('page-description', 'عرض وإدارة جميع الخدمات المتاحة')
 
@@ -138,9 +138,24 @@
                     <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
                     <input type="text" name="q" value="{{ request('q', $search ?? '') }}" class="form-control" placeholder="ابحث في اسم، وصف، نوع، فئة، السعر...">
                 </div>
+                <div class="input-group" style="min-width: 220px;">
+                    <span class="input-group-text bg-white"><i class="fas fa-tags"></i></span>
+                    <select name="type" class="form-select">
+                        <option value="">كل الأنواع</option>
+                        <option value="تصوير" {{ request('type') === 'تصوير' ? 'selected' : '' }}>تصوير</option>
+                        <option value="تنظيم" {{ request('type') === 'تنظيم' ? 'selected' : '' }}>تنظيم</option>
+                        <option value="ديكور" {{ request('type') === 'ديكور' ? 'selected' : '' }}>ديكور</option>
+                        <option value="ضيافة" {{ request('type') === 'ضيافة' ? 'selected' : '' }}>ضيافة</option>
+                        <option value="ترفيه" {{ request('type') === 'ترفيه' ? 'selected' : '' }}>ترفيه</option>
+                        <option value="أخرى" {{ request('type') === 'أخرى' ? 'selected' : '' }}>أخرى</option>
+                    </select>
+                </div>
                 <button type="submit" class="btn btn-light">بحث</button>
                 @if(($search ?? '') !== '')
                     <a href="{{ route('admin.services.index') }}" class="btn btn-outline-secondary">مسح البحث</a>
+                @endif
+                @if(request('type'))
+                    <a href="{{ route('admin.services.index', array_filter(['q' => request('q')])) }}" class="btn btn-outline-secondary">مسح النوع</a>
                 @endif
             </form>
             @if($services->count() > 0)
@@ -268,6 +283,9 @@
                     <div class="text-muted">
                         @if(($search ?? '') !== '')
                             النتائج لبحث: "{{ $search }}"
+                        @endif
+                        @if(request('type'))
+                            <span class="ms-2">| النوع: "{{ request('type') }}"</span>
                         @endif
                     </div>
                     <div>

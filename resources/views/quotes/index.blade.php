@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'عروض الأسعار - Your Events')
+@section('title', 'طلبات الأسعار') 'عروض الأسعار - Your Events')
 
 @section('content')
 <div class="container py-5" style="margin-top: 100px;">
@@ -114,26 +114,26 @@
 }
 
 .quote-card:hover {
-    border-color: #ef4870;
+    border-color: #A855F7;
     transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(239, 72, 112, 0.3) !important;
+    box-shadow: 0 15px 40px rgba(168, 85, 247, 0.3) !important;
 }
 
 .quote-icon {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
     padding: 20px;
     border-radius: 15px;
     display: inline-block;
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #ef4870 0%, #ff7ba3 100%);
+    background: linear-gradient(135deg, #5B21B6 0%, #7C3AED 50%, #A855F7 100%);
     border: none;
 }
 
 .btn-primary:hover {
     transform: scale(1.05);
-    box-shadow: 0 5px 15px rgba(239, 72, 112, 0.4);
+    box-shadow: 0 5px 15px rgba(168, 85, 247, 0.4);
 }
 </style>
 @endsection

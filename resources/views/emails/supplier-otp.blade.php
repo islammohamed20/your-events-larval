@@ -21,7 +21,7 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
         .header {
-            background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 40px 30px;
             text-align: center;
         }
@@ -52,7 +52,7 @@
             margin-bottom: 30px;
         }
         .otp-box {
-            background: linear-gradient(135deg, #fff9e6 0%, #fff4cc 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: 2px dashed #ffc107;
             border-radius: 12px;
             padding: 30px;
@@ -60,7 +60,7 @@
         }
         .otp-label {
             font-size: 14px;
-            color: #666666;
+            color: #ffffffff;
             margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -68,14 +68,14 @@
         .otp-code {
             font-size: 42px;
             font-weight: bold;
-            color: #ff9800;
+            color: #ffffffff;
             letter-spacing: 8px;
             font-family: 'Courier New', monospace;
             margin: 10px 0;
         }
         .otp-validity {
             font-size: 14px;
-            color: #d32f2f;
+            color: #ffffffff;
             margin-top: 15px;
             font-weight: bold;
         }
@@ -86,6 +86,7 @@
             margin: 30px 0;
             text-align: right;
             border-radius: 8px;
+            direction: rtl;
         }
         .warning-title {
             color: #856404;
@@ -97,6 +98,8 @@
             color: #856404;
             font-size: 14px;
             line-height: 1.5;
+            text-align: right;
+            direction: rtl;
         }
         .footer {
             background-color: #f8f9fa;
@@ -148,8 +151,8 @@
     <div class="email-container">
         <!-- Header -->
         <div class="header">
-            <h1>🎉 منصة فعالياتك</h1>
-            <p>رمز التحقق لتسجيل المورد</p>
+            <h1>Your Events</h1>
+            <p>لا وسطاء، لا انتظار، ولا مكالمات ما تخلص. كل شي واضح، وسلس، وسريع</p>
         </div>
 
         <!-- Content -->
@@ -165,7 +168,7 @@
             @endif
 
             <div class="message">
-                شكراً لتسجيلك كمورد في منصة فعالياتك. لإتمام عملية التسجيل، يرجى استخدام رمز التحقق التالي:
+                شكراً لتسجيلك كمورد في منصة Your Events. لإتمام عملية التسجيل، يرجى استخدام رمز التحقق التالي:
             </div>
 
             <!-- OTP Box -->
@@ -191,25 +194,18 @@
         </div>
 
         <!-- Footer -->
-        <div class="footer">
+        <div class="footer" style="direction: rtl; text-align: center;">
             <p class="footer-text">
-                <strong>منصة فعالياتك</strong><br>
-                منصتك المتكاملة لتنظيم الفعاليات والمناسبات
+                <strong>Your Events</strong><br>
+                لا وسطاء، لا انتظار، ولا مكالمات ما تخلص. كل شي واضح، وسلس، وسريع
             </p>
             <p class="footer-text">
-                📧 <a href="mailto:support@your-events.com" class="footer-link">support@your-events.com</a><br>
-                📱 <a href="tel:+966500000000" class="footer-link">+966 50 000 0000</a>
+                📧 <a href="mailto:hello@yourevents.sa" class="footer-link">hello@yourevents.sa</a><br>
+                📱 <a href="tel:+966505159616" class="footer-link" style="direction: ltr; unicode-bidi: bidi-override;">+966 50 515 9616</a>
             </p>
             
-            <div class="social-links">
-                <a href="#" title="تويتر">🐦</a>
-                <a href="#" title="إنستجرام">📷</a>
-                <a href="#" title="سناب شات">👻</a>
-                <a href="#" title="تيك توك">🎵</a>
-            </div>
-
             <p class="footer-text" style="margin-top: 20px; font-size: 12px; color: #999999;">
-                © {{ date('Y') }} منصة فعالياتك. جميع الحقوق محفوظة.<br>
+                © {{ date('Y') }} Your Events. جميع الحقوق محفوظة.<br>
                 هذه رسالة تلقائية، يرجى عدم الرد عليها.
             </p>
         </div>

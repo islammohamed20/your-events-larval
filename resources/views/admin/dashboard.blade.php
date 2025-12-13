@@ -14,7 +14,6 @@
                     <div>
                         <h3 class="mb-0">{{ $stats['customers'] ?? 0 }}</h3>
                         <p class="mb-0 text-muted">العملاء</p>
-                        <small class="text-muted">إجمالي: {{ $stats['total_users'] ?? 0 }}</small>
                     </div>
                     <i class="fas fa-user-tie fa-2x text-primary opacity-75"></i>
                 </div>

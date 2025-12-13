@@ -21,6 +21,7 @@ class ServiceController extends Controller
     {
         // قاعدة البحث
         $search = trim((string) $request->get('q', ''));
+        $filterType = trim((string) $request->get('type', ''));
 
         // Eager-load category لإظهارها بدون N+1، مع فلترة حسب البحث
         $query = Service::with('category')->latest();
@@ -50,6 +51,14 @@ class ServiceController extends Controller
             ->orWhereHas('category', function ($cq) use ($search) {
                 $cq->where('name', 'like', "%{$search}%")
                    ->orWhere('name_en', 'like', "%{$search}%");
+            });
+        }
+
+        // فلترة حسب نوع الخدمة إن وُجد
+        if ($filterType !== '') {
+            $query->where(function ($tq) use ($filterType) {
+                $tq->where('type', $filterType)
+                   ->orWhere('type', 'like', "%$filterType%" );
             });
         }
 
@@ -84,7 +93,7 @@ class ServiceController extends Controller
             'marketing_description' => 'nullable|string',
             'what_we_offer' => 'nullable|string',
             'why_choose_us' => 'nullable|string',
-            'meta_description' => 'nullable|string|max:160',
+            'meta_description' => 'nullable|string',
             'service_type' => 'nullable|in:simple,variable',
             'price' => 'nullable|numeric|min:0',
             'duration' => 'nullable|integer|min:0',
@@ -165,7 +174,7 @@ class ServiceController extends Controller
             'marketing_description' => 'nullable|string',
             'what_we_offer' => 'nullable|string',
             'why_choose_us' => 'nullable|string',
-            'meta_description' => 'nullable|string|max:160',
+            'meta_description' => 'nullable|string',
             'service_type' => 'required|in:simple,variable',
             'price' => 'required_if:service_type,simple|nullable|numeric|min:0',
             'duration' => 'nullable|integer|min:0',
@@ -308,8 +317,38 @@ class ServiceController extends Controller
 
     public function destroy(Service $service)
     {
+        // التحقق من استخدام الخدمة في عروض الأسعار
+        $quoteItemsCount = \App\Models\QuoteItem::where('service_id', $service->id)->count();
+        if ($quoteItemsCount > 0) {
+            return redirect()->route('admin.services.index')
+                             ->with('error', "لا يمكن حذف الخدمة \"{$service->name}\" لأنها مستخدمة في {$quoteItemsCount} عرض سعر. يمكنك إيقاف نشاطها بدلاً من حذفها.");
+        }
+
+        // التحقق من استخدام الخدمة في الحجوزات
+        $bookingsCount = \App\Models\Booking::where('service_id', $service->id)->count();
+        if ($bookingsCount > 0) {
+            return redirect()->route('admin.services.index')
+                             ->with('error', "لا يمكن حذف الخدمة \"{$service->name}\" لأنها مستخدمة في {$bookingsCount} حجز. يمكنك إيقاف نشاطها بدلاً من حذفها.");
+        }
+
+        // التحقق من استخدام الخدمة في السلة
+        $cartItemsCount = \App\Models\CartItem::where('service_id', $service->id)->count();
+        if ($cartItemsCount > 0) {
+            return redirect()->route('admin.services.index')
+                             ->with('error', "لا يمكن حذف الخدمة \"{$service->name}\" لأنها موجودة في سلة {$cartItemsCount} عميل. يمكنك إيقاف نشاطها بدلاً من حذفها.");
+        }
+
+        // حذف الصور المرتبطة
         if ($service->image) {
             Storage::disk('public')->delete($service->image);
+        }
+        
+        // حذف صور المعرض
+        foreach ($service->images as $image) {
+            if ($image->image_path) {
+                Storage::disk('public')->delete($image->image_path);
+            }
+            $image->delete();
         }
         
         $service->delete();
@@ -335,8 +374,24 @@ class ServiceController extends Controller
                              ->with('error', 'لم يتم تحديد أي خدمات للحذف');
         }
 
+        // التحقق من الخدمات المستخدمة
+        $usedInQuotes = \App\Models\QuoteItem::whereIn('service_id', $ids)->distinct('service_id')->pluck('service_id')->toArray();
+        $usedInBookings = \App\Models\Booking::whereIn('service_id', $ids)->distinct('service_id')->pluck('service_id')->toArray();
+        $usedInCart = \App\Models\CartItem::whereIn('service_id', $ids)->distinct('service_id')->pluck('service_id')->toArray();
+        
+        $usedServiceIds = array_unique(array_merge($usedInQuotes, $usedInBookings, $usedInCart));
+        
+        // استبعاد الخدمات المستخدمة من الحذف
+        $safeToDeleteIds = $ids->diff($usedServiceIds)->values();
+        
+        // جلب أسماء الخدمات المستخدمة للرسالة
+        $usedServicesNames = [];
+        if (!empty($usedServiceIds)) {
+            $usedServicesNames = Service::whereIn('id', $usedServiceIds)->pluck('name')->toArray();
+        }
+
         // Fetch services with images to delete files
-        $services = Service::whereIn('id', $ids)->get();
+        $services = Service::whereIn('id', $safeToDeleteIds)->get();
         $deletedCount = 0;
         foreach ($services as $service) {
             if ($service->image) {
@@ -346,17 +401,84 @@ class ServiceController extends Controller
                     Log::warning('Failed to delete service image: '.$service->image.' error: '.$e->getMessage());
                 }
             }
+            
+            // حذف صور المعرض
+            foreach ($service->images as $image) {
+                if ($image->image_path) {
+                    try {
+                        Storage::disk('public')->delete($image->image_path);
+                    } catch (\Exception $e) {
+                        Log::warning('Failed to delete service gallery image: '.$image->image_path);
+                    }
+                }
+                $image->delete();
+            }
+            
             $service->delete();
             $deletedCount++;
         }
 
-        if ($deletedCount === 0) {
+        // إعداد رسالة النتيجة
+        $message = '';
+        if ($deletedCount > 0) {
+            $message = "تم حذف {$deletedCount} خدمة بنجاح.";
+        }
+        
+        if (!empty($usedServicesNames)) {
+            $skippedMessage = " تم تخطي " . count($usedServicesNames) . " خدمة لأنها مستخدمة في عروض أسعار أو حجوزات: " . implode('، ', array_slice($usedServicesNames, 0, 3));
+            if (count($usedServicesNames) > 3) {
+                $skippedMessage .= " و" . (count($usedServicesNames) - 3) . " خدمات أخرى";
+            }
+            $message .= $skippedMessage;
+        }
+
+        if ($deletedCount === 0 && empty($usedServicesNames)) {
             return redirect()->route('admin.services.index')
                              ->with('warning', 'لم يتم العثور على خدمات مطابقة للحذف');
         }
 
+        $flashType = $deletedCount > 0 ? 'success' : 'warning';
         return redirect()->route('admin.services.index')
-                         ->with('success', "تم حذف {$deletedCount} خدمة بنجاح");
+                         ->with($flashType, $message);
+    }
+
+    /**
+     * Toggle service status (activate/deactivate)
+     */
+    public function toggleStatus(Service $service)
+    {
+        $service->is_active = !$service->is_active;
+        $service->save();
+
+        $status = $service->is_active ? 'تم تفعيل' : 'تم إيقاف';
+        return redirect()->back()->with('success', "{$status} الخدمة \"{$service->name}\" بنجاح");
+    }
+
+    /**
+     * Bulk toggle status (activate/deactivate)
+     */
+    public function bulkToggleStatus(Request $request)
+    {
+        $idsCsv = (string) $request->input('ids', '');
+        $action = $request->input('action', 'deactivate'); // activate or deactivate
+        
+        $ids = collect(explode(',', $idsCsv))
+            ->map(fn($v) => (int) trim($v))
+            ->filter(fn($v) => $v > 0)
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return redirect()->route('admin.services.index')
+                             ->with('error', 'لم يتم تحديد أي خدمات');
+        }
+
+        $newStatus = $action === 'activate' ? true : false;
+        $updatedCount = Service::whereIn('id', $ids)->update(['is_active' => $newStatus]);
+
+        $statusText = $newStatus ? 'تفعيل' : 'إيقاف';
+        return redirect()->route('admin.services.index')
+                         ->with('success', "تم {$statusText} {$updatedCount} خدمة بنجاح");
     }
 
     private function normalizeCustomFields(array $fields): array

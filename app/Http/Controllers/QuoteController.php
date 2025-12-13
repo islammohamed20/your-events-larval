@@ -77,18 +77,39 @@ class QuoteController extends Controller
         ]);
 
         // Create quote items from cart
+        $itemsCreated = 0;
         foreach ($cartItems as $cartItem) {
-            QuoteItem::create([
-                'quote_id' => $quote->id,
-                'service_id' => $cartItem->service_id,
-                'service_name' => $cartItem->service->name,
-                'service_description' => $cartItem->service->description,
-                'price' => $cartItem->price,
-                'quantity' => $cartItem->quantity,
-                'subtotal' => $cartItem->price * $cartItem->quantity,
-                'customer_notes' => $cartItem->customer_notes,
-                'selections' => $cartItem->selections,
-            ]);
+            // تجاوز العناصر التي ليس لها خدمة (الخدمة محذوفة)
+            if (!$cartItem->service) {
+                Log::warning('Cart item skipped - service not found', ['cart_item_id' => $cartItem->id, 'service_id' => $cartItem->service_id]);
+                continue;
+            }
+            
+            try {
+                QuoteItem::create([
+                    'quote_id' => $quote->id,
+                    'service_id' => $cartItem->service_id,
+                    'service_name' => $cartItem->service->name,
+                    'service_description' => $cartItem->service->description ?? '',
+                    'price' => $cartItem->price,
+                    'quantity' => $cartItem->quantity,
+                    'subtotal' => $cartItem->price * $cartItem->quantity,
+                    'customer_notes' => $cartItem->customer_notes,
+                    'selections' => $cartItem->selections,
+                ]);
+                $itemsCreated++;
+            } catch (\Exception $e) {
+                Log::error('Failed to create quote item', [
+                    'cart_item_id' => $cartItem->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        // إذا لم يتم إنشاء أي عناصر، احذف العرض وأرجع خطأ
+        if ($itemsCreated === 0) {
+            $quote->delete();
+            return redirect()->route('cart.index')->with('error', 'لم نتمكن من إنشاء عرض السعر. يرجى التحقق من السلة والمحاولة مرة أخرى.');
         }
 
         // Calculate totals
@@ -269,6 +290,25 @@ class QuoteController extends Controller
 
         // Update quote status to booked
         $quote->update(['status' => 'booked']);
+
+        try {
+            \App\Models\Payment::create([
+                'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                'quote_id' => $quote->id,
+                'booking_id' => $booking->id,
+                'amount' => $quote->total,
+                'currency' => 'SAR',
+                'method' => $validated['payment_method'],
+                'status' => 'pending',
+                'provider' => 'manual',
+                'notes' => $validated['payment_method'] === 'card' ? $booking->payment_notes : null,
+                'metadata' => [
+                    'source' => 'quotes.processPayment',
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Payment record creation failed: ' . $e->getMessage());
+        }
 
         // Send confirmation email
         try {

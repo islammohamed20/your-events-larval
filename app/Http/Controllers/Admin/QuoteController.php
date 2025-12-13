@@ -88,6 +88,25 @@ class QuoteController extends Controller
             } catch (\Exception $e) {
                 Log::error('Failed to send approval email: ' . $e->getMessage());
             }
+
+            // Notify all suppliers whose services are in this quote (for quick approval competition)
+            try {
+                $serviceIds = $quote->items->pluck('service_id')->unique();
+                $suppliers = \App\Models\Supplier::whereHas('services', function($q) use ($serviceIds) {
+                    $q->whereIn('services.id', $serviceIds);
+                })->where('status', 'approved')->get();
+
+                foreach ($suppliers as $supplier) {
+                    Mail::to($supplier->email)->send(new \App\Mail\SupplierQuoteApprovedNotification($quote, $supplier));
+                }
+                
+                Log::info('Notified ' . $suppliers->count() . ' suppliers about approved quote', [
+                    'quote_id' => $quote->id,
+                    'supplier_emails' => $suppliers->pluck('email')->toArray(),
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Failed to notify suppliers: ' . $e->getMessage());
+            }
         } elseif ($validated['status'] === 'rejected') {
             $quote->rejected_at = now();
             // يمكن إرسال إيميل بالرفض

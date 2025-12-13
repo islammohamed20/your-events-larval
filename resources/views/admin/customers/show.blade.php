@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تفاصيل العميل - ' . $customer->name)
+@section('title', 'تفاصيل العميل')
 
 @section('content')
 <div class="container-fluid py-4">

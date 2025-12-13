@@ -67,6 +67,9 @@
                         <option value="invoice" {{ old('type', $emailTemplate->type ?? '') == 'invoice' ? 'selected' : '' }}>
                             💰 فاتورة
                         </option>
+                        <option value="supplier_approval" {{ old('type', $emailTemplate->type ?? '') == 'supplier_approval' ? 'selected' : '' }}>
+                            ✅ قبول المورد
+                        </option>
                         <option value="custom" {{ old('type', $emailTemplate->type ?? '') == 'custom' ? 'selected' : '' }}>
                             ⚙️ مخصص
                         </option>
@@ -93,6 +96,15 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                     <small class="text-muted">يمكنك استخدام المتغيرات مثل: @{{customer_name}}</small>
+                    
+                    <!-- Quick Fill Supplier Approval -->
+                    <div class="mt-3">
+                        <button type="button" id="fill-supplier-approval" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-magic me-1"></i>
+                            ملء بقالب قبول المورد الاحترافي
+                        </button>
+                        <small class="text-muted ms-2">يضبط الموضوع والمحتوى بنمط الهوية البصرية الحالية</small>
+                    </div>
                 </div>
 
                 <!-- Body -->
@@ -252,6 +264,7 @@
 @push('scripts')
 <!-- TinyMCE Editor -->
 <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+@verbatim
 <script>
 // Initialize TinyMCE
 tinymce.init({
@@ -306,6 +319,14 @@ const variablesByType = {
         { key: 'payment_method', label: 'طريقة الدفع' },
         { key: 'invoice_url', label: 'رابط الفاتورة' },
     ],
+    supplier_approval: [
+        { key: 'supplier_name', label: 'اسم المورد' },
+        { key: 'supplier_email', label: 'البريد الإلكتروني للمورد' },
+        { key: 'approval_date', label: 'تاريخ الموافقة' },
+        { key: 'dashboard_url', label: 'رابط لوحة المورد' },
+        { key: 'company_name', label: 'اسم الشركة' },
+        { key: 'support_email', label: 'بريد الدعم' },
+    ],
     custom: []
 };
 
@@ -326,7 +347,7 @@ function updateVariablesList() {
             <div class="list-group-item px-0 py-2 border-0">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <code class="text-primary">\{\{${variable.key}\}\}</code>
+                        <code class="text-primary">{{'{{'}}${variable.key}{{'}}'}}</code>
                         <br>
                         <small class="text-muted">${variable.label}</small>
                     </div>
@@ -347,9 +368,8 @@ function updateVariablesList() {
     // Add copy functionality
     document.querySelectorAll('.copy-variable').forEach(btn => {
         btn.addEventListener('click', function() {
-            const variable = `\{\{${this.dataset.variable}\}\}`;
+            const variable = '{{' + this.dataset.variable + '}}';
             navigator.clipboard.writeText(variable).then(() => {
-                // Show tooltip or notification
                 const originalText = this.innerHTML;
                 this.innerHTML = '<i class="fas fa-check"></i>';
                 setTimeout(() => {
@@ -384,8 +404,95 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('slug').addEventListener('input', function() {
         this.dataset.auto = 'false';
     });
+
+    // Fill supplier approval template
+    const fillBtn = document.getElementById('fill-supplier-approval');
+    if (fillBtn) {
+        fillBtn.addEventListener('click', function() {
+            // Force type to supplier_approval
+            const typeSelect = document.getElementById('type');
+            if (typeSelect) {
+                typeSelect.value = 'supplier_approval';
+                updateVariablesList();
+            }
+
+            // Set subject using literal Blade-safe braces via @verbatim
+            const subjectInput = document.getElementById('subject');
+            subjectInput.value = '🎉 تم قبولك كمورد لدى {{company_name}} – ابدأ الآن';
+
+            // Compose modern HTML body using brand style
+            const html = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>قبول المورد</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f8f9fb; margin:0; padding:0; direction:rtl; }
+    .container { max-width:680px; margin:32px auto; background:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 6px 24px rgba(0,0,0,0.08); }
+    .header { background: linear-gradient(135deg, #5B21B6 0%, #7C3AED 50%, #A855F7 100%); color:#fff; text-align:center; padding:36px 24px; }
+    .header .brand { font-size:22px; font-weight:700; margin-bottom:8px; color:#FDE68A; }
+    .header .title { font-size:26px; font-weight:800; margin:0; }
+    .header .subtitle { font-size:15px; opacity:0.9; margin-top:10px; }
+    .content { padding:32px 28px; color:#374151; line-height:1.8; }
+    .greeting { font-size:18px; margin-bottom:14px; }
+    .panel { background:#f8f4ff; border:2px solid #e9e3ff; border-radius:12px; padding:18px; margin:18px 0; }
+    .btn { display:inline-block; padding:12px 18px; background:#7C3AED; color:#fff; text-decoration:none; border-radius:10px; font-weight:600; box-shadow:0 4px 12px rgba(124,58,237,0.35); }
+    .btn:hover { background:#6D28D9; }
+    .note { font-size:14px; color:#6b7280; margin-top:12px; }
+    .footer { background: linear-gradient(135deg, #1f2937 0%, #374151 100%); color:#d1d5db; text-align:center; padding:24px; }
+    .footer .brand { color:#A855F7; font-weight:700; }
+    .contact { display:flex; justify-content:center; gap:16px; flex-wrap:wrap; margin-top:12px; }
+    .divider { height:1px; background:linear-gradient(to left, transparent, #e9ecef, transparent); margin:22px 0; }
+  </style>
+  </head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">{{company_name}}</div>
+      <h1 class="title">تم قبولك كمورد ✅</h1>
+      <p class="subtitle">نرحّب بك ضمن شبكة شركائنا – جاهزين ننطلق!</p>
+    </div>
+    <div class="content">
+      <p class="greeting">مرحباً {{supplier_name}},</p>
+      <p>يسعدنا إبلاغك أنه تم قبول طلبك كمورد لدى {{company_name}} بتاريخ {{approval_date}}. تم مراجعة بياناتك والتأكد من توافقها مع معاييرنا المهنية.</p>
+      <div class="panel">
+        <strong>الخطوة التالية:</strong>
+        <ul style="margin:10px 0 0; padding-right:18px;">
+          <li>أكمل ملفك التعريفي وخدماتك من لوحة المورد.</li>
+          <li>أضف نماذج أعمالك لتزيد فرص ظهورك للعملاء.</li>
+          <li>فعّل الإشعارات لتتابع الطلبات والعروض أولاً بأول.</li>
+        </ul>
+      </div>
+      <p style="text-align:center; margin:24px 0;">
+        <a class="btn" href="{{dashboard_url}}" target="_blank">الذهاب إلى لوحة المورد</a>
+      </p>
+      <div class="divider"></div>
+      <p class="note">لو لديك أي استفسار، فريق الدعم جاهز دائماً لمساعدتك عبر البريد: <a href="mailto:{{support_email}}" style="color:#7C3AED; text-decoration:none;">{{support_email}}</a>.</p>
+    </div>
+    <div class="footer">
+      <div><span class="brand">{{company_name}}</span></div>
+      <div class="contact">
+        <span>✉️ <a href="mailto:{{support_email}}" style="color:#A855F7; text-decoration:none;">{{support_email}}</a></span>
+        <span>🌐 <a href="{{dashboard_url}}" style="color:#A855F7; text-decoration:none;">لوحة المورد</a></span>
+      </div>
+      <p style="margin-top: 10px; font-size: 12px; color: #9ca3af;">هذه رسالة تلقائية – لا ترد عليها.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+            // Put HTML into TinyMCE or textarea
+            if (window.tinymce?.get('body')) {
+                tinymce.get('body').setContent(html);
+            } else {
+                document.getElementById('body').value = html;
+            }
+        });
+    }
 });
 </script>
+@endverbatim
 @endpush
 
 <style>

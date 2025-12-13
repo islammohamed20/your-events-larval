@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'إعادة تعيين كلمة المرور')
+@section('title', 'إعادة تعيين كلمة المرور') 'إعادة تعيين كلمة المرور')
 
 @section('content')
 <div class="container py-5">

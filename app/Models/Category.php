@@ -15,6 +15,7 @@ class Category extends Model
         'description',
         'icon',
         'icon_png',
+        'banner',
         'color',
         'image',
         'order',
@@ -32,6 +33,19 @@ class Category extends Model
     public function services()
     {
         return $this->hasMany(Service::class);
+    }
+
+    /**
+     * Get suppliers offering services in this category
+     */
+    public function suppliers()
+    {
+        return $this->belongsToMany(
+            \App\Models\Supplier::class,
+            'supplier_services',
+            'category_id',
+            'supplier_id'
+        )->distinct();
     }
 
     /**

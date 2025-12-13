@@ -15,6 +15,7 @@ class Booking extends Model
         'quote_id',
         'package_id',
         'service_id',
+        'supplier_id',
         'activity_name',
         'client_name',
         'client_email',
@@ -98,6 +99,14 @@ class Booking extends Model
     public function service()
     {
         return $this->belongsTo(Service::class);
+    }
+
+    /**
+     * Get the supplier for this booking
+     */
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
     }
 
     /**

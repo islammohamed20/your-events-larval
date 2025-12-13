@@ -21,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
         
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'supplier' => \App\Http\Middleware\SupplierMiddleware::class,
+            'supplier.guest' => \App\Http\Middleware\RedirectIfSupplier::class,
         ]);
         
         // CSRF protection is enabled by default in Laravel 11

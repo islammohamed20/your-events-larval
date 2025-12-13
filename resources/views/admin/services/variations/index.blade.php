@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تنويعات الخدمة - Your Events')
+@section('title', 'تنويعات الخدمة')
 @section('page-title', 'إدارة التنويعات: ' . $service->name)
 @section('page-description', 'إضافة وتعديل وحذف تنويعات الخدمة')
 

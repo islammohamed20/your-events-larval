@@ -223,7 +223,7 @@ if ($template) {
         'total_amount' => number_format($booking->total_amount, 2),
         'company_name' => 'Your Events',
         'company_phone' => '0500000000',
-        'company_email' => 'info@yourevents.sa',
+        'company_email' => 'hello@yourevents.sa',
     ];
 
     // استبدال المتغيرات

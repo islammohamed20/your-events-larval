@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'تعديل البيانات الشخصية')
+@section('title', 'تعديل البيانات الشخصية') 'تعديل البيانات الشخصية')
 
 @section('content')
 <div class="container py-5">
@@ -49,6 +49,19 @@
                     </h5>
                 </div>
                 <div class="card-body">
+                    <div class="alert alert-warning d-flex justify-content-between align-items-center" role="alert">
+                        <div>
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            حذف الحساب سيؤدي إلى إزالة جميع بياناتك نهائياً.
+                        </div>
+                        <form action="{{ route('profile.destroy') }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف الحساب نهائياً؟ لا يمكن التراجع عن هذا الإجراء.');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash-alt me-1"></i> حذف الحساب
+                            </button>
+                        </form>
+                    </div>
                     <form action="{{ route('profile.update') }}" method="POST">
                         @csrf
                         @method('PUT')

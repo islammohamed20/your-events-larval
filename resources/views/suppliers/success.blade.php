@@ -24,9 +24,9 @@
 
                         <p class="mt-4 text-muted">سيتم تحويلك تلقائياً إلى صفحة تسجيل الدخول خلال ثوانٍ...</p>
 
-                        <a href="{{ route('login') }}" class="btn btn-primary mt-3">
+                        <a href="{{ url('/supplier/login') }}" class="btn btn-primary mt-3">
                             <i class="fas fa-sign-in-alt me-2"></i>
-                            الذهاب إلى تسجيل الدخول الآن
+                            الذهاب إلى تسجيل دخول الموردين الآن
                         </a>
                     </div>
                 </div>
@@ -44,8 +44,7 @@
 <script>
     // Auto-redirect to login after a short delay
     setTimeout(function() {
-        window.location.href = "{{ route('login') }}";
+        window.location.href = "{{ url('/supplier/login') }}";
     }, 5000); // 5 seconds
 </script>
 @endsection
-

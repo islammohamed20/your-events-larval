@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\OtpVerification;
 use App\Models\User;
+use App\Models\Supplier;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Hash;
@@ -25,6 +26,9 @@ class OtpController extends Controller
             if ($type === 'login') {
                 return redirect()->route('login')->with('error', 'الرجاء تسجيل الدخول لإرسال كود التحقق');
             }
+            if ($type === 'supplier_login') {
+                return redirect()->route('supplier.login')->with('error', 'الرجاء تسجيل الدخول كمورد لإرسال كود التحقق');
+            }
             return redirect()->route('register')->with('error', 'الرجاء إدخال بريدك الإلكتروني أولاً');
         }
 
@@ -38,7 +42,7 @@ class OtpController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
-            'type' => 'required|in:email_verification,login,password_reset,booking_confirmation,payment_confirmation'
+            'type' => 'required|in:email_verification,login,password_reset,booking_confirmation,payment_confirmation,supplier_login'
         ]);
 
         if ($validator->fails()) {
@@ -87,6 +91,17 @@ class OtpController extends Controller
                 }
             }
 
+            // التحقق من وجود البريد لحالات تسجيل دخول الموردين
+            if ($type === 'supplier_login') {
+                $exists = Supplier::where('email', $email)->exists();
+                if (!$exists) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'البريد الإلكتروني غير مسجل كمورد'
+                    ], 422);
+                }
+            }
+
             // إنشاء وإرسال OTP
             $otp = OtpVerification::generate($email, $type);
 
@@ -118,7 +133,7 @@ class OtpController extends Controller
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email',
                 'otp' => 'required|string|size:6',
-                'type' => 'required|in:email_verification,login,password_reset,booking_confirmation,payment_confirmation'
+                'type' => 'required|in:email_verification,login,password_reset,booking_confirmation,payment_confirmation,supplier_login'
             ]);
 
             if ($validator->fails()) {
@@ -186,11 +201,35 @@ class OtpController extends Controller
                             Auth::login($user, $remember);
                             $request->session()->regenerate();
 
-                            // تحديد إعادة التوجيه حسب الدور
+                            // تحديث آخر تسجيل دخول
+                            try {
+                                $user->last_login_at = now();
+                                $user->save();
+                            } catch (\Throwable $e) {
+                                // تجاهل أي خطأ يتعلق بعمود غير موجود
+                            }
+
+                            // تحديد إعادة التوجيه حسب الدور أو وجود حساب مورد
                             if ($user->isAdmin()) {
                                 $redirectUrl = route('admin.dashboard');
                             } else {
-                                $redirectUrl = url('/');
+                                // إن كان للمستخدم حساب مورد (موافق ومؤكد البريد)، نسجّل دخوله كـ مورّد ونحوّله للوحة الموردين
+                                try {
+                                    $supplier = \App\Models\Supplier::where('email', $user->email)->first();
+                                    if ($supplier && $supplier->status === 'approved' && $supplier->email_verified_at) {
+                                        // تسجيل خروج من حارس الويب ثم تسجيل دخول على حارس المورد
+                                        Auth::logout();
+                                        $remember = (bool) $request->session()->get('login_remember', false);
+                                        Auth::guard('supplier')->login($supplier, $remember);
+                                        $request->session()->regenerate();
+                                        $redirectUrl = route('supplier.dashboard');
+                                    } else {
+                                        $redirectUrl = url('/');
+                                    }
+                                } catch (\Throwable $e) {
+                                    \Illuminate\Support\Facades\Log::error('Supplier auto-login after OTP failed: ' . $e->getMessage());
+                                    $redirectUrl = url('/');
+                                }
                             }
 
                             // سجل نشاط تسجيل الدخول (OTP)
@@ -210,7 +249,32 @@ class OtpController extends Controller
                         // تنظيف بيانات الجلسة المؤقتة الخاصة بتسجيل الدخول
                         $request->session()->forget(['login_pending', 'login_remember', 'login_user_id']);
                     } catch (\Exception $e) {
-                        Log::error('Login after OTP failed: ' . $e->getMessage());
+                        \Illuminate\Support\Facades\Log::error('Login after OTP failed: ' . $e->getMessage());
+                    }
+                } elseif ($type === 'supplier_login') {
+                    try {
+                        $supplierId = $request->session()->get('supplier_login_supplier_id');
+                        $remember = (bool) $request->session()->get('supplier_login_remember', false);
+                        if ($supplierId) {
+                            $supplier = \App\Models\Supplier::find($supplierId);
+                        } else {
+                            $supplier = \App\Models\Supplier::where('email', $email)->first();
+                        }
+                        if ($supplier && $supplier->status === 'approved' && $supplier->email_verified_at) {
+                            Auth::guard('supplier')->login($supplier, $remember);
+                            $request->session()->regenerate();
+                            try {
+                                $supplier->forceFill(['last_login_at' => now()])->save();
+                            } catch (\Throwable $e) {
+                            }
+                            $redirectUrl = route('supplier.dashboard');
+                        } else {
+                            $redirectUrl = route('supplier.login');
+                        }
+                        $request->session()->forget(['supplier_login_pending', 'supplier_login_remember', 'supplier_login_supplier_id']);
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error('Supplier login after OTP failed: ' . $e->getMessage());
+                        $redirectUrl = route('supplier.login');
                     }
                 }
 
@@ -265,6 +329,7 @@ class OtpController extends Controller
                 'password_reset' => route('password.reset.form'),
                 'booking_confirmation' => route('booking.my-bookings'),
                 'payment_confirmation' => route('home'),
+                'supplier_login' => route('supplier.login'),
             ];
 
             return $urls[$type] ?? route('home');

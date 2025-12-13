@@ -77,7 +77,7 @@ CREATE TABLE settings (
 | site_description | منصة لتنظيم الفعاليات والحفلات | textarea | general |
 | **favicon** | NULL | **image** | **appearance** |
 | logo | NULL | image | appearance |
-| contact_email | info@yourevents.sa | text | general |
+| contact_email | hello@yourevents.sa | text | general |
 | contact_phone | NULL | text | general |
 
 ---

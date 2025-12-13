@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تعديل قالب البريد: ' . $emailTemplate->name)
+@section('title', 'تعديل قالب البريد')
 
 @section('content')
 <div class="container-fluid px-4">

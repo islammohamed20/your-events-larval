@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'الإعدادات العامة - Your Events')
+@section('title', 'الإعدادات العامة')
 @section('page-title', 'الإعدادات العامة')
 @section('page-description', 'إدارة إعدادات الموقع العامة والتخصيصات')
 

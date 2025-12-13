@@ -2,38 +2,36 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\ActivityLog;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Supplier extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable;
 
-    protected $guard = 'supplier';
+    protected $table = 'suppliers';
 
     protected $fillable = [
-        'supplier_type',
         'name',
+        'email',
+        'password',
+        'supplier_type',
+        'status',
+        'primary_phone',
+        'secondary_phone',
+        'description',
+        'address',
+        'headquarters_city',
         'commercial_register',
         'tax_number',
-        'headquarters_city',
-        'description',
-        'services_offered',
         'commercial_register_file',
         'tax_certificate_file',
         'company_profile_file',
         'portfolio_files',
-        'primary_phone',
-        'secondary_phone',
-        'email',
-        'password',
+        'services_offered',
         'social_media',
-        'address',
-        'status',
-        'rejection_reason',
-        'email_verified_at',
         'terms_accepted',
         'privacy_accepted',
     ];
@@ -44,152 +42,90 @@ class Supplier extends Authenticatable
     ];
 
     protected $casts = [
-        'services_offered' => 'array',
-        'portfolio_files' => 'array',
-        'social_media' => 'array',
         'email_verified_at' => 'datetime',
-        'terms_accepted' => 'boolean',
-        'privacy_accepted' => 'boolean',
-        'password' => 'hashed',
+        'social_media' => 'array',
+        'portfolio_files' => 'array',
+        'services_offered' => 'array',
     ];
 
     /**
-     * Get status badge HTML
+     * Services offered by this supplier (Many-to-Many via supplier_services)
      */
-    public function getStatusBadgeAttribute()
+    public function services()
     {
-        $badges = [
-            'pending' => '<span class="badge bg-warning">قيد المراجعة</span>',
-            'approved' => '<span class="badge bg-success">موافق عليه</span>',
-            'rejected' => '<span class="badge bg-danger">مرفوض</span>',
-            'suspended' => '<span class="badge bg-secondary">موقوف</span>',
-        ];
-
-        return $badges[$this->status] ?? $this->status;
+        return $this->belongsToMany(
+            Service::class,
+            'supplier_services',
+            'supplier_id',
+            'service_id'
+        )->withPivot('category_id', 'is_available')
+         ->withTimestamps();
     }
 
     /**
-     * Get status text
+     * Categories selected by this supplier (Many-to-Many via supplier_services)
      */
-    public function getStatusTextAttribute()
+    public function serviceCategories()
     {
-        $statuses = [
-            'pending' => 'قيد المراجعة',
-            'approved' => 'موافق عليه',
-            'rejected' => 'مرفوض',
-            'suspended' => 'موقوف',
-        ];
-
-        return $statuses[$this->status] ?? $this->status;
+        return $this->belongsToMany(
+            Category::class,
+            'supplier_services',
+            'supplier_id',
+            'category_id'
+        )->distinct();
     }
 
     /**
-     * Get supplier type text
+     * Pivot details for supplier services
      */
-    public function getSupplierTypeTextAttribute()
+    public function supplierServices()
     {
-        return $this->supplier_type === 'individual' ? 'فرد' : 'منشأة';
+        return $this->hasMany(SupplierService::class, 'supplier_id');
     }
 
     /**
-     * Get services offered as text
-     */
-    public function getServicesTextAttribute()
-    {
-        if (!$this->services_offered) {
-            return 'لا توجد خدمات محددة';
-        }
-
-        $services = [
-            'photography' => 'التصوير والفيديو',
-            'catering' => 'الضيافة والتموين',
-            'entertainment' => 'الألعاب الترفيهية والحركية',
-            'gifts' => 'تجهيز وتوفير الهدايا',
-            'logistics' => 'الدعم اللوجستي وسيارات VIP',
-            'handicrafts' => 'الحِرَف اليدوية',
-        ];
-
-        $selected = [];
-        foreach ($this->services_offered as $service) {
-            if (isset($services[$service])) {
-                $selected[] = $services[$service];
-            }
-        }
-
-        return implode('، ', $selected);
-    }
-
-    /**
-     * Scope for approved suppliers
-     */
-    public function scopeApproved($query)
-    {
-        return $query->where('status', 'approved');
-    }
-
-    /**
-     * Scope for pending suppliers
-     */
-    public function scopePending($query)
-    {
-        return $query->where('status', 'pending');
-    }
-
-    /**
-     * Check if supplier is approved
-     */
-    public function isApproved()
-    {
-        return $this->status === 'approved';
-    }
-
-    /**
-     * Check if supplier is individual
-     */
-    public function isIndividual()
-    {
-        return $this->supplier_type === 'individual';
-    }
-
-    /**
-     * Check if supplier is company
-     */
-    public function isCompany()
-    {
-        return $this->supplier_type === 'company';
-    }
-
-    /**
-     * Activity logs relation
+     * Activity logs related to this supplier (polymorphic)
      */
     public function activityLogs()
     {
-        return $this->morphMany(\App\Models\ActivityLog::class, 'subject')->latest();
+        return $this->morphMany(ActivityLog::class, 'subject');
     }
 
     /**
-     * Model events for logging
+     * Competitive orders received by this supplier
      */
-    protected static function boot()
+    public function receivedOrders()
     {
-        parent::boot();
+        return $this->belongsToMany(CompetitiveOrder::class, 'order_notifications', 'supplier_id', 'competitive_order_id')
+                    ->withPivot('notified_at', 'viewed_at', 'responded_at', 'response')
+                    ->withTimestamps();
+    }
 
-        static::created(function ($supplier) {
-            \App\Models\ActivityLog::record($supplier, 'created', 'تم تسجيل مورد جديد', [
-                'status' => $supplier->status,
-                'email' => $supplier->email,
-                'supplier_type' => $supplier->supplier_type,
-            ]);
-        });
+    /**
+     * Orders accepted by this supplier
+     */
+    public function acceptedOrders()
+    {
+        return $this->hasMany(CompetitiveOrder::class, 'accepted_by_supplier_id');
+    }
 
-        static::updated(function ($supplier) {
-            $changes = $supplier->getChanges();
-            unset($changes['updated_at']);
-            if (!empty($changes)) {
-                \App\Models\ActivityLog::record($supplier, 'updated', 'تم تعديل بيانات المورد', [
-                    'changes' => $changes,
-                ]);
-            }
-        });
+    /**
+     * Computed HTML badge for supplier status
+     */
+    public function getStatusBadgeAttribute()
+    {
+        $status = $this->status;
+        switch ($status) {
+            case 'pending':
+                return '<span class="badge bg-warning">قيد المراجعة</span>';
+            case 'approved':
+                return '<span class="badge bg-success">مقبول</span>';
+            case 'rejected':
+                return '<span class="badge bg-danger">مرفوض</span>';
+            case 'suspended':
+                return '<span class="badge bg-warning">معلق</span>';
+            default:
+                return '<span class="badge bg-secondary">' . e($status) . '</span>';
+        }
     }
 }

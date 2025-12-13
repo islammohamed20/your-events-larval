@@ -6,36 +6,38 @@
     <title>تأكيد طلب الحجز - Your Events</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             direction: rtl;
             text-align: right;
-            background-color: #f8f9fa;
+            background-color: #f4f4f4;
             margin: 0;
-            padding: 0;
+            padding: 20px;
         }
         .container {
-            max-width: 600px;
+            max-width: 650px;
             margin: 0 auto;
             background-color: white;
-            border-radius: 10px;
+            border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
         .header {
-            background: linear-gradient(135deg, #D4AF37, #EFD469);
+            background: linear-gradient(135deg, #5B21B6 0%, #7C3AED 50%, #A855F7 100%);
             color: white;
-            padding: 30px 20px;
+            padding: 40px 30px;
             text-align: center;
         }
         .header h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: 28px;
+            margin-bottom: 10px;
         }
         .content {
             padding: 30px 20px;
         }
         .booking-details {
             background-color: #f8f9fa;
+            border-right: 4px solid #5B21B6;
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
@@ -77,13 +79,14 @@
         }
         .btn {
             display: inline-block;
-            background-color: #D4AF37;
+            background: linear-gradient(135deg, #5B21B6 0%, #7C3AED 100%);
             color: white;
             padding: 12px 30px;
             text-decoration: none;
             border-radius: 25px;
             font-weight: bold;
             margin: 10px 0;
+            box-shadow: 0 4px 15px rgba(91, 33, 182, 0.3);
         }
     </style>
 </head>
@@ -92,7 +95,8 @@
         <!-- Header -->
         <div class="header">
             <h1>تأكيد طلب الحجز</h1>
-            <p>Your Events - نحول مناسبتك العادية إلى لحظة استثنائية</p>
+            <p>Your Events</p>
+            <p style="font-size: 14px; margin: 10px 0 0 0; line-height: 1.6;">لا وسطاء، لا انتظار، ولا مكالمات ما تخلص. كل شي واضح، وسلس، وسريع</p>
         </div>
 
         <!-- Content -->
@@ -175,10 +179,10 @@
                 <li>بعد التأكيد، سنبدأ في التحضير لمناسبتك</li>
             </ol>
 
-            <div class="contact-info">
+            <div class="contact-info" style="direction: rtl; text-align: right;">
                 <h4 style="color: #1976d2; margin-top: 0;">معلومات الاتصال:</h4>
-                <p><strong>الهاتف:</strong> {{ setting('contact_phone', '+966 50 123 4567') }}</p>
-                <p><strong>البريد الإلكتروني:</strong> {{ setting('contact_email', 'info@yourevents.sa') }}</p>
+                <p><strong>البريد الإلكتروني:</strong> hello@yourevents.sa</p>
+                <p><strong>الهاتف:</strong> <span dir="ltr" style="unicode-bidi: bidi-override; direction: ltr;">+966 50 515 9616</span></p>
                 <p><strong>ساعات العمل:</strong> السبت - الخميس: 9:00 ص - 6:00 م</p>
             </div>
 
@@ -189,14 +193,16 @@
 
             <p>شكراً لاختيارك Your Events لتنظيم مناسبتك. نتطلع لجعل مناسبتك لا تُنسى!</p>
 
-            <p>مع أطيب التحيات،<br>
+            <p style="text-align: right;">مع أطيب التحيات،<br>
             <strong>فريق Your Events</strong></p>
+            <p style="text-align: center; font-size: 12px; color: #666; margin-top: 15px;">لا وسطاء، لا انتظار، ولا مكالمات ما تخلص. كل شي واضح، وسلس، وسريع</p>
         </div>
 
         <!-- Footer -->
-        <div class="footer">
+        <div class="footer" style="direction: rtl; text-align: right;">
             <p>&copy; {{ date('Y') }} Your Events. جميع الحقوق محفوظة.</p>
-            <p>الرياض، المملكة العربية السعودية</p>
+            <p style="text-align: center;">الرياض، المملكة العربية السعودية</p>
+            <p style="text-align: center; font-size: 12px; margin-top: 10px;">hello@yourevents.sa | <span dir="ltr" style="unicode-bidi: bidi-override; direction: ltr;">+966 50 515 9616</span></p>
         </div>
     </div>
 </body>

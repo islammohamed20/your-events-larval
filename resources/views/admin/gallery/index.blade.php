@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إدارة المعرض - Your Events')
+@section('title', 'إدارة المعرض')
 @section('page-title', 'إدارة المعرض')
 @section('page-description', 'عرض وإدارة جميع صور وفيديوهات المعرض')
 

@@ -40,6 +40,7 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
             'icon_png' => 'nullable|image|mimes:png|max:2048',
+            'banner' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
             'color' => 'nullable|string|max:20',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'order' => 'nullable|integer|min:0',
@@ -54,6 +55,11 @@ class CategoryController extends Controller
         // Handle PNG icon upload
         if ($request->hasFile('icon_png')) {
             $validated['icon_png'] = $request->file('icon_png')->store('category-icons', 'public');
+        }
+
+        // Handle banner upload
+        if ($request->hasFile('banner')) {
+            $validated['banner'] = $request->file('banner')->store('category-banners', 'public');
         }
 
         Category::create($validated);
@@ -81,12 +87,14 @@ class CategoryController extends Controller
             'description' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
             'icon_png' => 'nullable|image|mimes:png|max:2048',
+            'banner' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
             'color' => 'nullable|string|max:20',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
             'delete_image' => 'nullable|boolean',
             'delete_icon_png' => 'nullable|boolean',
+            'delete_banner' => 'nullable|boolean',
         ]);
 
         // Handle image deletion
@@ -119,9 +127,25 @@ class CategoryController extends Controller
             $validated['icon_png'] = $request->file('icon_png')->store('category-icons', 'public');
         }
 
-        // Remove delete_image from validated data before update
+        // Handle banner deletion
+        if ($request->input('delete_banner') == '1' && $category->banner) {
+            Storage::disk('public')->delete($category->banner);
+            $validated['banner'] = null;
+        }
+
+        // Handle banner upload
+        if ($request->hasFile('banner')) {
+            // Delete old banner
+            if ($category->banner) {
+                Storage::disk('public')->delete($category->banner);
+            }
+            $validated['banner'] = $request->file('banner')->store('category-banners', 'public');
+        }
+
+        // Remove delete fields from validated data before update
         unset($validated['delete_image']);
         unset($validated['delete_icon_png']);
+        unset($validated['delete_banner']);
 
         $category->update($validated);
 
@@ -142,6 +166,11 @@ class CategoryController extends Controller
         // Delete image
         if ($category->image) {
             Storage::disk('public')->delete($category->image);
+        }
+
+        // Delete banner
+        if ($category->banner) {
+            Storage::disk('public')->delete($category->banner);
         }
 
         $category->delete();

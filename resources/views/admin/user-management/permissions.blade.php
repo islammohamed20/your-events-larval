@@ -9,9 +9,14 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title">إدارة الصلاحيات</h3>
-                    <a href="{{ route('admin.user-management.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> العودة
-                    </a>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('admin.user-management.create') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> إضافة مستخدم جديد
+                        </a>
+                        <a href="{{ route('admin.user-management.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> العودة
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     @if(session('success'))
@@ -31,7 +36,7 @@
                     <div class="row">
                         <div class="col-md-8">
                             <div class="table-responsive">
-                                <table class="table table-striped table-hover">
+                                <table class="table table-dark table-striped table-hover align-middle">
                                     <thead class="table-dark">
                                         <tr>
                                             <th>المستخدم</th>
@@ -77,7 +82,17 @@
                                                 <td>
                                                     @if($user->id !== auth()->user()->id)
                                                         <div class="btn-group" role="group">
-                                                            <button type="button" class="btn btn-sm btn-outline-warning" 
+                                                            <a href="{{ route('admin.user-management.show', $user) }}" 
+                                                               class="btn btn-sm btn-outline-info" 
+                                                               title="عرض">
+                                                                <i class="fas fa-eye"></i>
+                                                            </a>
+                                                            <a href="{{ route('admin.user-management.edit', $user) }}" 
+                                                               class="btn btn-sm btn-outline-warning" 
+                                                               title="تعديل">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary" 
                                                                     data-bs-toggle="modal" 
                                                                     data-bs-target="#editPermissionsModal{{ $user->id }}"
                                                                     title="تعديل الصلاحيات">
@@ -88,10 +103,22 @@
                                                                   class="d-inline">
                                                                 @csrf
                                                                 <button type="submit" 
+                                                                        class="btn btn-sm btn-outline-dark" 
+                                                                        title="إزالة/منح صلاحيات الإدارة"
+                                                                        onclick="return confirm('هل أنت متأكد من تبديل صلاحيات الإدارة؟')">
+                                                                    <i class="fas fa-user-shield"></i>
+                                                                </button>
+                                                            </form>
+                                                            <form action="{{ route('admin.user-management.destroy', $user) }}" 
+                                                                  method="POST" 
+                                                                  class="d-inline"
+                                                                  onsubmit="return confirm('هل أنت متأكد من حذف هذا المستخدم؟')">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" 
                                                                         class="btn btn-sm btn-outline-danger" 
-                                                                        title="إزالة صلاحيات الإدارة"
-                                                                        onclick="return confirm('هل أنت متأكد من إزالة صلاحيات الإدارة؟')">
-                                                                    <i class="fas fa-user-minus"></i>
+                                                                        title="حذف">
+                                                                    <i class="fas fa-trash-alt"></i>
                                                                 </button>
                                                             </form>
                                                         </div>
@@ -159,17 +186,7 @@
                                                                     </div>
                                                                 </div>
 
-                                                                <div class="mb-3">
-                                                                    <div class="form-check">
-                                                                        <input class="form-check-input" type="checkbox" 
-                                                                               id="can_manage_settings{{ $user->id }}" 
-                                                                               name="permissions[]" 
-                                                                               value="manage_settings" checked>
-                                                                        <label class="form-check-label" for="can_manage_settings{{ $user->id }}">
-                                                                            إدارة الإعدادات
-                                                                        </label>
-                                                                    </div>
-                                                                </div>
+                                                                
 
                                                                 <input type="hidden" name="name" value="{{ $user->name }}">
                                                                 <input type="hidden" name="email" value="{{ $user->email }}">
@@ -218,11 +235,6 @@
                                     <div class="mb-3">
                                         <h6><i class="fas fa-calendar text-warning"></i> إدارة الحجوزات</h6>
                                         <small class="text-muted">إدارة جميع الحجوزات وعروض الأسعار</small>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <h6><i class="fas fa-cog text-info"></i> إدارة الإعدادات</h6>
-                                        <small class="text-muted">تعديل إعدادات النظام العامة</small>
                                     </div>
 
                                     <div class="alert alert-warning mt-3">

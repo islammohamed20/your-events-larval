@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'خصائص الخدمات - Your Events')
+@section('title', 'الخصائص')
 @section('page-title', 'خصائص الخدمات')
 @section('page-description', 'إدارة الخصائص المستخدمة في الخدمات المتغيرة (عدد الأشخاص، المدينة، إلخ)')
 

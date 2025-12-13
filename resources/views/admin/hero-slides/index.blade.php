@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إدارة سلايدات البانر الرئيسي')
+@section('title', 'إدارة سلايدات البانر')
 
 @section('content')
 <div class="container-fluid px-4">

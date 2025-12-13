@@ -47,6 +47,20 @@ class Service extends Model
     }
 
     /**
+     * Get suppliers offering this service
+     */
+    public function suppliers()
+    {
+        return $this->belongsToMany(
+            \App\Models\Supplier::class,
+            'supplier_services',
+            'service_id',
+            'supplier_id'
+        )->withPivot('category_id', 'is_available')
+         ->withTimestamps();
+    }
+
+    /**
      * Get bookings for this service
      */
     public function bookings()

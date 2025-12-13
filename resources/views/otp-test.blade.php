@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'اختبار نظام OTP')
+@section('title', 'اختبار OTP') 'اختبار نظام OTP')
 
 @section('content')
 <div class="container py-5">

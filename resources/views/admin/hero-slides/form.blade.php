@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', isset($heroSlide) ? 'تعديل سلايد' : 'إضافة سلايد جديد')
+@section('title', 'إدارة السلايد')
 
 @section('content')
 <div class="container-fluid px-4">

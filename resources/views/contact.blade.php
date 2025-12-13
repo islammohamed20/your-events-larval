@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'تواصل معنا - Your Events')
+@section('title', 'اتصل بنا - Your Events')
 
 @section('content')
 <!-- Page Header -->
@@ -106,7 +106,7 @@
                                 <i class="fas fa-envelope text-primary me-3"></i>
                                 <div>
                                     <strong>البريد الإلكتروني:</strong><br>
-                                    <a href="mailto:{{ \App\Models\Setting::get('contact_email', 'info@yourevents.sa') }}">{{ \App\Models\Setting::get('contact_email', 'info@yourevents.sa') }}</a>
+                                    <a href="mailto:{{ \App\Models\Setting::get('contact_email', 'hello@yourevents.sa') }}">{{ \App\Models\Setting::get('contact_email', 'hello@yourevents.sa') }}</a>
                                 </div>
                             </li>
                             <li>
@@ -190,7 +190,7 @@
 <!-- Map Section -->
 <section class="py-5 bg-secondary-custom">
     <div class="container">
-        <h2 class="section-title mb-5" data-aos="fade-up">موقعنا</h2>
+        <h2 class="section-title mb-5" data-aos="fade-up" style="background: none; -webkit-text-fill-color: #000000; color: #000000;">موقعنا</h2>
         <div class="row justify-content-center">
             <div class="col-lg-10">
                 <div class="card shadow" data-aos="fade-up" data-aos-delay="100">
@@ -215,7 +215,7 @@
 <!-- FAQ Section -->
 <section class="py-5">
     <div class="container">
-        <h2 class="section-title mb-5" data-aos="fade-up">الأسئلة الشائعة</h2>
+        <h2 class="section-title mb-5" data-aos="fade-up" style="background: none; -webkit-text-fill-color: #000000; color: #000000;">الأسئلة الشائعة</h2>
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="accordion" id="faqAccordion" data-aos="fade-up" data-aos-delay="100">

@@ -81,6 +81,14 @@ class EmailTemplate extends Model
                 'payment_method' => 'طريقة الدفع',
                 'invoice_url' => 'رابط الفاتورة',
             ],
+            'supplier_approval' => [
+                'supplier_name' => 'اسم المورد',
+                'supplier_email' => 'البريد الإلكتروني للمورد',
+                'approval_date' => 'تاريخ الموافقة',
+                'dashboard_url' => 'رابط لوحة المورد',
+                'company_name' => 'اسم الشركة',
+                'support_email' => 'بريد الدعم',
+            ],
         ];
 
         return $defaults[$this->type] ?? [];

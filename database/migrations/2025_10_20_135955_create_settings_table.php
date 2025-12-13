@@ -57,7 +57,7 @@ return new class extends Migration
             ],
             [
                 'key' => 'contact_email',
-                'value' => 'info@yourevents.sa',
+                'value' => 'hello@yourevents.sa',
                 'type' => 'text',
                 'group' => 'general',
                 'created_at' => now(),

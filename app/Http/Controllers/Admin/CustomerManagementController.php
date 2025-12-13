@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\OtpVerification;
+use App\Models\ActivityLog;
+use App\Models\Visit;
+use App\Models\LoginActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -91,6 +95,22 @@ class CustomerManagementController extends Controller
                              ->with('error', 'لا يمكن حذف العميل لأنه يحتوي على عروض أسعار');
         }
 
+        // تنظيف البيانات المرتبطة قبل الحذف النهائي
+        $customer->wishlists()->delete();
+        $customer->quotes()->delete();
+
+        Visit::where('user_id', $customer->id)->delete();
+        LoginActivity::where('user_id', $customer->id)->delete();
+        OtpVerification::where('email', $customer->email)->delete();
+
+        ActivityLog::where('subject_type', User::class)
+            ->where('subject_id', $customer->id)
+            ->delete();
+        ActivityLog::where('actor_type', User::class)
+            ->where('actor_id', $customer->id)
+            ->delete();
+
+        // حذف نهائي للمستخدم (Model لا يستخدم SoftDeletes)
         $customer->delete();
 
         return redirect()->route('admin.customers.index')

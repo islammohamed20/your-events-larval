@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إضافة خدمة جديدة - Your Events')
+@section('title', 'إضافة خدمة جديدة')
 @section('page-title', 'إضافة خدمة جديدة')
 @section('page-description', 'إضافة خدمة جديدة للموقع')
 

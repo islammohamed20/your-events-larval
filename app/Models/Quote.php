@@ -21,11 +21,15 @@ class Quote extends Model
         'admin_notes',
         'approved_at',
         'rejected_at',
+        'accepted_by_supplier_id',
+        'supplier_accepted_at',
+        'supplier_notes',
     ];
 
     protected $casts = [
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
+        'supplier_accepted_at' => 'datetime',
         'subtotal' => 'decimal:2',
         'tax' => 'decimal:2',
         'discount' => 'decimal:2',
@@ -72,6 +76,11 @@ class Quote extends Model
     public function items()
     {
         return $this->hasMany(QuoteItem::class);
+    }
+
+    public function acceptedBySupplier()
+    {
+        return $this->belongsTo(Supplier::class, 'accepted_by_supplier_id');
     }
 
     /**

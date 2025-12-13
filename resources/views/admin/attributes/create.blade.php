@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إضافة خاصية جديدة - Your Events')
+@section('title', 'إضافة خاصية جديدة')
 @section('page-title', 'إضافة خاصية جديدة')
 @section('page-description', 'إنشاء خاصية جديدة للاستخدام في الخدمات المتغيرة')
 

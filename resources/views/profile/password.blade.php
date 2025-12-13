@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'تغيير كلمة المرور')
+@section('title', 'تغيير كلمة المرور') 'تغيير كلمة المرور')
 
 @section('content')
 <div class="container py-5">

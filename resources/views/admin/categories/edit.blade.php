@@ -114,6 +114,39 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="banner" class="form-label">صورة البانر (966×205 بكسل)</label>
+                            @if($category->banner)
+                                <div class="mb-2 position-relative d-inline-block w-100">
+                                    <img src="{{ Storage::url($category->banner) }}" alt="{{ $category->name }} Banner" class="img-thumbnail" style="max-width: 100%; height: auto;">
+                                    <button type="button" 
+                                            class="btn btn-danger btn-sm position-absolute top-0 end-0" 
+                                            onclick="deleteBanner()"
+                                            style="margin: 5px;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    <p class="text-muted small mt-2">البانر الحالي</p>
+                                </div>
+                                <input type="hidden" name="delete_banner" id="delete_banner" value="0">
+                            @endif
+                            <input type="file" 
+                                   class="form-control @error('banner') is-invalid @enderror" 
+                                   id="banner" 
+                                   name="banner"
+                                   accept="image/*"
+                                   onchange="previewBanner(event)">
+                            <small class="text-muted d-block mt-2">
+                                <i class="fas fa-info-circle me-1"></i>الحجم الموصى به: 966×205 بكسل<br>
+                                سيتم عرضه عند اختيار هذه الفئة من الفلاتر
+                            </small>
+                            @error('banner')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                            <div id="bannerPreview" class="mt-3" style="display: none;">
+                                <img id="bannerImg" src="" alt="Banner Preview" class="img-thumbnail" style="max-width: 100%; height: auto;">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="image" class="form-label">صورة الفئة</label>
                             @if($category->image)
                                 <div class="mb-2 position-relative d-inline-block">
@@ -283,6 +316,46 @@ function cancelDeleteImage(btn) {
     const imgContainer = document.querySelector('.position-relative.d-inline-block');
     if (imgContainer) {
         imgContainer.style.display = 'inline-block';
+    }
+    btn.closest('.alert').remove();
+}
+
+function previewBanner(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('bannerImg').src = e.target.result;
+            document.getElementById('bannerPreview').style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+function deleteBanner() {
+    if (confirm('هل أنت متأكد من حذف البانر؟')) {
+        document.getElementById('delete_banner').value = '1';
+        // Hide the banner preview
+        const bannerContainer = event.target.closest('.position-relative');
+        bannerContainer.style.display = 'none';
+        
+        // Show confirmation message
+        const label = document.querySelector('label[for="banner"]');
+        const confirmMsg = document.createElement('div');
+        confirmMsg.className = 'alert alert-warning alert-dismissible fade show mt-2';
+        confirmMsg.innerHTML = `
+            <i class="fas fa-exclamation-triangle me-2"></i>سيتم حذف البانر عند الحفظ.
+            <button type="button" onclick="cancelDeleteBanner(this)" class="btn btn-sm btn-link">تراجع</button>
+        `;
+        label.parentElement.appendChild(confirmMsg);
+    }
+}
+
+function cancelDeleteBanner(btn) {
+    document.getElementById('delete_banner').value = '0';
+    const bannerContainer = document.querySelector('input[name="banner"]').previousElementSibling;
+    if (bannerContainer && bannerContainer.classList.contains('position-relative')) {
+        bannerContainer.style.display = 'inline-block';
     }
     btn.closest('.alert').remove();
 }

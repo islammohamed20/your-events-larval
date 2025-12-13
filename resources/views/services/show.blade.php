@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $service->name . ' - خدماتنا - Your Events')
+@section('title', $service->name)
 
 @if($service->meta_description)
 @section('meta')
@@ -178,7 +178,7 @@
                                 @if($service->isVariable())
                                     {{ $service->price_range }}
                                 @elseif($service->price)
-                                    {{ number_format($service->price) }} ريال
+                                    {{ number_format((float) $service->price) }} ريال
                                 @else
                                     —
                                 @endif
@@ -202,7 +202,7 @@
                                           data-attr-count="{{ $service->attributes->count() }}"
                                           data-variation-url="{{ route('services.get-variation', $service) }}"
                                           data-add-url="{{ route('cart.add', $service) }}"
-                                          data-price-fallback="{{ $service->isVariable() ? $service->price_range : ( ($service->price ? number_format($service->price) . ' ريال' : '—') ) }}">
+                                          data-price-fallback="{{ $service->isVariable() ? $service->price_range : ( ($service->price ? number_format((float) $service->price) . ' ريال' : '—') ) }}">
                                     @csrf
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
@@ -346,8 +346,8 @@
                             </li>
                             <li class="mb-2">
                                 <i class="fas fa-envelope text-primary me-2"></i>
-                                <a href="mailto:{{ setting('contact_email', 'info@yourevents.sa') }}" class="text-decoration-none text-dark">
-                                    {{ setting('contact_email', 'info@yourevents.sa') }}
+                                <a href="mailto:{{ setting('contact_email', 'hello@yourevents.sa') }}" class="text-decoration-none text-dark">
+                                    {{ setting('contact_email', 'hello@yourevents.sa') }}
                                 </a>
                             </li>
                             <li>

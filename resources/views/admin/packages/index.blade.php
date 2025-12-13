@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إدارة الباقات - Your Events')
+@section('title', 'إدارة الباقات')
 @section('page-title', 'إدارة الباقات')
 @section('page-description', 'عرض وإدارة جميع الباقات المتاحة')
 
@@ -34,8 +34,9 @@
                             <th>الصورة</th>
                             <th>اسم الباقة</th>
                             <th>السعر</th>
+                            <th>عدد الأشخاص</th>
+                            <th>الخواص</th>
                             <th>الحالة</th>
-                            <th>تاريخ الإنشاء</th>
                             <th>الإجراءات</th>
                         </tr>
                     </thead>
@@ -64,14 +65,36 @@
                                     <span class="badge bg-success fs-6">{{ number_format($package->price) }} ريال</span>
                                 </td>
                                 <td>
+                                    @if($package->persons_min || $package->persons_max)
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-users me-1"></i>
+                                            @if($package->persons_min && $package->persons_max)
+                                                {{ $package->persons_min }} - {{ $package->persons_max }} شخص
+                                            @elseif($package->persons_min)
+                                                {{ $package->persons_min }} شخص
+                                            @else
+                                                حتى {{ $package->persons_max }} شخص
+                                            @endif
+                                        </span>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($package->attributes && count($package->attributes) > 0)
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-list me-1"></i>{{ count($package->attributes) }} خاصية
+                                        </span>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </td>
+                                <td>
                                     @if($package->is_active)
                                         <span class="badge bg-success">نشط</span>
                                     @else
                                         <span class="badge bg-secondary">غير نشط</span>
                                     @endif
-                                </td>
-                                <td>
-                                    <small class="text-muted">{{ $package->created_at->format('d/m/Y') }}</small>
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">

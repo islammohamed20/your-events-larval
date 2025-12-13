@@ -1,5 +1,8 @@
 @extends('layouts.app')
 
+@section('title', 'تحقق من البريد الإلكتروني')
+@section('robotsMeta', 'noindex,nofollow')
+
 @section('content')
 <div class="min-vh-100 d-flex align-items-center bg-light py-5">
     <div class="container">
@@ -20,8 +23,9 @@
                         </div>
 
                         <!-- OTP Form -->
-                        <form method="POST" action="{{ route('suppliers.verify-otp') }}" id="otpForm">
+                        <form method="POST" action="{{ route('suppliers.verify-otp.post') }}" id="otpForm" data-resend-url="{{ \Illuminate\Support\Facades\Route::has('suppliers.resend-otp') ? route('suppliers.resend-otp') : route('otp.resend') }}">
                             @csrf
+                            <input type="hidden" name="email" value="{{ session('supplier_email') }}">
 
                             @if(session('error'))
                                 <div class="alert alert-danger d-flex align-items-center" role="alert">
@@ -152,6 +156,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('otpForm');
+    const resendUrl = form.dataset.resendUrl;
     const verifyBtn = document.getElementById('verifyBtn');
     const resendBtn = document.getElementById('resendBtn');
     const resendSuccess = document.getElementById('resendSuccess');
@@ -296,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 1000);
         
         // Send AJAX request to resend OTP
-        fetch('{{ route("suppliers.register") }}', {
+        fetch(resendUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -37,7 +37,7 @@ class EmailTemplateController extends Controller
             'slug' => 'nullable|string|max:255|unique:email_templates,slug',
             'subject' => 'required|string|max:255',
             'body' => 'required|string',
-            'type' => 'required|in:booking,welcome,reset_password,invoice,custom',
+            'type' => 'required|in:booking,welcome,reset_password,invoice,custom,supplier_approval',
             'description' => 'nullable|string',
         ]);
 
@@ -92,7 +92,7 @@ class EmailTemplateController extends Controller
             'slug' => 'required|string|max:255|unique:email_templates,slug,' . $emailTemplate->id,
             'subject' => 'required|string|max:255',
             'body' => 'required|string',
-            'type' => 'required|in:booking,welcome,reset_password,invoice,custom',
+            'type' => 'required|in:booking,welcome,reset_password,invoice,custom,supplier_approval',
             'description' => 'nullable|string',
         ]);
 

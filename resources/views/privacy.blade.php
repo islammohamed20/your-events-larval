@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'سياسة الخصوصية - ' . (setting('site_name') ?? 'Your Events'))
+@section('title', 'سياسة الخصوصية')
 
 @section('content')
 <div class="container py-5" style="margin-top: 80px;">

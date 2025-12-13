@@ -1,14 +1,64 @@
 @extends('layouts.app')
 
-@section('title', $package->name . ' - الباقات - Your Events')
+@section('title', $package->name)
 
 @section('content')
-<section class="py-5">
+<section class="py-5" style="margin-top: 80px;">
     <div class="container">
         <div class="row">
             <div class="col-lg-8">
                 <div class="mb-4" data-aos="fade-right">
-                    @if($package->image)
+                    @if($package->images->count() > 0)
+                        <!-- معرض صور متعدد -->
+                        <div id="packageImageCarousel" class="carousel slide" data-bs-ride="carousel">
+                            <div class="carousel-indicators">
+                                @foreach($package->images as $index => $img)
+                                    <button type="button" 
+                                            data-bs-target="#packageImageCarousel" 
+                                            data-bs-slide-to="{{ $index }}" 
+                                            class="{{ $index === 0 ? 'active' : '' }}"
+                                            aria-current="{{ $index === 0 ? 'true' : 'false' }}"
+                                            aria-label="صورة {{ $index + 1 }}"></button>
+                                @endforeach
+                            </div>
+                            <div class="carousel-inner rounded">
+                                @foreach($package->images as $index => $img)
+                                    <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
+                                        <img src="{{ $img->image_url }}" 
+                                             class="d-block w-100" 
+                                             alt="{{ $img->alt_text ?? $package->name }}"
+                                             style="height: 400px; object-fit: cover;">
+                                    </div>
+                                @endforeach
+                            </div>
+                            @if($package->images->count() > 1)
+                                <button class="carousel-control-prev" type="button" data-bs-target="#packageImageCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">السابق</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#packageImageCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">التالي</span>
+                                </button>
+                            @endif
+                        </div>
+                        
+                        <!-- صور مصغرة -->
+                        @if($package->images->count() > 1)
+                            <div class="row mt-3 g-2">
+                                @foreach($package->images as $index => $img)
+                                    <div class="col-3">
+                                        <img src="{{ $img->image_url }}" 
+                                             class="img-thumbnail thumbnail-img {{ $index === 0 ? 'active' : '' }}" 
+                                             alt="{{ $img->alt_text ?? $package->name }}"
+                                             style="height: 80px; object-fit: cover; cursor: pointer; width: 100%;"
+                                             data-bs-target="#packageImageCarousel" 
+                                             data-bs-slide-to="{{ $index }}">
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    @elseif($package->image)
                         <img src="{{ Storage::url($package->image) }}" class="img-fluid rounded" alt="{{ $package->name }}">
                     @else
                         <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
@@ -18,11 +68,32 @@
                 
                 <div data-aos="fade-up">
                     <h1 class="mb-4">{{ $package->name }}</h1>
+                    
+                    @if($package->persons_min || $package->persons_max)
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-users me-2"></i>
+                            <strong>عدد الأشخاص:</strong>
+                            @if($package->persons_min && $package->persons_max)
+                                من {{ $package->persons_min }} إلى {{ $package->persons_max }} شخص
+                            @elseif($package->persons_min)
+                                من {{ $package->persons_min }} شخص
+                            @elseif($package->persons_max)
+                                حتى {{ $package->persons_max }} شخص
+                            @endif
+                        </div>
+                    @endif
+                    
                     <div class="mb-4">
                         {!! nl2br(e($package->description)) !!}
                     </div>
                     
-                    @if($package->features)
+                    @php
+                        $validFeatures = collect($package->features ?? [])->filter(function($feature) {
+                            return !empty(trim($feature));
+                        });
+                    @endphp
+                    
+                    @if($validFeatures->count() > 0)
                         <div class="card mb-4">
                             <div class="card-body">
                                 <h5 class="card-title mb-3">
@@ -30,9 +101,46 @@
                                     مميزات الباقة
                                 </h5>
                                 <div class="row">
-                                    @foreach($package->features as $feature)
+                                    @foreach($validFeatures as $feature)
                                         <div class="col-md-6 mb-2">
                                             <i class="fas fa-check text-primary me-2"></i>{{ $feature }}
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                    
+                    @php
+                        $visibleAttributes = collect($package->attributes ?? [])->filter(function($attr) {
+                            return isset($attr['visible']) ? $attr['visible'] : true;
+                        });
+                    @endphp
+                    
+                    @if($visibleAttributes->count() > 0)
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title mb-3">
+                                    <i class="fas fa-list-alt me-2 text-primary"></i>
+                                    خواص الباقة
+                                </h5>
+                                <div class="row">
+                                    @foreach($visibleAttributes as $attr)
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100 border-0 bg-light">
+                                                <div class="card-body">
+                                                    <h6 class="card-title text-primary mb-2">
+                                                        <i class="fas fa-cog me-1"></i>
+                                                        {{ $attr['name'] }}
+                                                    </h6>
+                                                    @if(!empty($attr['description']))
+                                                        <p class="card-text small text-muted mb-1">{{ $attr['description'] }}</p>
+                                                    @endif
+                                                    @if(!empty($attr['details']))
+                                                        <p class="card-text small">{{ $attr['details'] }}</p>
+                                                    @endif
+                                                </div>
+                                            </div>
                                         </div>
                                     @endforeach
                                 </div>
@@ -101,7 +209,8 @@
 
 <style>
 .card.sticky-top {
-    top: 100px !important;
+    top: 120px !important;
+    z-index: 100;
 }
 
 .card-body {
@@ -135,5 +244,68 @@
     padding: 0.75rem 1.5rem;
     font-size: 1.1rem;
 }
+
+/* Fix for content below sticky card */
+.col-lg-8 {
+    padding-top: 20px;
+}
+
+/* Carousel Styles */
+.carousel-inner {
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    padding: 20px;
+}
+
+.thumbnail-img {
+    opacity: 0.6;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.thumbnail-img:hover,
+.thumbnail-img.active {
+    opacity: 1;
+    border-color: var(--primary-color, #1f144a);
+}
+
+.carousel-indicators button {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.carousel-indicators button.active {
+    background-color: var(--primary-color, #1f144a);
+}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update thumbnail active state when carousel slides
+    const carousel = document.getElementById('packageImageCarousel');
+    if (carousel) {
+        carousel.addEventListener('slide.bs.carousel', function (e) {
+            document.querySelectorAll('.thumbnail-img').forEach((img, index) => {
+                img.classList.toggle('active', index === e.to);
+            });
+        });
+        
+        // Click on thumbnail to change slide
+        document.querySelectorAll('.thumbnail-img').forEach(img => {
+            img.addEventListener('click', function() {
+                document.querySelectorAll('.thumbnail-img').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    }
+});
+</script>
 @endsection

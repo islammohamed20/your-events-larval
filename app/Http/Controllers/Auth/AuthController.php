@@ -24,17 +24,25 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            /** @var \App\Models\User $user */
             $user = Auth::user();
 
             // تخطي OTP للمسؤولين (Admins)
             if ($user->is_admin || $user->role === 'admin') {
+                // تحديث وقت آخر تسجيل دخول
+                try {
+                    $user->last_login_at = now();
+                    $user->save();
+                } catch (\Throwable $e) {
+                    // تجاهل أي أخطاء تتعلق بعمود غير موجود أو مشاكل قاعدة البيانات
+                }
                 $request->session()->regenerate();
                 
                 return redirect()->intended(route('admin.dashboard'))
                     ->with('success', 'مرحباً بك ' . $user->name);
             }
 
-            // OTP للعملاء فقط
+            // OTP للعملاء فقط: بعد التحقق، سنحوّل حسابات الموردين إلى لوحة الموردين تلقائياً
             try {
                 \App\Models\OtpVerification::generate($user->email, 'login');
 
@@ -87,6 +95,9 @@ class AuthController extends Controller
             'password.min' => 'كلمة المرور يجب أن تكون 8 أحرف على الأقل',
             'password.confirmed' => 'كلمة المرور غير متطابقة',
         ]);
+
+        // إضافة مصدر التسجيل
+        $validated['registration_source'] = 'web';
 
         // حفظ بيانات التسجيل في الـ session
         $request->session()->put('registration_data', $validated);

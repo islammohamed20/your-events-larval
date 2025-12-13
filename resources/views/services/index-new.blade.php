@@ -4,25 +4,31 @@
 
 @section('content')
 <!-- Page Header -->
-<section class="hero-section" style="padding: 40px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-    <div class="container">
-        <div class="text-center">
-            <h1 class="display-4 fw-bold mb-3 text-white">
-                @if($selectedCategory)
-                    {{ $selectedCategory->name }}
-                @else
-                    خدماتنا
-                @endif
-            </h1>
-            <p class="lead text-white-50">
-                @if($selectedCategory && $selectedCategory->description)
-                    {{ $selectedCategory->description }}
-                @else
-                    نقدم مجموعة شاملة من الخدمات لجعل مناسبتك مميزة ولا تُنسى
-                @endif
-            </p>
+<section class="hero-section" @if($selectedCategory && $selectedCategory->banner)
+    style="padding: 0; background-image: url('{{ Storage::url($selectedCategory->banner) }}'); background-position: center; background-size: cover; background-repeat: no-repeat; min-height: 205px; display: flex; align-items: center;"
+@else
+    style="padding: 40px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"
+@endif>
+    @if(!$selectedCategory || !$selectedCategory->banner)
+        <div class="container">
+            <div class="text-center">
+                <h1 class="display-4 fw-bold mb-3 text-white">
+                    @if($selectedCategory)
+                        {{ $selectedCategory->name }}
+                    @else
+                        خدماتنا
+                    @endif
+                </h1>
+                <p class="lead text-white-50">
+                    @if($selectedCategory && $selectedCategory->description)
+                        {{ $selectedCategory->description }}
+                    @else
+                        نقدم مجموعة شاملة من الخدمات لجعل مناسبتك مميزة ولا تُنسى
+                    @endif
+                </p>
+            </div>
         </div>
-    </div>
+    @endif
 </section>
 
 <!-- Services Section with Sidebar Filter -->
@@ -319,6 +325,25 @@
 </div>
 
 <style>
+/* Hero Section Banner Responsive */
+.hero-section {
+    width: 100%;
+}
+
+/* Mobile View - Banner takes full width */
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: 150px !important;
+    }
+}
+
+/* Desktop View - Banner fixed height */
+@media (min-width: 769px) {
+    .hero-section {
+        min-height: 205px !important;
+    }
+}
+
 /* Grid Layout */
 .products.grid-column {
     display: grid;

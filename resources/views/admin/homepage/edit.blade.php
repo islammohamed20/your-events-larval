@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تعديل قسم - ' . $section->title)
+@section('title', 'تعديل القسم')
 
 @section('content')
 <div class="container-fluid px-4">

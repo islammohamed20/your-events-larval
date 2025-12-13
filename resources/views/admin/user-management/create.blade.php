@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إضافة مستخدم مصرح جديد')
+@section('title', 'إضافة مستخدم مصرح')
 
 @section('content')
 <div class="container-fluid">

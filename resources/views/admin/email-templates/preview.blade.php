@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'معاينة القالب: ' . $template->name)
+@section('title', 'معاينة القالب')
 
 @section('content')
 <div class="container-fluid px-4">

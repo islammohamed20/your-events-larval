@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تعديل الخدمة - Your Events')
+@section('title', 'تعديل الخدمة')
 @section('page-title', 'تعديل الخدمة: ' . $service->name)
 @section('page-description', 'تعديل بيانات الخدمة')
 
@@ -56,9 +56,18 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-edit me-2"></i>تعديل الخدمة
-                </h5>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>تعديل الخدمة
+                    </h5>
+                    <form method="POST" action="{{ route('admin.services.destroy', $service) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه الخدمة؟ سيتم حذفها نهائياً.')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="fas fa-trash-alt me-1"></i>حذف الخدمة
+                        </button>
+                    </form>
+                </div>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ route('admin.services.update', $service) }}" enctype="multipart/form-data" id="serviceForm" data-service-id="{{ $service->id }}">

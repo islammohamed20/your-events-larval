@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Models\Customer;
 use App\Models\Package;
 use App\Models\Service;
 use App\Models\Booking;
@@ -36,7 +37,7 @@ class AdminController extends Controller
         $stats = [
             'total_users' => User::count(),
             'admin_users' => User::where('is_admin', true)->count(),
-            'customers' => User::where('is_admin', false)->count(),
+            'customers' => Customer::count(),
             'packages' => Package::count(),
             'services' => Service::count(),
             'bookings' => Booking::count(),

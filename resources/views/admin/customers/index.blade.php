@@ -153,10 +153,6 @@
                                                class="btn btn-sm btn-primary" title="تعديل البيانات">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a href="{{ route('admin.customers.export-detail', $customer->id) }}" 
-                                               class="btn btn-sm btn-success" title="تصدير البيانات">
-                                                <i class="fas fa-file-excel"></i>
-                                            </a>
                                         </div>
                                     </td>
                                 </tr>

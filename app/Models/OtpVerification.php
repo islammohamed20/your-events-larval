@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class OtpVerification extends Model
@@ -29,7 +30,7 @@ class OtpVerification extends Model
     /**
      * Generate and send OTP
      */
-    public static function generate(string $email, string $type = 'email_verification', int $length = 6, int $expiryMinutes = 10)
+    public static function generate(string $email, string $type = 'email_verification', int $length = 6, int $expiryMinutes = 10, bool $sendEmail = true)
     {
         // حذف OTP القديمة لنفس البريد والنوع
         self::where('email', $email)
@@ -51,8 +52,10 @@ class OtpVerification extends Model
             'user_agent' => request()->userAgent(),
         ]);
 
-        // إرسال البريد الإلكتروني
-        self::sendOtpEmail($email, $otp, $type, $expiryMinutes);
+        // إرسال البريد الإلكتروني (يمكن تعطيله عند الحاجة)
+        if ($sendEmail) {
+            self::sendOtpEmail($email, $otp, $type, $expiryMinutes);
+        }
 
         return $otpRecord;
     }
@@ -152,153 +155,27 @@ class OtpVerification extends Model
         $typeLabels = [
             'email_verification' => 'التحقق من البريد الإلكتروني',
             'login' => 'تسجيل الدخول',
+            'supplier_login' => 'تسجيل دخول المورد',
             'password_reset' => 'إعادة تعيين كلمة المرور',
             'booking_confirmation' => 'تأكيد الحجز',
             'payment_confirmation' => 'تأكيد الدفع',
         ];
 
-        $subject = 'كود التحقق - Your Events';
+        $subject = 'رمز التحقق - منصة فعالياتك';
         $typeLabel = $typeLabels[$type] ?? 'التحقق';
-
-        $html = "
-        <!DOCTYPE html>
-        <html dir='rtl' lang='ar'>
-        <head>
-            <meta charset='UTF-8'>
-            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-            <style>
-                body {
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    background-color: #f4f6f9;
-                    margin: 0;
-                    padding: 0;
-                    direction: rtl;
-                }
-                .container {
-                    max-width: 600px;
-                    margin: 40px auto;
-                    background: white;
-                    border-radius: 12px;
-                    overflow: hidden;
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-                }
-                .header {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    padding: 40px 20px;
-                    text-align: center;
-                    color: white;
-                }
-                .header h1 {
-                    margin: 0;
-                    font-size: 28px;
-                    font-weight: 600;
-                }
-                .content {
-                    padding: 40px 30px;
-                }
-                .otp-box {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    text-align: center;
-                    padding: 30px;
-                    border-radius: 10px;
-                    margin: 30px 0;
-                    font-size: 48px;
-                    font-weight: bold;
-                    letter-spacing: 10px;
-                    font-family: 'Courier New', monospace;
-                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-                }
-                .info {
-                    background: #f8f9fa;
-                    padding: 20px;
-                    border-radius: 8px;
-                    border-right: 4px solid #667eea;
-                    margin: 20px 0;
-                }
-                .info p {
-                    margin: 10px 0;
-                    color: #495057;
-                    line-height: 1.8;
-                }
-                .warning {
-                    background: #fff3cd;
-                    border-right: 4px solid #ffc107;
-                    padding: 15px;
-                    border-radius: 8px;
-                    margin: 20px 0;
-                }
-                .warning p {
-                    margin: 0;
-                    color: #856404;
-                    font-size: 14px;
-                }
-                .footer {
-                    background: #f8f9fa;
-                    padding: 20px;
-                    text-align: center;
-                    color: #6c757d;
-                    font-size: 14px;
-                }
-                .icon {
-                    font-size: 60px;
-                    margin-bottom: 10px;
-                }
-            </style>
-        </head>
-        <body>
-            <div class='container'>
-                <div class='header'>
-                    <div class='icon'>🔐</div>
-                    <h1>كود التحقق</h1>
-                </div>
-                <div class='content'>
-                    <p style='font-size: 18px; color: #212529; margin-bottom: 20px;'>
-                        مرحباً،
-                    </p>
-                    <p style='color: #495057; line-height: 1.8; margin-bottom: 20px;'>
-                        تلقيت هذا البريد لأنك طلبت كود تحقق لـ <strong>{$typeLabel}</strong>
-                    </p>
-                    
-                    <div class='otp-box'>
-                        {$otp}
-                    </div>
-                    
-                    <div class='info'>
-                        <p><strong>⏱️ صلاحية الكود:</strong> {$expiryMinutes} دقيقة</p>
-                        <p><strong>🎯 الغرض:</strong> {$typeLabel}</p>
-                        <p><strong>📧 البريد الإلكتروني:</strong> {$email}</p>
-                    </div>
-                    
-                    <div class='warning'>
-                        <p>⚠️ <strong>تنبيه أمني:</strong> لا تشارك هذا الكود مع أي شخص. فريق Your Events لن يطلب منك هذا الكود أبداً.</p>
-                    </div>
-                    
-                    <p style='color: #6c757d; font-size: 14px; margin-top: 30px;'>
-                        إذا لم تطلب هذا الكود، يرجى تجاهل هذا البريد أو التواصل معنا إذا كنت تعتقد أن هناك نشاط مشبوه.
-                    </p>
-                </div>
-                <div class='footer'>
-                    <p style='margin: 5px 0;'><strong>Your Events</strong></p>
-                    <p style='margin: 5px 0;'>منصة حجز الفعاليات والخدمات</p>
-                    <p style='margin: 5px 0;'>📧 info@yourevents.sa | 📱 0500000000</p>
-                    <p style='margin: 10px 0; font-size: 12px; color: #adb5bd;'>
-                        © 2025 Your Events. جميع الحقوق محفوظة.
-                    </p>
-                </div>
-            </div>
-        </body>
-        </html>
-        ";
-
+        // إرسال باستخدام قالب Blade الموحد (emails.supplier-otp)
         try {
-            Mail::send([], [], function ($message) use ($email, $subject, $html) {
-                $message->to($email)
-                    ->subject($subject)
-                    ->html($html);
+            Mail::send('emails.supplier-otp', [
+                'otp' => $otp,
+                'supplierName' => null,
+                'typeLabel' => $typeLabel,
+                'expiryMinutes' => $expiryMinutes,
+                'email' => $email,
+            ], function ($message) use ($email, $subject) {
+                $message->to($email)->subject($subject);
             });
         } catch (\Exception $e) {
-            \Log::error('OTP Email Error: ' . $e->getMessage());
+            Log::error('OTP Email Error: ' . $e->getMessage());
         }
     }
 

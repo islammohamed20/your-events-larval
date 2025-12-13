@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تعديل بيانات العميل - ' . $customer->name)
+@section('title', 'تعديل بيانات العميل')
 
 @section('content')
 <div class="container-fluid py-4">
@@ -313,6 +313,10 @@
                                     <button type="button" class="btn btn-danger w-100" onclick="confirmDelete()">
                                         <i class="fas fa-trash"></i> حذف الحساب
                                     </button>
+                                    <form id="deleteCustomerForm" action="{{ route('admin.customers.destroy', $customer->id) }}" method="POST" class="d-none">
+                                        @csrf
+                                        @method('DELETE')
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -377,7 +381,10 @@ function sendWelcomeEmail() {
 function confirmDelete() {
     if (confirm('تحذير: هل أنت متأكد من حذف هذا الحساب؟ لا يمكن التراجع عن هذا الإجراء!')) {
         if (confirm('تأكيد نهائي: سيتم حذف جميع البيانات المرتبطة بهذا العميل (الحجوزات، عروض الأسعار، إلخ)')) {
-            alert('سيتم تنفيذ هذه الميزة قريباً');
+            const form = document.getElementById('deleteCustomerForm');
+            if (form) {
+                form.submit();
+            }
         }
     }
 }

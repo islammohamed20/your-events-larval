@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'تم الحجز بنجاح - Your Events')
+@section('title', 'تمت عملية الحجز بنجاح') 'تم الحجز بنجاح - Your Events')
 
 @section('content')
 <section class="py-5">

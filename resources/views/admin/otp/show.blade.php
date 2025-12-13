@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تفاصيل OTP #' . $otp->id)
+@section('title', 'تفاصيل OTP')
 
 @section('content')
 <div class="container-fluid py-4">

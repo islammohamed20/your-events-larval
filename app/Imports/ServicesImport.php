@@ -61,10 +61,6 @@ class ServicesImport implements ToModel, WithHeadingRow, WithValidation, SkipsOn
         $whatWeOffer = $sanitizeText($row['what_we_offer'] ?? null);
         $whyChooseUs = $sanitizeText($row['why_choose_us'] ?? null);
         $metaDescription = $sanitizeString($row['meta_description'] ?? null);
-        // Respect 160 chars limit for meta
-        if ($metaDescription !== null) {
-            $metaDescription = mb_substr($metaDescription, 0, 160, 'UTF-8');
-        }
 
         $price = $sanitizeDecimal($row['price'] ?? null);
         $duration = $sanitizeInt($row['duration'] ?? null);
@@ -120,7 +116,7 @@ class ServicesImport implements ToModel, WithHeadingRow, WithValidation, SkipsOn
             'category_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
             'price' => 'nullable|numeric|min:0',
-            'meta_description' => 'nullable|string|max:160',
+            'meta_description' => 'nullable|string',
         ];
     }
 
@@ -134,7 +130,6 @@ class ServicesImport implements ToModel, WithHeadingRow, WithValidation, SkipsOn
             'category_id.required' => 'الفئة مطلوبة',
             'category_id.exists' => 'الفئة غير موجودة',
             'price.numeric' => 'السعر يجب أن يكون رقماً',
-            'meta_description.max' => 'وصف SEO يجب ألا يتجاوز 160 حرفاً',
         ];
     }
 

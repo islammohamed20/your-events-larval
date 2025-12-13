@@ -4,6 +4,10 @@
     <meta charset="utf-8">
     <title>عرض السعر #{{ $quote->quote_number }}</title>
     <style>
+        @page {
+            margin: 20mm 15mm 30mm 15mm;
+        }
+        
         body {
             font-family: 'dejavusans', sans-serif;
             direction: rtl;
@@ -64,7 +68,7 @@
         
         h3 {
             color: #1f144a;
-            margin: 20px 0 12px 0;
+            margin: 10px 0 8px 0;
             font-size: 14px;
         }
         
@@ -72,7 +76,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 18px;
-            background: #fff; /* خلفية صلبة */
+            background: #fff;
         }
         
         table.items th {
@@ -139,7 +143,7 @@
         }
         
         .total-row {
-            background: #f2f2f7; /* لون فاتح لضمان وضوح النص */
+            background: #f2f2f7;
             color: #1f144a;
             font-size: 12px;
         }
@@ -149,6 +153,7 @@
             border-right: 4px solid #ef4870;
             padding: 10px;
             margin: 15px 0;
+            page-break-inside: avoid;
         }
         
         .notes-title {
@@ -168,13 +173,41 @@
         .text-center { text-align: center; }
         .text-left { text-align: left; }
 
-        /* Two-column layout for quote info (robust for mPDF) */
-        .info-columns { width: 100%; margin-bottom: 20px; overflow: hidden; }
+        /* Two-column layout for quote info */
+        .info-columns { width: 100%; margin-bottom: 10px; overflow: hidden; }
         .info-col { float: left; width: 48%; vertical-align: top; }
         .info-col.right { float: right; }
+        
+        /* منع القطع في منتصف الصفوف */
+        table.items tr {
+            page-break-inside: avoid;
+        }
+        
+        .summary-table {
+            page-break-inside: avoid;
+        }
+        
+        /* الختم الثابت في أسفل يسار كل صفحة */
+        .stamp-watermark {
+            position: fixed;
+            bottom: 0mm;
+            left: 10mm;
+            z-index: 1000;
+        }
+        
+        .stamp-watermark img {
+            width: 70px;
+            height: auto;
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
+    <!-- الختم الثابت - يظهر في نفس المكان في كل الصفحات -->
+    <div class="stamp-watermark">
+        <img src="{{ public_path('storage/extra/stamp.png') }}" alt="ختم">
+    </div>
+    
     <div class="container">
         <!-- Quote Title -->
         <div class="quote-title">
@@ -387,11 +420,6 @@
                 • يرجى مراجعة الخدمات والأسعار قبل التأكيد<br>
                 • للاستفسارات والتواصل: hello@yourevents.sa
             </div>
-        </div>
-        
-        <!-- Stamp on the left -->
-        <div style="text-align: left; margin-top: 15px; margin-left: 70px;">
-            <img src="{{ public_path('storage/extra/stamp.png') }}" alt="ختم الشركة" style="width: 120px; height: auto;">
         </div>
         
         <!-- Footer -->

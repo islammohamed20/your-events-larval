@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\OtpVerification;
+use App\Models\ActivityLog;
+use App\Models\Visit;
+use App\Models\LoginActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -104,6 +108,29 @@ class UserController extends Controller
                              ->with('error', 'لا يمكن حذف المستخدم لأنه يحتوي على حجوزات');
         }
 
+        // Cleanup related data before permanent deletion
+        // Remove quotes (FK cascade will handle items)
+        $user->quotes()->delete();
+
+        // Remove wishlists
+        $user->wishlists()->delete();
+
+        // Remove visits and login activities
+        Visit::where('user_id', $user->id)->delete();
+        LoginActivity::where('user_id', $user->id)->delete();
+
+        // Remove OTP verifications
+        OtpVerification::where('email', $user->email)->delete();
+
+        // Remove activity logs referencing this user
+        ActivityLog::where('subject_type', User::class)
+            ->where('subject_id', $user->id)
+            ->delete();
+        ActivityLog::where('actor_type', User::class)
+            ->where('actor_id', $user->id)
+            ->delete();
+
+        // حذف نهائي للمستخدم (الموديل لا يستخدم SoftDeletes، لذا delete كافٍ)
         $user->delete();
 
         return redirect()->route('admin.users.index')
