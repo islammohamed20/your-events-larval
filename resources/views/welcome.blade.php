@@ -2633,7 +2633,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Enhanced CTA Section (Refactored) - Based on Promotional Banner Design -->
 <section class="cta-section-refactored" style="
-    background: linear-gradient(135deg, #8B2D5D 0%, #6B4A7F 50%, #4A2E5F 100%);
+    background: linear-gradient(135deg, #1d2875 0%, #2a2f91 50%, #3c2ff7 100%);
     position: relative;
     overflow: hidden;
     color: white;

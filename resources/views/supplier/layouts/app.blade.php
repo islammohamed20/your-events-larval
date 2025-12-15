@@ -391,7 +391,12 @@
     <aside class="supplier-sidebar" id="supplierSidebar">
         <div class="sidebar-header">
             <a href="{{ route('supplier.dashboard') }}">
-                <img src="{{ asset('images/logo/logo-white.png') }}" alt="Your Events" class="sidebar-logo" onerror="this.src='{{ asset('images/logo/logo.png') }}'">
+                <img 
+                    src="{{ asset('images/logo/logo-white.png') }}" 
+                    alt="Your Events" 
+                    class="sidebar-logo" 
+                    data-fallback="{{ asset('images/logo/logo.png') }}"
+                    onerror="this.src=this.dataset.fallback">
             </a>
         </div>
         
@@ -433,10 +438,7 @@
                 @endif
             </a>
             
-            <a href="{{ route('supplier.customers.index') }}" class="nav-link {{ request()->routeIs('supplier.customers*') ? 'active' : '' }}">
-                <i class="fas fa-users"></i>
-                <span>العملاء</span>
-            </a>
+            
 
             <a href="{{ route('supplier.quotes.index') }}" class="nav-link {{ request()->routeIs('supplier.quotes*') ? 'active' : '' }}">
                 <i class="fas fa-file-invoice-dollar"></i>

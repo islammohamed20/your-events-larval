@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\ContactController;
 
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -147,6 +148,7 @@ Route::get('/search/autocomplete', [SearchController::class, 'autocomplete'])->n
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\Supplier\SupplierAuthController;
 use App\Http\Controllers\Supplier\SupplierDashboardController;
+use App\Http\Controllers\Supplier\SupplierBookingController;
 Route::get('/suppliers/register', [SupplierController::class, 'create'])->name('suppliers.register');
 Route::post('/suppliers/register', [SupplierController::class, 'store'])->name('suppliers.store');
 Route::get('/suppliers/verify-otp', [SupplierController::class, 'showVerifyOtp'])->name('suppliers.verify-otp');
@@ -190,6 +192,9 @@ Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery.index
 Route::get('/contact', function () {
     return view('contact');
 })->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])
+    ->name('contact.store')
+    ->middleware('throttle:5,1');
 
 // Terms and Conditions Route
 Route::get('/terms-and-conditions', function () {
@@ -296,6 +301,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Categories Management
     Route::resource('categories', \App\Http\Controllers\Admin\CategoryController::class);
     Route::patch('categories/{category}/toggle-active', [\App\Http\Controllers\Admin\CategoryController::class, 'toggleActive'])->name('categories.toggle-active');
+    
+    // Contact Messages Management
+    Route::get('contact-messages', [\App\Http\Controllers\Admin\ContactMessageController::class, 'index'])->name('contact-messages.index');
+    Route::get('contact-messages/{contactMessage}', [\App\Http\Controllers\Admin\ContactMessageController::class, 'show'])->name('contact-messages.show');
+    Route::patch('contact-messages/{contactMessage}/status', [\App\Http\Controllers\Admin\ContactMessageController::class, 'updateStatus'])->name('contact-messages.update-status');
+    Route::delete('contact-messages/{contactMessage}', [\App\Http\Controllers\Admin\ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
     
     // Packages Management
     Route::resource('packages', AdminPackageController::class);
@@ -409,6 +420,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('quotes/{quote}', [\App\Http\Controllers\Admin\QuoteController::class, 'show'])->name('quotes.show');
     Route::patch('quotes/{quote}/status', [\App\Http\Controllers\Admin\QuoteController::class, 'updateStatus'])->name('quotes.update-status');
     Route::post('quotes/{quote}/send-email', [\App\Http\Controllers\Admin\QuoteController::class, 'sendEmail'])->name('quotes.send-email');
+    Route::post('quotes/{quote}/convert-paid', [\App\Http\Controllers\Admin\QuoteController::class, 'convertPaidToBooking'])->name('quotes.convert-paid');
     Route::delete('quotes/{quote}', [\App\Http\Controllers\Admin\QuoteController::class, 'destroy'])->name('quotes.destroy');
 
     // Payments Management
@@ -468,12 +480,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('suppliers/{supplier}/download/{type}', [\App\Http\Controllers\Admin\SupplierController::class, 'downloadDocument'])->name('suppliers.download');
     Route::post('suppliers/{supplier}/add-service', [\App\Http\Controllers\Admin\SupplierController::class, 'addService'])->name('suppliers.add-service');
     Route::delete('suppliers/{supplier}/services/{serviceId}', [\App\Http\Controllers\Admin\SupplierController::class, 'removeService'])->name('suppliers.remove-service');
-    
-    // Orders Management
-    Route::get('orders', [\App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
-    Route::get('orders/{order}', [\App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
-    Route::put('orders/{order}', [\App\Http\Controllers\Admin\OrderController::class, 'update'])->name('orders.update');
-    Route::delete('orders/{order}', [\App\Http\Controllers\Admin\OrderController::class, 'destroy'])->name('orders.destroy');
 });
 
 // ===============================
@@ -520,10 +526,12 @@ Route::prefix('supplier')->name('supplier.')->group(function () {
         Route::get('/services/{id}', [SupplierDashboardController::class, 'showService'])->name('services.show');
         Route::patch('/services/{id}/toggle', [SupplierDashboardController::class, 'toggleServiceAvailability'])->name('services.toggle');
         
-        // Bookings
-        Route::get('/bookings', [SupplierDashboardController::class, 'bookings'])->name('bookings.index');
-        Route::get('/bookings/{booking}', [SupplierDashboardController::class, 'showBooking'])->name('bookings.show');
-        Route::patch('/bookings/{booking}/status', [SupplierDashboardController::class, 'updateBookingStatus'])->name('bookings.update-status');
+        // Competitive Bookings (New System)
+        Route::get('/bookings', [SupplierBookingController::class, 'index'])->name('bookings.index');
+        Route::get('/bookings/{booking}', [SupplierBookingController::class, 'show'])->name('bookings.show');
+        Route::post('/bookings/{booking}/accept', [SupplierBookingController::class, 'accept'])->name('bookings.accept');
+        Route::post('/bookings/{booking}/reject', [SupplierBookingController::class, 'reject'])->name('bookings.reject');
+        Route::get('/bookings/count/pending', [SupplierBookingController::class, 'pendingCount'])->name('bookings.pending-count');
         
         // Customers
         Route::get('/customers', [SupplierDashboardController::class, 'customers'])->name('customers.index');

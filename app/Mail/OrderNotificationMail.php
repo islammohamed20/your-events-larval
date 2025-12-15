@@ -42,7 +42,3 @@ class OrderNotificationMail extends Mailable
         return [];
     }
 }
-
-        return [];
-    }
-}

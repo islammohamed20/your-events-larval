@@ -47,7 +47,10 @@ class QuoteController extends Controller
             abort(403, 'غير مصرح لك بعرض هذا العرض');
         }
 
-        $quote->load('items.service');
+        $quote->load([
+            'items.service.thumbnailImage',
+            'items.service.images',
+        ]);
 
         return view('quotes.show', compact('quote'));
     }
@@ -148,7 +151,11 @@ class QuoteController extends Controller
             abort(403, 'غير مصرح لك بتحميل هذا العرض');
         }
 
-        $quote->load('items.service', 'user');
+        $quote->load([
+            'items.service.thumbnailImage',
+            'items.service.images',
+            'user',
+        ]);
 
         // Generate HTML content
         $html = view('quotes.pdf', compact('quote'))->render();
@@ -229,6 +236,11 @@ class QuoteController extends Controller
                 ->with('error', 'يجب أن يتم الموافقة على عرض السعر أولاً قبل الدفع');
         }
 
+        if ($quote->items()->count() === 0) {
+            return redirect()->route('quotes.show', $quote)
+                ->with('error', 'هذا العرض لا يحتوي على أي خدمات. يرجى إنشاء عرض جديد أو إضافة خدمات قبل الدفع.');
+        }
+
         $quote->load('items.service', 'user');
 
         return view('quotes.payment', compact('quote'));
@@ -247,6 +259,10 @@ class QuoteController extends Controller
         // Only allow payment for approved quotes
         if ($quote->status !== 'approved') {
             return back()->with('error', 'يجب أن يتم الموافقة على عرض السعر أولاً');
+        }
+
+        if ($quote->items()->count() === 0) {
+            return back()->with('error', 'لا يمكن إتمام الدفع لهذا العرض لأنه لا يحتوي على خدمات.');
         }
 
         $validated = $request->validate([
@@ -268,6 +284,8 @@ class QuoteController extends Controller
         $booking = Booking::create([
             'user_id' => Auth::id(),
             'quote_id' => $quote->id,
+            'activity_name' => $quote->items->first()->service_name ?? 'فعالية',
+            'service_id' => $quote->items->first()->service_id ?? null,
             'client_name' => $validated['client_name'],
             'client_email' => Auth::user()->email,
             'client_phone' => $validated['client_phone'],
@@ -277,9 +295,10 @@ class QuoteController extends Controller
             'special_requests' => $validated['special_requests'] ?? null,
             'total_amount' => $quote->total,
             'payment_method' => $validated['payment_method'],
-            'payment_status' => 'pending', // In real app, this would be 'paid' after payment gateway
-            'status' => 'confirmed',
+            'payment_status' => 'paid',
+            'status' => 'awaiting_supplier',
             'booking_reference' => 'BOOK-YE-' . str_pad(Booking::count() + 1, 6, '0', STR_PAD_LEFT),
+            'expires_at' => now()->addHours(24),
         ]);
 
         // Update payment notes with card info if card payment
@@ -288,8 +307,13 @@ class QuoteController extends Controller
             $booking->save();
         }
 
-        // Update quote status to booked
-        $quote->update(['status' => 'booked']);
+        $quote->update([
+            'status' => 'paid',
+            'payment_status' => 'paid',
+            'payment_date' => now(),
+            'payment_method' => $validated['payment_method'],
+            'payment_notes' => $validated['payment_method'] === 'card' ? $booking->payment_notes : null,
+        ]);
 
         try {
             \App\Models\Payment::create([
@@ -299,18 +323,31 @@ class QuoteController extends Controller
                 'amount' => $quote->total,
                 'currency' => 'SAR',
                 'method' => $validated['payment_method'],
-                'status' => 'pending',
+                'status' => 'paid',
                 'provider' => 'manual',
                 'notes' => $validated['payment_method'] === 'card' ? $booking->payment_notes : null,
                 'metadata' => [
                     'source' => 'quotes.processPayment',
                 ],
+                'captured_at' => now(),
             ]);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Payment record creation failed: ' . $e->getMessage());
         }
 
-        // Send confirmation email
+        try {
+            $booking->notifyEligibleSuppliers();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Supplier notification failed: ' . $e->getMessage());
+        }
+
+        try {
+            Mail::to(Auth::user()->email)->send(new \App\Mail\QuotePaymentConfirmationMail($quote->fresh()));
+        } catch (\Exception $e) {
+            Log::error('Failed to send quote payment confirmation email: ' . $e->getMessage());
+        }
+
+        // Send booking confirmation email
         try {
             Mail::to(Auth::user()->email)->send(new BookingConfirmation($booking));
         } catch (\Exception $e) {

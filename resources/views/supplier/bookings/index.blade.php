@@ -4,221 +4,227 @@
 @section('page-title', 'الحجوزات')
 
 @section('content')
-<!-- Filters -->
-<div class="content-card mb-4">
-    <div class="p-3">
-        <form method="GET" class="row g-3 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label">الحالة</label>
-                <select name="status" class="form-select">
-                    <option value="">جميع الحالات</option>
-                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>بانتظار التأكيد</option>
-                    <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>مؤكد</option>
-                    <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>قيد التنفيذ</option>
-                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>مكتمل</option>
-                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ملغي</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">من تاريخ</label>
-                <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">إلى تاريخ</label>
-                <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
-            </div>
-            <div class="col-md-3">
-                <button type="submit" class="btn btn-supplier-primary">
-                    <i class="fas fa-filter me-1"></i> تصفية
-                </button>
-                <a href="{{ route('supplier.bookings.index') }}" class="btn btn-light">
-                    <i class="fas fa-undo me-1"></i> إعادة
-                </a>
-            </div>
-        </form>
-    </div>
-</div>
+<div class="container-fluid">
+    <!-- Navigation Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="available-tab" data-bs-toggle="tab" href="#available" role="tab">
+                <i class="fas fa-clock me-2"></i>متاحة للقبول
+                @if($availableBookings->count() > 0)
+                    <span class="badge bg-warning ms-2">{{ $availableBookings->count() }}</span>
+                @endif
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="accepted-tab" data-bs-toggle="tab" href="#accepted" role="tab">
+                <i class="fas fa-check-circle me-2"></i>مقبولة
+                @if($acceptedBookings->count() > 0)
+                    <span class="badge bg-success ms-2">{{ $acceptedBookings->count() }}</span>
+                @endif
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="rejected-tab" data-bs-toggle="tab" href="#rejected" role="tab">
+                <i class="fas fa-times-circle me-2"></i>مرفوضة/منتهية
+            </a>
+        </li>
+    </ul>
 
-<!-- Stats Summary -->
-<div class="row g-3 mb-4">
-    <div class="col-md-3 col-6">
-        <div class="content-card p-3 text-center">
-            <div class="fw-bold fs-4 text-warning">{{ $bookings->where('status', 'pending')->count() }}</div>
-            <small class="text-muted">بانتظار التأكيد</small>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="content-card p-3 text-center">
-            <div class="fw-bold fs-4 text-success">{{ $bookings->where('status', 'confirmed')->count() }}</div>
-            <small class="text-muted">مؤكدة</small>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="content-card p-3 text-center">
-            <div class="fw-bold fs-4 text-info">{{ $bookings->where('status', 'completed')->count() }}</div>
-            <small class="text-muted">مكتملة</small>
-        </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="content-card p-3 text-center">
-            <div class="fw-bold fs-4 text-danger">{{ $bookings->where('status', 'cancelled')->count() }}</div>
-            <small class="text-muted">ملغية</small>
-        </div>
-    </div>
-</div>
+    <!-- Tab Content -->
+    <div class="tab-content">
+        <!-- Available Bookings -->
+        <div class="tab-pane fade show active" id="available" role="tabpanel">
+            @if($availableBookings->count() > 0)
+                <div class="row">
+                    @foreach($availableBookings as $booking)
+                        <div class="col-lg-6 mb-4">
+                            <div class="card border-warning shadow-sm">
+                                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-calendar-alt me-2"></i>
+                                        {{ $booking->booking_reference }}
+                                    </h6>
+                                    <span class="badge bg-light text-dark">
+                                        <i class="fas fa-clock me-1"></i>
+                                        ينتهي في: {{ $booking->expires_at->diffForHumans() }}
+                                    </span>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Customer Info (hidden per request) -->
 
-<!-- Bookings Table -->
-<div class="content-card">
-    <div class="table-responsive">
-        <table class="table table-custom">
-            <thead>
-                <tr>
-                    <th>رقم الحجز</th>
-                    <th>العميل</th>
-                    <th>الخدمة</th>
-                    <th>تاريخ الفعالية</th>
-                    <th>المبلغ</th>
-                    <th>الحالة</th>
-                    <th>الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($bookings as $booking)
-                <tr>
-                    <td>
-                        <span class="fw-bold">#{{ $booking->id }}</span>
-                        <br>
-                        <small class="text-muted">{{ $booking->created_at->format('Y/m/d') }}</small>
-                    </td>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <div class="user-avatar me-2" style="width: 40px; height: 40px; font-size: 0.9rem; background: #2dbcae;">
-                                {{ mb_substr($booking->user->name ?? 'ز', 0, 1) }}
-                            </div>
-                            <div>
-                                <div class="fw-semibold">{{ $booking->user->name ?? 'زائر' }}</div>
-                                <small class="text-muted">{{ $booking->user->email ?? '' }}</small>
+                                    <!-- Services List -->
+                                    @if($booking->quote && $booking->quote->items->count() > 0)
+                                        <div class="mb-3">
+                                            <h6 class="text-muted mb-2"><i class="fas fa-concierge-bell me-2"></i>الخدمات المطلوبة</h6>
+                                            <ul class="list-unstyled">
+                                                @foreach($booking->quote->items as $item)
+                                                    <li class="mb-1">
+                                                        <i class="fas fa-check-circle text-success me-1"></i>
+                                                        {{ $item->service_name }}
+                                                        @if($item->quantity > 1)
+                                                            <span class="badge bg-secondary">× {{ $item->quantity }}</span>
+                                                        @endif
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    @endif
+
+                                    <!-- Amount -->
+                                    <div class="mb-3">
+                                        <h6 class="text-muted mb-2"><i class="fas fa-money-bill-wave me-2"></i>المبلغ الإجمالي</h6>
+                                        <h4 class="text-success mb-0">{{ number_format($booking->total_amount, 2) }} ر.س</h4>
+                                        <small class="text-muted">تم الدفع مسبقاً ✓</small>
+                                    </div>
+
+                                    <!-- Competition Info -->
+                                    <div class="alert alert-info mb-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>منافسة نشطة:</strong> 
+                                        تم إرسال إشعارات لـ {{ $booking->notified_suppliers_count }} موردين.
+                                        @if($booking->views_count > 0)
+                                            شاهد الحجز {{ $booking->views_count }} موردين.
+                                        @endif
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ route('supplier.bookings.show', $booking->id) }}" class="btn btn-primary flex-fill">
+                                            <i class="fas fa-eye me-2"></i><span style="color: white;">عرض التفاصيل</span>
+                                        </a>
+                                        <form action="{{ route('supplier.bookings.accept', $booking->id) }}" method="POST" class="flex-fill">
+                                            @csrf
+                                            <button type="submit" class="btn btn-success w-100" onclick="return confirm('هل أنت متأكد من قبول هذا الحجز؟')">
+                                                <i class="fas fa-check me-2"></i><span style="color: white;">قبول الحجز</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </td>
-                    <td>
-                        <div class="fw-semibold">{{ $booking->service->name ?? '-' }}</div>
-                        <small class="text-muted">{{ $booking->service->category->name ?? '' }}</small>
-                    </td>
-                    <td>
-                        @if($booking->event_date)
-                            <div class="fw-semibold">{{ $booking->event_date->format('Y/m/d') }}</div>
-                            <small class="text-muted">{{ $booking->event_time ?? '' }}</small>
-                        @else
-                            <span class="text-muted">-</span>
-                        @endif
-                    </td>
-                    <td>
-                        <span class="fw-bold" style="color: #1f144a;">{{ number_format($booking->total_amount, 0) }} ر.س</span>
-                    </td>
-                    <td>
-                        @php
-                            $statusClass = match($booking->status) {
-                                'pending' => 'status-pending',
-                                'confirmed' => 'status-confirmed',
-                                'in_progress' => 'status-confirmed',
-                                'completed' => 'status-completed',
-                                'cancelled' => 'status-cancelled',
-                                default => 'status-pending'
-                            };
-                            $statusText = match($booking->status) {
-                                'pending' => 'بانتظار التأكيد',
-                                'confirmed' => 'مؤكد',
-                                'in_progress' => 'قيد التنفيذ',
-                                'completed' => 'مكتمل',
-                                'cancelled' => 'ملغي',
-                                default => 'غير محدد'
-                            };
-                        @endphp
-                        <span class="status-badge {{ $statusClass }}">{{ $statusText }}</span>
-                    </td>
-                    <td>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('supplier.bookings.show', $booking->id) }}">
-                                        <i class="fas fa-eye me-2"></i>عرض التفاصيل
-                                    </a>
-                                </li>
-                                @if($booking->status === 'pending')
-                                <li>
-                                    <form action="{{ route('supplier.bookings.update-status', $booking->id) }}" method="POST">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="status" value="confirmed">
-                                        <button type="submit" class="dropdown-item text-success">
-                                            <i class="fas fa-check me-2"></i>تأكيد الحجز
-                                        </button>
-                                    </form>
-                                </li>
-                                @endif
-                                @if($booking->status === 'confirmed')
-                                <li>
-                                    <form action="{{ route('supplier.bookings.update-status', $booking->id) }}" method="POST">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="status" value="in_progress">
-                                        <button type="submit" class="dropdown-item text-info">
-                                            <i class="fas fa-play me-2"></i>بدء التنفيذ
-                                        </button>
-                                    </form>
-                                </li>
-                                @endif
-                                @if(in_array($booking->status, ['confirmed', 'in_progress']))
-                                <li>
-                                    <form action="{{ route('supplier.bookings.update-status', $booking->id) }}" method="POST">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="status" value="completed">
-                                        <button type="submit" class="dropdown-item text-primary">
-                                            <i class="fas fa-check-double me-2"></i>إتمام الحجز
-                                        </button>
-                                    </form>
-                                </li>
-                                @endif
-                                @if(!in_array($booking->status, ['completed', 'cancelled']))
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form action="{{ route('supplier.bookings.update-status', $booking->id) }}" method="POST">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="status" value="cancelled">
-                                        <button type="submit" class="dropdown-item text-danger" onclick="return confirm('هل أنت متأكد من إلغاء الحجز؟')">
-                                            <i class="fas fa-times me-2"></i>إلغاء الحجز
-                                        </button>
-                                    </form>
-                                </li>
-                                @endif
-                            </ul>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="7" class="text-center py-5">
-                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">لا توجد حجوزات</h5>
-                        <p class="text-muted mb-0">لم يتم استلام أي حجوزات بعد</p>
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+                    @endforeach
+                </div>
+                <div class="d-flex justify-content-center">
+                    {{ $availableBookings->links() }}
+                </div>
+            @else
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    لا توجد حجوزات متاحة للقبول حالياً
+                </div>
+            @endif
+        </div>
+
+        <!-- Accepted Bookings -->
+        <div class="tab-pane fade" id="accepted" role="tabpanel">
+            @if($acceptedBookings->count() > 0)
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>رقم الحجز</th>
+                                <th>العميل</th>
+                                <th>الخدمات</th>
+                                <th>المبلغ</th>
+                                <th>الحالة</th>
+                                <th>تاريخ القبول</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($acceptedBookings as $booking)
+                                <tr>
+                                    <td>{{ $booking->booking_reference }}</td>
+                                    <td>—</td>
+                                    <td>
+                                        @if($booking->quote)
+                                            {{ $booking->quote->items->count() }} خدمة
+                                        @endif
+                                    </td>
+                                    <td>{{ number_format($booking->total_amount, 2) }} ر.س</td>
+                                    <td>
+                                        @if($booking->status === 'confirmed')
+                                            <span class="badge bg-success">مؤكد</span>
+                                        @elseif($booking->status === 'completed')
+                                            <span class="badge bg-primary">مكتمل</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $booking->accepted_at ? $booking->accepted_at->format('Y-m-d H:i') : '-' }}</td>
+                                    <td>
+                                        <a href="{{ route('supplier.bookings.show', $booking->id) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-center">
+                    {{ $acceptedBookings->links() }}
+                </div>
+            @else
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    لا توجد حجوزات مقبولة
+                </div>
+            @endif
+        </div>
+
+        <!-- Rejected/Expired Bookings -->
+        <div class="tab-pane fade" id="rejected" role="tabpanel">
+            @if($rejectedBookings->count() > 0)
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>رقم الحجز</th>
+                                <th>العميل</th>
+                                <th>الحالة</th>
+                                <th>تاريخ الرد</th>
+                                <th>السبب</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($rejectedBookings as $notification)
+                                <tr>
+                                    <td>{{ $notification->booking->booking_reference }}</td>
+                                    <td>—</td>
+                                    <td>
+                                        @if($notification->response === 'rejected')
+                                            <span class="badge bg-danger">مرفوض</span>
+                                        @elseif($notification->response === 'expired')
+                                            <span class="badge bg-secondary">منتهي (قبله مورد آخر)</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $notification->responded_at ? $notification->responded_at->format('Y-m-d H:i') : '-' }}</td>
+                                    <td>{{ $notification->rejection_reason ?? '-' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-center">
+                    {{ $rejectedBookings->links() }}
+                </div>
+            @else
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    لا توجد حجوزات مرفوضة أو منتهية
+                </div>
+            @endif
+        </div>
     </div>
 </div>
 
-<!-- Pagination -->
-@if($bookings->hasPages())
-<div class="mt-4 d-flex justify-content-center">
-    {{ $bookings->withQueryString()->links() }}
-</div>
-@endif
+@push('scripts')
+<script>
+// Auto-refresh available bookings every 30 seconds
+setInterval(function() {
+    if ($('#available-tab').hasClass('active')) {
+        location.reload();
+    }
+}, 30000);
+</script>
+@endpush
 @endsection

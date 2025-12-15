@@ -97,7 +97,7 @@
                                         {{ number_format($result->price) }} ر.س
                                     </span>
                                     <a href="{{ route('services.show', $result->id) }}" class="btn btn-outline-primary btn-sm">
-                                        عرض التفاصيل <i class="fas fa-arrow-left"></i>
+                                        <span style="color: white;">عرض التفاصيل</span> <i class="fas fa-arrow-left"></i>
                                     </a>
                                 </div>
                             </div>
@@ -148,7 +148,7 @@
                                         @endif
                                     </div>
                                     <a href="{{ route('packages.show', $result->id) }}" class="btn btn-outline-success btn-sm">
-                                        عرض التفاصيل <i class="fas fa-arrow-left"></i>
+                                        <span style="color: white;">عرض التفاصيل</span> <i class="fas fa-arrow-left"></i>
                                     </a>
                                 </div>
                             </div>

@@ -36,16 +36,22 @@
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            @if($item->service && $item->service->image)
-                                                <img src="{{ asset('storage/' . $item->service->image) }}" 
+                                            @if($item->service)
+                                                <img src="{{ $item->service->thumbnail_url }}" 
                                                      alt="{{ $item->service_name }}" 
                                                      class="rounded me-3"
                                                      style="width: 60px; height: 60px; object-fit: cover;">
+                                            @else
+                                                <div class="rounded me-3 d-flex align-items-center justify-content-center bg-light"
+                                                     style="width: 60px; height: 60px;">
+                                                    <i class="fas fa-image text-muted"></i>
+                                                </div>
                                             @endif
                                             <div>
-                                                <strong>{{ $item->service_name }}</strong>
-                                                @if($item->service_description)
-                                                    <p class="text-muted small mb-0">{{ Str::limit($item->service_description, 80) }}</p>
+                                                <strong>{{ $item->service->name ?? $item->service_name }}</strong>
+                                                @php $desc = $item->service->description ?? $item->service_description; @endphp
+                                                @if($desc)
+                                                    <p class="text-muted small mb-0">{{ Str::limit($desc, 80) }}</p>
                                                 @endif
                                                 
                                                 {{-- عرض التنويعات المختارة --}}
@@ -53,42 +59,53 @@
                                                     $variationId = $item->getSelectedVariationId();
                                                     $variation = $variationId ? $item->getVariation() : null;
                                                 @endphp
-                                                @if($variation && $variation->attributeValuesList && $variation->attributeValuesList->count() > 0)
+                                                @if(false)
                                                     <ul class="small text-primary mb-1 mt-1">
                                                         <li class="fw-bold"><i class="fas fa-sliders-h me-1"></i>الخيارات المختارة:</li>
-                                                        @foreach($variation->attributeValuesList as $value)
-                                                            <li class="ms-3">
-                                                                <strong>{{ $value->attribute->name }}:</strong> {{ $value->value }}
-                                                            </li>
-                                                        @endforeach
                                                     </ul>
                                                 @endif
                                                 
                                                 @if(is_array($item->selections) && count($item->selections) > 0)
-                                                    <ul class="small text-muted mb-0 mt-1">
-                                                        @foreach($item->selections as $key => $values)
-                                                            @php
-                                                                // تجاهل المفاتيح الداخلية
-                                                                if (str_starts_with($key, '_')) continue;
-                                                                
-                                                                $fieldLabel = $key;
-                                                                if ($item->service && is_array($item->service->custom_fields)) {
-                                                                    foreach ($item->service->custom_fields as $f) {
-                                                                        $slug = \Illuminate\Support\Str::slug($f['label'] ?? '');
-                                                                        if ($slug === $key) { $fieldLabel = $f['label']; break; }
-                                                                    }
+                                                    @php
+                                                        $fieldsBySlug = [];
+                                                        $fieldOptions = [];
+                                                        if ($item->service && is_array($item->service->custom_fields)) {
+                                                            foreach ($item->service->custom_fields as $field) {
+                                                                $slug = \Illuminate\Support\Str::slug($field['label'] ?? '');
+                                                                if ($slug) {
+                                                                    $fieldsBySlug[$slug] = $field['label'] ?? $slug;
+                                                                    $opts = $field['options'] ?? [];
+                                                                    if (is_string($opts)) { $opts = array_map('trim', explode(',', $opts)); }
+                                                                    $fieldOptions[$slug] = is_array($opts) ? array_values(array_filter($opts, fn($v) => $v !== null && $v !== '')) : [];
                                                                 }
-                                                            @endphp
-                                                            <li>
-                                                                <strong>{{ $fieldLabel }}:</strong>
-                                                                @if(is_array($values))
-                                                                    {{ implode(', ', $values) }}
-                                                                @else
-                                                                    {{ $values }}
-                                                                @endif
-                                                            </li>
-                                                        @endforeach
-                                                    </ul>
+                                                            }
+                                                        }
+                                                        $validSelections = [];
+                                                        if (is_array($item->selections)) {
+                                                            foreach ($item->selections as $key => $values) {
+                                                                if (str_starts_with($key, '_')) continue;
+                                                                if (!array_key_exists($key, $fieldsBySlug)) continue;
+                                                                $allowed = $fieldOptions[$key] ?? [];
+                                                                if (is_array($values)) {
+                                                                    $vals = array_values(array_filter($values, fn($v) => in_array((string)$v, $allowed, true)));
+                                                                    if (count($vals) > 0) { $validSelections[$key] = $vals; }
+                                                                } else {
+                                                                    if (in_array((string)$values, $allowed, true)) { $validSelections[$key] = [$values]; }
+                                                                }
+                                                            }
+                                                        }
+                                                    @endphp
+                                                    @if(count($validSelections) > 0)
+                                                        <ul class="small text-muted mb-0 mt-1">
+                                                            @foreach($validSelections as $key => $values)
+                                                                @php $fieldLabel = $fieldsBySlug[$key]; @endphp
+                                                                <li>
+                                                                    <strong>{{ $fieldLabel }}:</strong>
+                                                                    {{ implode('، ', array_map(fn($v) => (string)$v, $values)) }}
+                                                                </li>
+                                                            @endforeach
+                                                        </ul>
+                                                    @endif
                                                 @endif
                                                 @if($item->customer_notes)
                                                     <small class="text-info d-block mt-1">
@@ -174,10 +191,10 @@
                         </a>
                         @endif
                         
-                        @if($quote->status === 'booked')
+                        @if($quote->status === 'paid')
                         <div class="alert alert-success mb-0">
                             <i class="fas fa-check-circle me-2"></i>
-                            تم تأكيد الحجز والدفع بنجاح
+                            تم الدفع بنجاح! جاري معالجة الحجز وإرسال إشعارات للموردين
                         </div>
                         @endif
                         

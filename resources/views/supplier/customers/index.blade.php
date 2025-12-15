@@ -51,7 +51,7 @@
                 
                 <div class="mt-3">
                     <a href="{{ route('supplier.customers.show', $user->id) }}" class="btn btn-supplier-primary w-100">
-                        <i class="fas fa-eye me-1"></i> عرض التفاصيل
+                        <i class="fas fa-eye me-1"></i> <span style="color: white;">عرض التفاصيل</span>
                     </a>
                 </div>
             </div>

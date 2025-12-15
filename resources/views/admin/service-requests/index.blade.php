@@ -114,7 +114,7 @@
                                 </span>
                             </td>
                             <td class="text-center py-2">
-                                <a href="{{ route('admin.service-requests.show', $request->id) }}" class="btn btn-sm btn-outline-primary" title="عرض التفاصيل">
+                                <a href="{{ route('admin.service-requests.show', $request->id) }}" class="btn btn-sm btn-outline-primary text-white" title="عرض التفاصيل">
                                     <i class="fas fa-eye"></i>
                                 </a>
                             </td>

@@ -45,6 +45,7 @@ class QuoteController extends Controller
             'approved' => Quote::where('status', 'approved')->count(),
             'rejected' => Quote::where('status', 'rejected')->count(),
             'completed' => Quote::where('status', 'completed')->count(),
+            'paid' => Quote::where('status', 'paid')->count(),
         ];
         
         return view('admin.quotes.index', compact('quotes', 'stats'));
@@ -55,7 +56,11 @@ class QuoteController extends Controller
      */
     public function show(Quote $quote)
     {
-        $quote->load('user', 'items.service');
+        $quote->load([
+            'user',
+            'items.service.thumbnailImage',
+            'items.service.images',
+        ]);
         
         return view('admin.quotes.show', compact('quote'));
     }
@@ -66,7 +71,7 @@ class QuoteController extends Controller
     public function updateStatus(Request $request, Quote $quote)
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,under_review,approved,rejected,completed',
+            'status' => 'required|in:pending,under_review,approved,rejected,completed,paid',
             'admin_notes' => 'nullable|string|max:2000',
             'discount' => 'nullable|numeric|min:0',
         ]);
@@ -83,7 +88,11 @@ class QuoteController extends Controller
             $quote->approved_at = now();
             // إرسال بريد الكتروني للعميل عند الموافقة
             try {
-                $quote->load('items.service', 'user');
+                $quote->load([
+                    'items.service.thumbnailImage',
+                    'items.service.images',
+                    'user',
+                ]);
                 Mail::to($quote->user->email)->send(new QuoteMail($quote));
             } catch (\Exception $e) {
                 Log::error('Failed to send approval email: ' . $e->getMessage());
@@ -115,6 +124,41 @@ class QuoteController extends Controller
                 Mail::to($quote->user->email)->send(new QuoteMail($quote));
             } catch (\Exception $e) {
                 Log::error('Failed to send rejection email: ' . $e->getMessage());
+            }
+        } elseif ($validated['status'] === 'paid' && $oldStatus !== 'paid') {
+            $quote->payment_status = 'paid';
+            $quote->payment_date = now();
+            if (empty($quote->payment_method)) {
+                $quote->payment_method = 'bank_transfer';
+            }
+            $quote->save();
+
+            try {
+                $quote->convertToBooking();
+            } catch (\Throwable $e) {
+                Log::warning('Admin set quote to paid but booking conversion failed: ' . $e->getMessage(), [
+                    'quote_id' => $quote->id,
+                ]);
+            }
+
+            try {
+                \App\Models\Payment::create([
+                    'user_id' => $quote->user_id,
+                    'quote_id' => $quote->id,
+                    'booking_id' => optional($quote->bookings()->latest()->first())->id,
+                    'amount' => $quote->total,
+                    'currency' => 'SAR',
+                    'method' => $quote->payment_method ?? 'bank_transfer',
+                    'status' => 'paid',
+                    'provider' => 'manual',
+                    'notes' => $quote->payment_notes,
+                    'metadata' => [
+                        'source' => 'admin.quotes.updateStatus',
+                    ],
+                    'captured_at' => now(),
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('Failed to record payment on admin paid status: ' . $e->getMessage());
             }
         }
         
@@ -159,10 +203,42 @@ class QuoteController extends Controller
     public function sendEmail(Quote $quote)
     {
         try {
-            \Mail::to($quote->user->email)->send(new \App\Mail\QuoteMail($quote));
+            Mail::to($quote->user->email)->send(new \App\Mail\QuoteMail($quote));
             return back()->with('success', 'تم إرسال البريد الإلكتروني للعميل بنجاح');
         } catch (\Exception $e) {
             return back()->with('error', 'حدث خطأ أثناء إرسال البريد: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Convert a PAID quote into a competitive booking if missing
+     */
+    public function convertPaidToBooking(Quote $quote)
+    {
+        if ($quote->status !== 'paid') {
+            return back()->with('error', 'يجب أن تكون حالة عرض السعر: تم الدفع');
+        }
+
+        if ($quote->bookings()->exists()) {
+            return back()->with('success', 'تم تحويل هذا العرض إلى حجز مسبقاً');
+        }
+
+        // Ensure payment_status consistency
+        if ($quote->payment_status !== 'paid') {
+            $quote->payment_status = 'paid';
+            $quote->payment_date = now();
+            $quote->save();
+        }
+
+        try {
+            $booking = $quote->convertToBooking();
+        } catch (\Throwable $e) {
+            Log::error('Failed converting paid quote to booking: ' . $e->getMessage(), [
+                'quote_id' => $quote->id,
+            ]);
+            return back()->with('error', 'فشل تحويل العرض إلى حجز: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'تم تحويل العرض المدفوع إلى حجز تنافسي بنجاح: #' . $booking->booking_reference);
     }
 }

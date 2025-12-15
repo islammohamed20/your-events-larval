@@ -146,7 +146,7 @@
                                     <td>
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('admin.customers.show', $customer->id) }}" 
-                                               class="btn btn-sm btn-info" title="عرض التفاصيل">
+                                               class="btn btn-sm btn-info text-white" title="عرض التفاصيل">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             <a href="{{ route('admin.customers.edit', $customer->id) }}" 

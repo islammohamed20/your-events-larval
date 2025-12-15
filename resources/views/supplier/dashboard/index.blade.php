@@ -181,14 +181,8 @@
                 @forelse($services as $service)
                 <div class="d-flex align-items-center p-3 mb-2 rounded-3" style="background: #f8f9fa;">
                     <div class="me-3">
-                        @if($service->image)
-                            <img src="{{ asset('storage/' . $service->image) }}" alt="{{ $service->name }}" 
-                                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 10px;">
-                        @else
-                            <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-concierge-bell text-white"></i>
-                            </div>
-                        @endif
+                        <img src="{{ $service->thumbnail_url }}" alt="{{ $service->name }}" 
+                             style="width: 50px; height: 50px; object-fit: cover; border-radius: 10px;">
                     </div>
                     <div class="flex-grow-1">
                         <div class="fw-semibold">{{ $service->name }}</div>

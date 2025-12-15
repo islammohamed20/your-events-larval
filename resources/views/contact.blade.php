@@ -4,11 +4,11 @@
 
 @section('content')
 <!-- Page Header -->
-<section class="hero-section hero-contact" style="padding: 40px 0; background: var(--gradient-secondary);">
+<section class="hero-section hero-contact" style="padding: 40px 0; background: linear-gradient(135deg, var(--primary-color) 0%, #2d1a5e 50%, var(--purple-light) 100%) !important;">
     <div class="container">
         <div class="text-center">
             <h1 class="display-4 fw-bold mb-3">تواصل معنا</h1>
-            <p class="lead">نحن هنا للإجابة على جميع استفساراتك ومساعدتك في تنظيم مناسبتك المثالية</p>
+            <p class="lead">نحن في Your Events نؤمن إن كل فعالية مميّزة تبدأ بتواصل واضح</p>
         </div>
     </div>
 </section>
@@ -23,49 +23,76 @@
                         <h3 class="mb-4 text-primary">
                             <i class="fas fa-envelope me-2"></i>أرسل لنا رسالة
                         </h3>
-                        <form>
+                        @if(session('success'))
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+                        @if($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-circle me-2"></i>{{ $errors->first() }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+                        <form method="POST" action="{{ route('contact.store') }}">
+                            @csrf
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="name" class="form-label">الاسم الكامل *</label>
-                                    <input type="text" class="form-control" id="name" required>
+                                    <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required>
+                                    @error('name')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="email" class="form-label">البريد الإلكتروني *</label>
-                                    <input type="email" class="form-control" id="email" required>
+                                    <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required>
+                                    @error('email')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="phone" class="form-label">رقم الهاتف</label>
-                                    <input type="tel" class="form-control" id="phone">
+                                    <input type="tel" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}">
+                                    @error('phone')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label d-block">اختر الموضوع</label>
                                     <div class="d-flex flex-wrap gap-3" id="subject-group">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="subject" id="subjectBooking" value="booking">
+                                            <input class="form-check-input" type="radio" name="subject" id="subjectBooking" value="booking" {{ old('subject') === 'booking' ? 'checked' : '' }} required>
                                             <label class="form-check-label" for="subjectBooking">استفسار عن الحجز</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="subject" id="subjectPackages" value="packages">
+                                            <input class="form-check-input" type="radio" name="subject" id="subjectPackages" value="packages" {{ old('subject') === 'packages' ? 'checked' : '' }}>
                                             <label class="form-check-label" for="subjectPackages">استفسار عن الباقات</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="subject" id="subjectServices" value="services">
+                                            <input class="form-check-input" type="radio" name="subject" id="subjectServices" value="services" {{ old('subject') === 'services' ? 'checked' : '' }}>
                                             <label class="form-check-label" for="subjectServices">استفسار عن الخدمات</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="subject" id="subjectComplaint" value="complaint">
+                                            <input class="form-check-input" type="radio" name="subject" id="subjectComplaint" value="complaint" {{ old('subject') === 'complaint' ? 'checked' : '' }}>
                                             <label class="form-check-label" for="subjectComplaint">شكوى</label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="subject" id="subjectOther" value="other">
+                                            <input class="form-check-input" type="radio" name="subject" id="subjectOther" value="other" {{ old('subject') === 'other' ? 'checked' : '' }}>
                                             <label class="form-check-label" for="subjectOther">أخرى</label>
                                         </div>
                                     </div>
+                                    @error('subject')
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label for="message" class="form-label">الرسالة *</label>
-                                    <textarea class="form-control" id="message" rows="5" 
-                                              placeholder="اكتب رسالتك هنا..." required></textarea>
+                                    <textarea class="form-control @error('message') is-invalid @enderror" id="message" name="message" rows="5" placeholder="اكتب رسالتك هنا..." required>{{ old('message') }}</textarea>
+                                    @error('message')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-12">
                                     <button type="submit" class="btn btn-primary btn-lg">
@@ -176,7 +203,7 @@
                         <hr class="my-4">
                         
                         <div class="text-center">
-                            <a href="https://wa.me/{{ preg_replace('/\D+/', '', \App\Models\Setting::get('contact_phone')) }}" target="_blank" class="btn btn-success w-100">
+                            <a href="https://wa.me/{{ preg_replace('/\D+/', '', \App\Models\Setting::get('contact_phone', '+966501234567')) }}" target="_blank" class="btn btn-success w-100">
                                 <i class="fab fa-whatsapp me-2"></i>تواصل عبر الواتساب
                             </a>
                         </div>
@@ -195,16 +222,13 @@
             <div class="col-lg-10">
                 <div class="card shadow" data-aos="fade-up" data-aos-delay="100">
                     <div class="card-body p-0">
-                        <div style="height: 400px; background: #f8f9fa; border-radius: 0.375rem;" class="d-flex align-items-center justify-content-center">
-                            <div class="text-center">
-                                <i class="fas fa-map-marked-alt fa-3x text-muted mb-3"></i>
-                                <h5 class="text-muted">خريطة الموقع</h5>
-                                <p class="text-muted">الرياض، المملكة العربية السعودية</p>
-                                <p class="small text-muted">
-                                    ملاحظة: في التطبيق الفعلي، سيتم إدراج خريطة Google Maps أو خريطة تفاعلية أخرى هنا
-                                </p>
-                            </div>
-                        </div>
+                        <iframe 
+                            src="https://www.google.com/maps?q=24.804660797879635,46.62951321534364&hl=ar&z=15&output=embed" 
+                            style="width: 100%; height: 400px; border: 0; border-radius: 0.375rem;" 
+                            allowfullscreen 
+                            loading="lazy" 
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
                     </div>
                 </div>
             </div>
@@ -276,6 +300,9 @@
 
 @push('styles')
 <style>
+    .text-primary {
+        color: #1f144a !important;
+    }
     .social-icons {
         display: flex;
         gap: 15px;
@@ -317,7 +344,7 @@
     }
     
     .social-icon.twitter {
-        background: #000000;
+        background: #000000ff;
     }
     
     .social-icon.twitter:hover {

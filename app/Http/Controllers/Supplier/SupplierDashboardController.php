@@ -11,6 +11,8 @@ use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class SupplierDashboardController extends Controller
 {
@@ -49,7 +51,7 @@ class SupplierDashboardController extends Controller
 
         // الخدمات المتاحة
         $services = $supplier->services()
-            ->with('category')
+            ->with(['category', 'thumbnailImage'])
             ->take(6)
             ->get();
 
@@ -74,7 +76,7 @@ class SupplierDashboardController extends Controller
     {
         $supplier = $this->supplier();
         
-        $query = $supplier->services()->with('category');
+        $query = $supplier->services()->with(['category', 'thumbnailImage']);
 
         // فلترة حسب الحالة
         if ($request->filled('status')) {
@@ -102,7 +104,7 @@ class SupplierDashboardController extends Controller
         $supplier = $this->supplier();
         
         $service = $supplier->services()
-            ->with(['category', 'variations.attributeValues'])
+            ->with(['category', 'variations', 'thumbnailImage'])
             ->findOrFail($id);
 
         $bookings = Booking::where('service_id', $id)
@@ -187,6 +189,10 @@ class SupplierDashboardController extends Controller
             'status' => $request->status,
             'supplier_notes' => $request->notes,
         ]);
+
+        if ($booking->quote_id && $request->status === 'completed') {
+            $booking->quote()->update(['status' => 'completed']);
+        }
 
         $statusNames = [
             'confirmed' => 'تم التأكيد',
@@ -356,17 +362,17 @@ class SupplierDashboardController extends Controller
 
         // Send notification email to customer with supplier contact
         try {
-            \Mail::to($quote->user->email)->send(new \App\Mail\SupplierAcceptedQuoteMail($quote, $supplier));
+            Mail::to($quote->user->email)->send(new \App\Mail\SupplierAcceptedQuoteMail($quote, $supplier));
         } catch (\Exception $e) {
-            \Log::error('Failed to send supplier acceptance email: ' . $e->getMessage());
+            Log::error('Failed to send supplier acceptance email: ' . $e->getMessage());
         }
 
         // Notify admin
         try {
             $adminEmail = config('mail.admin_email', 'admin@your-events.com');
-            \Mail::to($adminEmail)->send(new \App\Mail\AdminSupplierAcceptedNotification($quote, $supplier));
+            Mail::to($adminEmail)->send(new \App\Mail\AdminSupplierAcceptedNotification($quote, $supplier));
         } catch (\Exception $e) {
-            \Log::error('Failed to send admin notification: ' . $e->getMessage());
+            Log::error('Failed to send admin notification: ' . $e->getMessage());
         }
 
         return redirect()->route('supplier.quotes.show', $quote)->with('success', 'تم قبول عرض السعر بنجاح! سيتم التواصل معك من قبل العميل قريباً.');

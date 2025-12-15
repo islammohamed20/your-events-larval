@@ -87,6 +87,16 @@
                                                         <i class="fas fa-clock me-1"></i>في الانتظار
                                                     </span>
                                                     @break
+                                                @case('awaiting_supplier')
+                                                    <span class="badge bg-info fs-6">
+                                                        <i class="fas fa-hourglass-half me-1"></i>بانتظار المورد
+                                                    </span>
+                                                    @if($booking->expires_at)
+                                                        <small class="text-muted d-block mt-1">
+                                                            ينتهي في: {{ $booking->expires_at->diffForHumans() }}
+                                                        </small>
+                                                    @endif
+                                                    @break
                                                 @case('confirmed')
                                                     <span class="badge bg-success fs-6">
                                                         <i class="fas fa-check me-1"></i>مؤكد
@@ -100,6 +110,11 @@
                                                 @case('cancelled')
                                                     <span class="badge bg-danger fs-6">
                                                         <i class="fas fa-times me-1"></i>ملغي
+                                                    </span>
+                                                    @break
+                                                @case('expired')
+                                                    <span class="badge bg-secondary fs-6">
+                                                        <i class="fas fa-clock me-1"></i>منتهي الصلاحية
                                                     </span>
                                                     @break
                                             @endswitch
@@ -123,7 +138,7 @@
                                             <label class="form-label fw-bold">وقت المناسبة:</label>
                                             <p>
                                                 <i class="fas fa-clock me-1"></i>
-                                                {{ $booking->event_time }}
+                                                {{ $booking->event_date ? $booking->event_date->format('Y-m-d') : 'غير محدد' }}
                                             </p>
                                         </div>
                                     @endif
@@ -162,7 +177,8 @@
                                         </div>
                                     @endif
                                 </div>
-                            @elseif($booking->service)
+                            @endif
+                            @if($booking->service)
                                 <div class="d-flex align-items-center mb-3">
                                     <span class="badge bg-success me-2">
                                         <i class="fas fa-cogs me-1"></i>خدمة
@@ -179,6 +195,38 @@
                                             <strong>المدة:</strong> {{ $booking->service->duration }}
                                         </div>
                                     @endif
+                                </div>
+                            @endif
+                            @if($booking->quote && $booking->quote->items && $booking->quote->items->count() > 0)
+                                <div class="d-flex align-items-center mb-3">
+                                    <span class="badge bg-secondary me-2">
+                                        <i class="fas fa-file-invoice-dollar me-1"></i>خدمات من عرض السعر
+                                    </span>
+                                    <h6 class="mb-0">الخدمات المطلوبة</h6>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>الخدمة</th>
+                                                <th>الوصف</th>
+                                                <th>الكمية</th>
+                                                <th>السعر</th>
+                                                <th>الإجمالي</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($booking->quote->items as $item)
+                                                <tr>
+                                                    <td>{{ $item->service->name ?? $item->service_name }}</td>
+                                                    <td>{{ Str::limit($item->service->description ?? $item->service_description, 80) }}</td>
+                                                    <td>{{ $item->quantity }}</td>
+                                                    <td>{{ number_format($item->price, 2) }} ريال</td>
+                                                    <td>{{ number_format($item->subtotal, 2) }} ريال</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
                                 </div>
                             @endif
                         </div>

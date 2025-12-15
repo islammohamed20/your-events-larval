@@ -10,10 +10,10 @@
         @foreach($cartItems as $item)
         <div class="cart-dropdown-item">
             <div class="item-image">
-                @if($item->service->image)
-                    <img src="{{ Storage::url($item->service->image) }}" alt="{{ $item->service->name }}">
+                @if($item->service)
+                    <img src="{{ $item->service->thumbnail_url }}" alt="{{ $item->service->name }}">
                 @else
-                    <img src="{{ asset('images/service-default.svg') }}" alt="{{ $item->service->name }}">
+                    <img src="{{ asset('images/service-default.svg') }}" alt="خدمة">
                 @endif
             </div>
             <div class="item-details">

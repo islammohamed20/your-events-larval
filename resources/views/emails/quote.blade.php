@@ -281,9 +281,12 @@
                         @foreach($quote->items as $item)
                         <tr>
                             <td style="text-align:right;">
-                                <strong>{{ $item->service_name }}</strong>
-                                @if($item->service_description)
-                                    <div style="color:#6c757d; font-size:12px; margin-top:4px;">{{ Str::limit($item->service_description, 90) }}</div>
+                                <strong>{{ $item->service->name ?? $item->service_name }}</strong>
+                                @php
+                                    $desc = $item->service->description ?? $item->service_description;
+                                @endphp
+                                @if($desc)
+                                    <div style="color:#6c757d; font-size:12px; margin-top:4px;">{{ Str::limit($desc, 90) }}</div>
                                 @endif
                             </td>
                             <td style="text-align:center;">{{ $item->quantity }}</td>

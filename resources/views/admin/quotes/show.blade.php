@@ -45,7 +45,7 @@
         <div class="col-lg-8">
             <!-- Customer Info -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white">
+                <div class="card-header bg-black">
                     <h5 class="mb-0"><i class="fas fa-user me-2"></i>معلومات العميل</h5>
                 </div>
                 <div class="card-body">
@@ -76,13 +76,24 @@
                             <label class="text-muted small">تاريخ الإنشاء</label>
                             <p class="mb-0"><strong>{{ $quote->created_at->format('Y/m/d h:i A') }}</strong></p>
                         </div>
+                        @if($quote->bookings()->exists())
+                        @php $booking = $quote->bookings()->latest()->first(); @endphp
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">رقم الحجز</label>
+                            <p class="mb-0">
+                                <a href="{{ route('admin.bookings.show', $booking) }}">
+                                    <strong>{{ $booking->booking_reference }}</strong>
+                                </a>
+                            </p>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
 
             <!-- Services Details -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white">
+                <div class="card-header bg-black">
                     <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>تفاصيل الخدمات</h5>
                 </div>
                 <div class="card-body">
@@ -103,16 +114,11 @@
                                     <td>{{ $index + 1 }}</td>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            @if($item->service && $item->service->image)
-                                                <img src="{{ asset('storage/' . $item->service->image) }}" 
-                                                     alt="{{ $item->service_name }}" 
-                                                     class="rounded me-2"
-                                                     style="width: 50px; height: 50px; object-fit: cover;">
-                                            @endif
                                             <div>
-                                                <strong>{{ $item->service_name }}</strong>
-                                                @if($item->service_description)
-                                                    <br><small class="text-muted">{{ Str::limit($item->service_description, 60) }}</small>
+                                                <strong>{{ $item->service->name ?? $item->service_name }}</strong>
+                                                @php $desc = $item->service->description ?? $item->service_description; @endphp
+                                                @if($desc)
+                                                    <br><small class="text-muted">{{ Str::limit($desc, 60) }}</small>
                                                 @endif
                                                 @if($item->customer_notes)
                                                     <br><small class="text-info">
@@ -122,52 +128,52 @@
 
                                                 {{-- عرض التنويعات المختارة --}}
                                                 @php
-                                                    $variationId = $item->getSelectedVariationId();
-                                                    $variation = $variationId ? $item->getVariation() : null;
-                                                @endphp
-                                                @if($variation && $variation->attributeValuesList && $variation->attributeValuesList->count() > 0)
-                                                    <div class="mt-2">
-                                                        <small class="text-primary d-block fw-bold">
-                                                            <i class="fas fa-sliders-h me-1"></i>الخيارات المختارة:
-                                                        </small>
-                                                        <ul class="mb-0 small" style="padding-right: 18px;">
-                                                            @foreach($variation->attributeValuesList as $value)
-                                                                <li>
-                                                                    <strong>{{ $value->attribute->name }}:</strong> {{ $value->value }}
-                                                                </li>
-                                                            @endforeach
-                                                        </ul>
-                                                    </div>
-                                                @endif
-
-                                                @php
                                                     $fieldsBySlug = [];
+                                                    $fieldOptions = [];
                                                     if ($item->service && is_array($item->service->custom_fields)) {
                                                         foreach ($item->service->custom_fields as $field) {
                                                             $slug = \Illuminate\Support\Str::slug($field['label'] ?? '');
                                                             if ($slug) {
                                                                 $fieldsBySlug[$slug] = $field['label'] ?? $slug;
+                                                                $opts = $field['options'] ?? [];
+                                                                if (is_string($opts)) {
+                                                                    $opts = array_map('trim', explode(',', $opts));
+                                                                }
+                                                                $fieldOptions[$slug] = is_array($opts) ? array_values(array_filter($opts, fn($v) => $v !== null && $v !== '')) : [];
                                                             }
                                                         }
                                                     }
                                                 @endphp
-                                                @if(is_array($item->selections) && count($item->selections) > 0)
+                                                @php
+                                                    $validSelections = [];
+                                                    if (is_array($item->selections)) {
+                                                        foreach ($item->selections as $key => $val) {
+                                                            if (str_starts_with($key, '_')) continue;
+                                                            if (!array_key_exists($key, $fieldsBySlug)) continue;
+                                                            $allowed = $fieldOptions[$key] ?? [];
+                                                            if (is_array($val)) {
+                                                                $vals = array_values(array_filter($val, fn($v) => in_array((string)$v, $allowed, true)));
+                                                                if (count($vals) > 0) { $validSelections[$key] = $vals; }
+                                                            } else {
+                                                                if (in_array((string)$val, $allowed, true)) { $validSelections[$key] = [$val]; }
+                                                            }
+                                                        }
+                                                    }
+                                                @endphp
+                                                @if(count($validSelections) > 0)
                                                     <div class="mt-2">
                                                         <small class="text-muted d-block">اختيارات العميل:</small>
                                                         <ul class="mb-0" style="padding-right: 18px;">
-                                                            @foreach($item->selections as $key => $val)
+                                                            @foreach($validSelections as $key => $val)
                                                                 @php 
-                                                                    // تجاهل المفاتيح الداخلية
-                                                                    if (str_starts_with($key, '_')) continue;
-                                                                    
-                                                                    $label = $fieldsBySlug[$key] ?? \Illuminate\Support\Str::title(str_replace('-', ' ', $key)); 
+                                                                    $label = $fieldsBySlug[$key];
                                                                 @endphp
                                                                 <li class="small">
                                                                     <strong>{{ $label }}:</strong>
                                                                     @if(is_array($val))
                                                                         {{ implode('، ', array_filter($val)) }}
                                                                     @else
-                                                                        {{ $val }}
+                                                                        {{ (string)$val }}
                                                                     @endif
                                                                 </li>
                                                             @endforeach
@@ -288,7 +294,7 @@
 
             <!-- Update Status -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white">
+                <div class="card-header bg-black">
                     <h5 class="mb-0"><i class="fas fa-edit me-2"></i>تحديث الحالة</h5>
                 </div>
                 <div class="card-body">
@@ -304,6 +310,7 @@
                                 <option value="approved" {{ $quote->status == 'approved' ? 'selected' : '' }}>موافق عليه</option>
                                 <option value="rejected" {{ $quote->status == 'rejected' ? 'selected' : '' }}>مرفوض</option>
                                 <option value="completed" {{ $quote->status == 'completed' ? 'selected' : '' }}>مكتمل</option>
+                                <option value="paid" {{ $quote->status == 'paid' ? 'selected' : '' }}>تم الدفع</option>
                             </select>
                         </div>
 
@@ -330,7 +337,7 @@
 
             <!-- Quick Actions -->
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white">
+                <div class="card-header bg-black">
                     <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>إجراءات سريعة</h5>
                 </div>
                 <div class="card-body">
@@ -365,6 +372,15 @@
                         </form>
                         @endif
 
+                        @if($quote->status === 'paid' && !$quote->bookings()->exists())
+                        <form action="{{ route('admin.quotes.convert-paid', $quote) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-exchange-alt me-2"></i>تحويل المدفوع إلى حجز تنافسي
+                            </button>
+                        </form>
+                        @endif
+
                         <a href="{{ route('quotes.download', $quote) }}" class="btn btn-outline-primary w-100" target="_blank">
                             <i class="fas fa-download me-2"></i>تحميل PDF
                         </a>
@@ -390,7 +406,7 @@
 
             <!-- Timeline -->
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
+                <div class="card-header bg-black">
                     <h5 class="mb-0"><i class="fas fa-history me-2"></i>السجل الزمني</h5>
                 </div>
                 <div class="card-body">

@@ -168,6 +168,13 @@ class PackageController extends Controller
 
     public function destroy(Package $package)
     {
+        // منع حذف الباقة إذا كانت مستخدمة في حجوزات
+        $bookingsCount = \App\Models\Booking::where('package_id', $package->id)->count();
+        if ($bookingsCount > 0) {
+            return redirect()->route('admin.packages.index')
+                             ->with('error', "لا يمكن حذف الباقة \"{$package->name}\" لأنها مستخدمة في {$bookingsCount} حجز. يمكنك إيقاف نشاطها بدلاً من حذفها.");
+        }
+        
         // حذف الصورة القديمة
         if ($package->image) {
             Storage::disk('public')->delete($package->image);

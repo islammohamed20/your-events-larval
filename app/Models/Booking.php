@@ -4,7 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class Booking extends Model
 {
@@ -30,11 +32,17 @@ class Booking extends Model
         'payment_notes',
         'status',
         'booking_reference',
+        'expires_at',
+        'notified_suppliers_count',
+        'views_count',
+        'accepted_at',
     ];
 
     protected $casts = [
         'event_date' => 'date',
         'total_amount' => 'decimal:2',
+        'expires_at' => 'datetime',
+        'accepted_at' => 'datetime',
     ];
 
     /**
@@ -45,7 +53,7 @@ class Booking extends Model
         parent::boot();
         
         static::creating(function ($booking) {
-            $booking->booking_reference = 'YE-' . strtoupper(Str::random(16));
+            $booking->booking_reference = 'YE-' . now()->format('Y-m-d-H-i-s') . '-' . substr((string) microtime(true), -3);
         });
 
         // Logging events
@@ -107,6 +115,200 @@ class Booking extends Model
     public function supplier()
     {
         return $this->belongsTo(Supplier::class);
+    }
+
+    /**
+     * Get all notifications sent for this booking
+     */
+    public function notifications()
+    {
+        return $this->hasMany(BookingNotification::class);
+    }
+
+    /**
+     * Get eligible suppliers for this booking services
+     */
+    public function getEligibleSuppliers()
+    {
+        // جمع جميع الخدمات من quote items
+        if (!$this->quote_id) {
+            return collect();
+        }
+
+        $serviceIds = $this->quote->items()->pluck('service_id')->unique();
+        
+        // البحث عن الموردين الذين قاموا بتسجيل هذه الخدمات
+        return Supplier::whereHas('services', function ($query) use ($serviceIds) {
+            $query->whereIn('services.id', $serviceIds);
+        })
+        ->where('status', 'approved')
+        ->whereNotNull('email_verified_at')
+        ->get();
+    }
+
+    /**
+     * Send notifications to all eligible suppliers
+     */
+    public function notifyEligibleSuppliers()
+    {
+        $suppliers = $this->getEligibleSuppliers();
+        
+        foreach ($suppliers as $supplier) {
+            // إنشاء الإشعار
+            BookingNotification::create([
+                'booking_id' => $this->id,
+                'supplier_id' => $supplier->id,
+                'notified_at' => now(),
+            ]);
+
+            // إرسال البريد الإلكتروني
+            try {
+                Mail::to($supplier->email)->send(new \App\Mail\BookingNotificationMail($this, $supplier));
+            } catch (\Exception $e) {
+                Log::error('Failed to send booking notification email to supplier: ' . $supplier->email . ' - ' . $e->getMessage());
+            }
+        }
+
+        // تحديث عدد الموردين المُشعرين
+        $this->update(['notified_suppliers_count' => $suppliers->count()]);
+    }
+
+    /**
+     * Accept booking by supplier (First-Come-First-Served)
+     */
+    public function acceptBySupplier(Supplier $supplier, $notes = null)
+    {
+        return DB::transaction(function () use ($supplier, $notes) {
+            // قفل الحجز للتحديث لتجنب race conditions
+            $booking = self::where('id', $this->id)->lockForUpdate()->first();
+
+            // التحقق من أن الحجز لم ينتهي
+            if ($booking->isExpired()) {
+                throw new \Exception('انتهت مهلة قبول هذا الحجز');
+            }
+
+            // التحقق من أن الحجز لم يتم قبوله مسبقاً
+            if ($booking->supplier_id) {
+                throw new \Exception('تم قبول هذا الحجز من قبل مورد آخر');
+            }
+
+            // قبول الحجز
+            $booking->update([
+                'supplier_id' => $supplier->id,
+                'status' => 'confirmed',
+                'accepted_at' => now(),
+            ]);
+
+            // تحديث إشعار المورد الحالي
+            $notification = BookingNotification::where('booking_id', $booking->id)
+                ->where('supplier_id', $supplier->id)
+                ->first();
+
+            if ($notification) {
+                $notification->update([
+                    'response' => 'accepted',
+                    'responded_at' => now(),
+                ]);
+            }
+
+            // تحديث باقي الإشعارات كـ expired
+            BookingNotification::where('booking_id', $booking->id)
+                ->where('supplier_id', '!=', $supplier->id)
+                ->where('response', 'pending')
+                ->update([
+                    'response' => 'expired',
+                    'responded_at' => now(),
+                ]);
+
+            // إرسال بريد للعميل بتأكيد قبول الحجز
+            try {
+                Mail::to($booking->user->email)->send(new \App\Mail\BookingAcceptedBySupplierMail($booking));
+            } catch (\Exception $e) {
+                Log::error('Failed to send booking accepted email: ' . $e->getMessage());
+            }
+
+            // تسجيل في activity log
+            ActivityLog::record($booking, 'supplier_accepted', 'تم قبول الحجز من قبل المورد', [
+                'supplier_id' => $supplier->id,
+                'supplier_name' => $supplier->company_name,
+            ]);
+
+            return $booking->fresh();
+        });
+    }
+
+    /**
+     * Reject booking by supplier
+     */
+    public function rejectBySupplier(Supplier $supplier, $reason = null)
+    {
+        $notification = BookingNotification::where('booking_id', $this->id)
+            ->where('supplier_id', $supplier->id)
+            ->first();
+
+        if ($notification) {
+            $notification->update([
+                'response' => 'rejected',
+                'responded_at' => now(),
+                'rejection_reason' => $reason,
+            ]);
+        }
+
+        ActivityLog::record($this, 'supplier_rejected', 'رفض المورد الحجز', [
+            'supplier_id' => $supplier->id,
+            'supplier_name' => $supplier->company_name,
+            'reason' => $reason,
+        ]);
+    }
+
+    /**
+     * Check if booking is expired
+     */
+    public function isExpired()
+    {
+        return $this->expires_at && $this->expires_at->isPast();
+    }
+
+    /**
+     * Check if booking is still active for suppliers
+     */
+    public function isActive()
+    {
+        return $this->status === 'awaiting_supplier' && !$this->isExpired();
+    }
+
+    /**
+     * Get status badge HTML
+     */
+    public function getStatusBadgeAttribute()
+    {
+        $badges = [
+            'pending' => '<span class="badge bg-warning"><i class="fas fa-clock"></i> في الانتظار</span>',
+            'awaiting_supplier' => '<span class="badge bg-info"><i class="fas fa-hourglass-half"></i> بانتظار المورد</span>',
+            'confirmed' => '<span class="badge bg-success"><i class="fas fa-check"></i> مؤكد</span>',
+            'cancelled' => '<span class="badge bg-danger"><i class="fas fa-times"></i> ملغي</span>',
+            'expired' => '<span class="badge bg-secondary"><i class="fas fa-clock"></i> منتهي</span>',
+            'completed' => '<span class="badge bg-primary"><i class="fas fa-check-double"></i> مكتمل</span>',
+        ];
+
+        return $badges[$this->status] ?? $this->status;
+    }
+
+    /**
+     * Get status text
+     */
+    public function getStatusTextAttribute()
+    {
+        $statuses = [
+            'pending' => 'في الانتظار',
+            'awaiting_supplier' => 'بانتظار قبول المورد',
+            'confirmed' => 'مؤكد',
+            'cancelled' => 'ملغي',
+            'expired' => 'منتهي الصلاحية',
+            'completed' => 'مكتمل',
+        ];
+
+        return $statuses[$this->status] ?? $this->status;
     }
 
     /**

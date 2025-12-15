@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'حجوزاتي') 'حجوزاتي - Your Events')
+@section('title', 'حجوزاتي - Your Events')
 
 @section('content')
 <div class="container py-5">
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="text-white">حجوزاتي</h2>
+                <h2 class="text-black">حجوزاتي</h2>
                 <a href="{{ route('booking.create') }}" class="btn btn-primary">
                     <i class="fas fa-plus me-2"></i>حجز جديد
                 </a>
@@ -25,18 +25,47 @@
                                     </h6>
                                     <span class="badge 
                                         @if($booking->status == 'pending') bg-warning
+                                        @elseif($booking->status == 'awaiting_supplier') bg-info
                                         @elseif($booking->status == 'confirmed') bg-success
                                         @elseif($booking->status == 'cancelled') bg-danger
+                                        @elseif($booking->status == 'expired') bg-secondary
+                                        @elseif($booking->status == 'completed') bg-primary
                                         @else bg-secondary
                                         @endif">
                                         @if($booking->status == 'pending') في الانتظار
+                                        @elseif($booking->status == 'awaiting_supplier') 
+                                            <i class="fas fa-hourglass-half"></i> بانتظار المورد
                                         @elseif($booking->status == 'confirmed') مؤكد
                                         @elseif($booking->status == 'cancelled') ملغي
+                                        @elseif($booking->status == 'expired') منتهي
+                                        @elseif($booking->status == 'completed') مكتمل
                                         @else {{ $booking->status }}
                                         @endif
                                     </span>
                                 </div>
                                 <div class="card-body">
+                                    @if($booking->status === 'awaiting_supplier' && $booking->expires_at)
+                                        <div class="alert alert-info mb-3">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            <strong>جاري التنافس!</strong>
+                                            تم إرسال إشعارات لـ {{ $booking->notified_suppliers_count }} موردين.
+                                            <br>
+                                            <small>ينتهي التنافس في: {{ $booking->expires_at->diffForHumans() }}</small>
+                                        </div>
+                                    @endif
+                                    
+                                    @if($booking->status === 'confirmed' && $booking->supplier)
+                                        <div class="alert alert-success mb-3">
+                                            <i class="fas fa-check-circle me-2"></i>
+                                            <strong>تم قبول حجزك!</strong>
+                                            <br>
+                                            <small>المورد: {{ $booking->supplier->company_name }}</small>
+                                            @if($booking->supplier->phone)
+                                                <br><small>الهاتف: {{ $booking->supplier->phone }}</small>
+                                            @endif
+                                        </div>
+                                    @endif
+                                    
                                     <div class="row">
                                         <div class="col-md-6">
                                             <p class="text-white mb-2">

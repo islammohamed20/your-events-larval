@@ -268,7 +268,7 @@
                             <hr>
 
                             <div class="d-grid gap-2">
-                                <a href="{{ route('admin.customers.show', $customer->id) }}" class="btn btn-outline-primary btn-sm">
+                                <a href="{{ route('admin.customers.show', $customer->id) }}" class="btn btn-outline-primary btn-sm text-white">
                                     <i class="fas fa-eye"></i> عرض التفاصيل
                                 </a>
                                 <a href="{{ route('admin.customers.export-detail', $customer->id) }}" class="btn btn-outline-success btn-sm">

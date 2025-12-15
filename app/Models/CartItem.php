@@ -88,11 +88,11 @@ class CartItem extends Model
     {
         if (Auth::check()) {
             return self::where('user_id', Auth::id())
-                ->with(['service'])
+                ->with(['service.thumbnailImage', 'service.images'])
                 ->get();
         } else {
             return self::where('session_id', session()->getId())
-                ->with(['service'])
+                ->with(['service.thumbnailImage', 'service.images'])
                 ->get();
         }
     }

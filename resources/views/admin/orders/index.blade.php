@@ -146,7 +146,7 @@
                                 </span>
                             </td>
                             <td class="text-center">
-                                <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-info" 
+                                <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-info text-white" 
                                    title="عرض التفاصيل">
                                     <i class="fas fa-eye"></i>
                                 </a>

@@ -29,8 +29,8 @@
                             <div class="cart-item border-bottom pb-4 mb-4" data-item-id="{{ $item->id }}">
                                 <div class="row align-items-center">
                                     <div class="col-md-2 text-center mb-3 mb-md-0">
-                                        @if($item->service->image)
-                                            <img src="{{ asset('storage/' . $item->service->image) }}" 
+                                        @if($item->service)
+                                            <img src="{{ $item->service->thumbnail_url }}" 
                                                  alt="{{ $item->service->name }}" 
                                                  class="img-fluid rounded"
                                                  style="max-height: 80px; object-fit: cover;">

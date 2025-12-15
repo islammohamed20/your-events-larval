@@ -64,17 +64,10 @@
                             @foreach($wishlists as $wishlist)
                                 <div class="col-md-6 mb-4">
                                     <div class="card h-100 shadow-sm">
-                                        @if($wishlist->service->image)
-                                            <img src="{{ Storage::url($wishlist->service->image) }}" 
-                                                 class="card-img-top" 
-                                                 alt="{{ $wishlist->service->name }}"
-                                                 style="height: 200px; object-fit: cover;">
-                                        @else
-                                            <img src="{{ asset('images/service-default.svg') }}" 
-                                                 class="card-img-top" 
-                                                 alt="{{ $wishlist->service->name }}"
-                                                 style="height: 200px; object-fit: cover;">
-                                        @endif
+                                        <img src="{{ $wishlist->service->thumbnail_url }}" 
+                                             class="card-img-top" 
+                                             alt="{{ $wishlist->service->name }}"
+                                             style="height: 200px; object-fit: cover;">
                                         
                                         <div class="card-body d-flex flex-column">
                                             <h5 class="card-title arabic-text">{{ $wishlist->service->name }}</h5>

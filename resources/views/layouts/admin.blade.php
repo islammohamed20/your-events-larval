@@ -321,7 +321,14 @@
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-            <img src="{{ asset('images/logo/logo.png') }}" alt="Your Events">
+            @php
+                $logo = \App\Models\Setting::get('logo');
+                $defaultLogo = asset('images/logo/logo.png');
+                $logoUrl = $logo
+                    ? (filter_var($logo, FILTER_VALIDATE_URL) ? $logo : url(\Illuminate\Support\Facades\Storage::url($logo)))
+                    : $defaultLogo;
+            @endphp
+            <img src="{{ $logoUrl }}" alt="Your Events" onerror="this.onerror=null;this.src='{{ $defaultLogo }}';">
             <small>لوحة التحكم</small>
         </div>
         
@@ -437,6 +444,12 @@
                     <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" 
                        href="{{ route('admin.settings.index') }}">
                         <i class="fas fa-cog me-2"></i>الإعدادات
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->routeIs('admin.contact-messages.*') ? 'active' : '' }}" 
+                       href="{{ route('admin.contact-messages.index') }}">
+                        <i class="fas fa-envelope me-2"></i>رسائل التواصل
                     </a>
                 </li>
                 <li class="nav-item">

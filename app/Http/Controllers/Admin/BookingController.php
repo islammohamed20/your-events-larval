@@ -23,18 +23,22 @@ class BookingController extends Controller
 
     public function show(Booking $booking)
     {
-        $booking->load(['user', 'package', 'service']);
+        $booking->load(['user', 'package', 'service', 'quote.items.service']);
         return view('admin.bookings.show', compact('booking'));
     }
 
     public function updateStatus(Request $request, Booking $booking)
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,confirmed,cancelled,completed',
+            'status' => 'required|in:pending,awaiting_supplier,confirmed,cancelled,expired,completed',
         ]);
 
         $old = $booking->status;
         $booking->update($validated);
+
+        if ($booking->quote_id && $booking->status === 'completed') {
+            $booking->quote()->update(['status' => 'completed']);
+        }
 
         // Log status change
         if ($old !== $booking->status) {

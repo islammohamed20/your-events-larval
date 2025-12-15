@@ -169,7 +169,7 @@
             
             <div style="text-align: center; margin: 30px 0;">
                 <a href="{{ url('/supplier/quotes/' . $quote->id) }}" class="button">
-                    <i class="fas fa-bolt"></i> عرض التفاصيل وقبول العرض
+                    <i class="fas fa-bolt"></i> <span style="color: white;">عرض التفاصيل وقبول العرض</span>
                 </a>
             </div>
 

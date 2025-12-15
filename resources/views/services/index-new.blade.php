@@ -156,17 +156,10 @@
                             <div class="card h-100 service-card">
                                 <!-- Service Image -->
                                 <div class="position-relative">
-                                    @if($service->image)
-                                        <img src="{{ Storage::url($service->image) }}" 
-                                             class="card-img-top" 
-                                             alt="{{ $service->name }}"
-                                             style="height: 250px; object-fit: cover;">
-                                    @else
-                                        <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" 
-                                             class="card-img-top" 
-                                             alt="{{ $service->name }}"
-                                             style="height: 250px; object-fit: cover;">
-                                    @endif
+                                    <img src="{{ $service->thumbnail_url }}" 
+                                         class="card-img-top" 
+                                         alt="{{ $service->name }}"
+                                         style="height: 250px; object-fit: cover;">
                                     
                                     <!-- Wishlist Button -->
                                     @auth

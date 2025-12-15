@@ -26,6 +26,8 @@ class SecurityHeaders
             "img-src 'self' data: https: blob:; " .
             "media-src 'self'; " .
             "connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.tiny.cloud; " .
+            "frame-src 'self' https://www.google.com https://maps.google.com https://www.youtube.com; " .
+            "child-src 'self' https://www.google.com https://maps.google.com https://www.youtube.com; " .
             "object-src 'none'; " .
             "frame-ancestors 'none'; " .
             "base-uri 'self'; " .

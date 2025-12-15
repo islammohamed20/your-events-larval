@@ -46,15 +46,8 @@
         <div class="content-card h-100">
             <!-- Service Image -->
             <div class="position-relative">
-                @if($service->image)
-                    <img src="{{ asset('storage/' . $service->image) }}" alt="{{ $service->name }}" 
-                         class="w-100" style="height: 180px; object-fit: cover;">
-                @else
-                    <div class="w-100 d-flex align-items-center justify-content-center" 
-                         style="height: 180px; background: linear-gradient(135deg, #667eea, #764ba2);">
-                        <i class="fas fa-concierge-bell text-white" style="font-size: 3rem;"></i>
-                    </div>
-                @endif
+                <img src="{{ $service->thumbnail_url }}" alt="{{ $service->name }}" 
+                     class="w-100" style="height: 180px; object-fit: cover;">
                 
                 <!-- Status Badge -->
                 <div class="position-absolute top-0 end-0 m-2">

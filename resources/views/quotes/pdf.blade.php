@@ -12,8 +12,8 @@
             font-family: 'dejavusans', sans-serif;
             direction: rtl;
             text-align: right;
-            font-size: 11px;
-            line-height: 1.5;
+            font-size: 12px;
+            line-height: 1.6;
             color: #333;
         }
         
@@ -43,8 +43,9 @@
         }
         
         .info-table td {
-            padding: 8px;
+            padding: 10px 8px;
             border: 1px solid #ddd;
+            font-size: 11px;
         }
         
         .info-label {
@@ -65,6 +66,7 @@
         .status-approved { background: #d4edda; color: #155724; }
         .status-rejected { background: #f8d7da; color: #721c24; }
         .status-completed { background: #d1ecf1; color: #0c5460; }
+        .status-paid { background: #cce5ff; color: #004085; }
         
         h3 {
             color: #1f144a;
@@ -89,10 +91,11 @@
         }
         
         table.items td {
-            padding: 8px 10px;
+            padding: 10px;
             border: 1px solid #ddd;
-            font-size: 10px;
+            font-size: 11px;
             background: #fff;
+            vertical-align: top;
         }
         
         table.items tr:nth-child(even) td {
@@ -106,9 +109,10 @@
         }
         
         .service-description {
-            font-size: 9px;
+            font-size: 10px;
             color: #666;
-            margin-top: 3px;
+            margin-top: 4px;
+            line-height: 1.5;
         }
         
         .service-notes {
@@ -120,9 +124,10 @@
         
         .summary-table {
             width: 60%;
-            margin-right: auto;
+            margin-left: auto;
+            margin-right: 0;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 0;
             border: 2px solid #1f144a;
         }
         
@@ -152,7 +157,8 @@
             background: #f5f5f5;
             border-right: 4px solid #ef4870;
             padding: 10px;
-            margin: 15px 0;
+            margin: 25px 0;
+            line-height: 1.7;
             page-break-inside: avoid;
         }
         
@@ -174,40 +180,50 @@
         .text-left { text-align: left; }
 
         /* Two-column layout for quote info */
-        .info-columns { width: 100%; margin-bottom: 10px; overflow: hidden; }
-        .info-col { float: left; width: 48%; vertical-align: top; }
-        .info-col.right { float: right; }
+        .info-columns { 
+            width: 100%; 
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .info-col { 
+            float: right;
+            width: 49%; 
+            vertical-align: top;
+        }
+        .info-col:first-child {
+            margin-left: 2%;
+        }
         
         /* منع القطع في منتصف الصفوف */
         table.items tr {
             page-break-inside: avoid;
         }
         
+        table.items tbody tr {
+            page-break-after: auto;
+        }
+        
         .summary-table {
+            page-break-inside: avoid;
+            page-break-before: auto;
+        }
+        
+        .notes-box {
             page-break-inside: avoid;
         }
         
-        /* الختم الثابت في أسفل يسار كل صفحة */
-        .stamp-watermark {
-            position: fixed;
-            bottom: 0mm;
-            left: 10mm;
-            z-index: 1000;
+        h3 {
+            page-break-after: avoid;
         }
         
-        .stamp-watermark img {
-            width: 70px;
-            height: auto;
-            opacity: 1;
-        }
+        .summary-section { margin-top: 40px; }
+        .summary-section.new-page { margin-top: 140px; }
+        .inline-stamp { text-align: left; margin-top: 12px; }
+        .inline-stamp img { width: 66px; height: auto; opacity: 1; }
+        
     </style>
 </head>
 <body>
-    <!-- الختم الثابت - يظهر في نفس المكان في كل الصفحات -->
-    <div class="stamp-watermark">
-        <img src="{{ public_path('storage/extra/stamp.png') }}" alt="ختم">
-    </div>
-    
     <div class="container">
         <!-- Quote Title -->
         <div class="quote-title">
@@ -216,8 +232,44 @@
         
         <!-- Quote Information -->
         <div class="info-columns">
+            <!-- Quote/Customer Info: right side -->
+            <div class="info-col">
+                <table class="info-table">
+                    <tr>
+                        <td class="info-label">رقم العرض:</td>
+                        <td><strong>{{ $quote->quote_number }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">تاريخ الإصدار:</td>
+                        <td>{{ $quote->created_at->format('Y/m/d') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">اسم العميل:</td>
+                        <td><strong>{{ $quote->user->name }}</strong></td>
+                    </tr>
+                    @if($quote->user->phone)
+                    <tr>
+                        <td class="info-label">رقم الجوال:</td>
+                        <td>{{ $quote->user->phone }}</td>
+                    </tr>
+                    @endif
+                    <tr>
+                        <td class="info-label">البريد الإلكتروني:</td>
+                        <td>{{ $quote->user->email }}</td>
+                    </tr>
+                    <tr>
+                        <td class="info-label">الحالة:</td>
+                        <td>
+                            <span class="status-badge status-{{ $quote->status }}">
+                                {{ $quote->status_text }}
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
             <!-- Company Info: left side -->
-            <div class="info-col left">
+            <div class="info-col">
                 <table class="info-table">
                     <tr>
                         <td class="info-label">اسم المنصة:</td>
@@ -245,46 +297,6 @@
                     </tr>
                 </table>
             </div>
-
-            <!-- Quote/Customer Info: right side -->
-            <div class="info-col right">
-                <table class="info-table">
-                    <tr>
-                        <td class="info-label">رقم العرض:</td>
-                        <td><strong>{{ $quote->quote_number }}</strong></td>
-                    </tr>
-                    <tr>
-                        <td class="info-label">تاريخ الإصدار:</td>
-                        <td>{{ $quote->created_at->format('Y/m/d') }}</td>
-                    </tr>
-                    <tr>
-                        <td class="info-label">اسم العميل:</td>
-                        <td>{{ $quote->user->name }}</td>
-                    </tr>
-                    <tr>
-                        <td class="info-label">اسم الجهة:</td>
-                        <td><strong>{{ $quote->user->company_name }}</strong></td>
-                    </tr>
-                    @if($quote->user->tax_number)
-                    <tr>
-                        <td class="info-label">الرقم الضريبي:</td>
-                        <td>{{ $quote->user->tax_number }}</td>
-                    </tr>
-                    @endif
-                    <tr>
-                        <td class="info-label">البريد الإلكتروني:</td>
-                        <td>{{ $quote->user->email }}</td>
-                    </tr>
-                    <tr>
-                        <td class="info-label">الحالة:</td>
-                        <td>
-                            <span class="status-badge status-{{ $quote->status }}">
-                                {{ $quote->status_text }}
-                            </span>
-                        </td>
-                    </tr>
-                </table>
-            </div>
         </div>
         
         <!-- Items Table -->
@@ -304,9 +316,12 @@
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
                     <td>
-                        <div class="service-name">{{ $item->service_name }}</div>
-                        @if($item->service_description)
-                            <div class="service-description">{{ $item->service_description }}</div>
+                        <div class="service-name">{{ $item->service->name ?? $item->service_name }}</div>
+                        @php
+                            $pdfDesc = $item->service->description ?? $item->service_description;
+                        @endphp
+                        @if($pdfDesc)
+                            <div class="service-description">{{ $pdfDesc }}</div>
                         @endif
                         @if($item->customer_notes)
                             <div class="service-notes">ملاحظات: {{ $item->customer_notes }}</div>
@@ -317,47 +332,56 @@
                             $variationId = $item->getSelectedVariationId();
                             $variation = $variationId ? $item->getVariation() : null;
                         @endphp
-                        @if($variation && $variation->attributeValuesList && $variation->attributeValuesList->count() > 0)
+                        @if(false)
                             <div class="service-options" style="margin-top: 6px; border-top: 1px solid #e0e0e0; padding-top: 4px;">
                                 <small style="color: #2563eb; font-weight: bold;">الخيارات المختارة:</small>
-                                <ul style="margin: 2px 0 0; padding: 0 18px;">
-                                    @foreach($variation->attributeValuesList as $value)
-                                        <li style="font-size: 11px; color: #1e40af;">
-                                            <strong>{{ $value->attribute->name }}:</strong> {{ $value->value }}
-                                        </li>
-                                    @endforeach
-                                </ul>
+                                <ul style="margin: 2px 0 0; padding: 0 18px;"></ul>
                             </div>
                         @endif
 
                         @php
                             $fieldsBySlug = [];
+                            $fieldOptions = [];
                             if ($item->service && is_array($item->service->custom_fields)) {
                                 foreach ($item->service->custom_fields as $field) {
                                     $slug = \Illuminate\Support\Str::slug($field['label'] ?? '');
                                     if ($slug) {
                                         $fieldsBySlug[$slug] = $field['label'] ?? $slug;
+                                        $opts = $field['options'] ?? [];
+                                        if (is_string($opts)) { $opts = array_map('trim', explode(',', $opts)); }
+                                        $fieldOptions[$slug] = is_array($opts) ? array_values(array_filter($opts, fn($v) => $v !== null && $v !== '')) : [];
+                                    }
+                                }
+                            }
+                            $validSelections = [];
+                            if (is_array($item->selections)) {
+                                foreach ($item->selections as $key => $val) {
+                                    if (str_starts_with($key, '_')) continue;
+                                    if (!array_key_exists($key, $fieldsBySlug)) continue;
+                                    $allowed = $fieldOptions[$key] ?? [];
+                                    if (is_array($val)) {
+                                        $vals = array_values(array_filter($val, fn($v) => in_array((string)$v, $allowed, true)));
+                                        if (count($vals) > 0) { $validSelections[$key] = $vals; }
+                                    } else {
+                                        if (in_array((string)$val, $allowed, true)) { $validSelections[$key] = [$val]; }
                                     }
                                 }
                             }
                         @endphp
-                        @if(is_array($item->selections) && count($item->selections) > 0)
+                        @if(count($validSelections) > 0)
                             <div class="service-options">
                                 <small>اختياراتك:</small>
                                 <ul style="margin: 4px 0 0; padding: 0 18px;">
-                                    @foreach($item->selections as $key => $val)
+                                    @foreach($validSelections as $key => $val)
                                         @php 
-                                            // تجاهل المفاتيح الداخلية
-                                            if (str_starts_with($key, '_')) continue;
-                                            
-                                            $label = $fieldsBySlug[$key] ?? \Illuminate\Support\Str::title(str_replace('-', ' ', $key)); 
+                                            $label = $fieldsBySlug[$key];
                                         @endphp
                                         <li style="font-size: 11px;">
                                             <strong>{{ $label }}:</strong>
                                             @if(is_array($val))
                                                 {{ implode('، ', array_filter($val)) }}
                                             @else
-                                                {{ $val }}
+                                                {{ (string)$val }}
                                             @endif
                                         </li>
                                     @endforeach
@@ -373,29 +397,69 @@
             </tbody>
         </table>
         
-        <!-- Summary -->
-        <table class="summary-table">
-            <tr>
-                <td class="summary-label">المجموع الفرعي:</td>
-                <td class="summary-value">{{ number_format($quote->subtotal, 2) }} ريال</td>
-            </tr>
-            <tr>
-                <td class="summary-label">الضريبة (15%):</td>
-                <td class="summary-value">{{ number_format($quote->tax, 2) }} ريال</td>
-            </tr>
-            @if($quote->discount > 0)
-            <tr class="text-success">
-                <td class="summary-label">الخصم:</td>
-                <td class="summary-value">-{{ number_format($quote->discount, 2) }} ريال</td>
-            </tr>
+        <div class="summary-section" style="margin-top: {{ $quote->items->count() > 5 ? 140 : 16 }}px; padding-top: {{ $quote->items->count() > 5 ? 175 : 16 }}px; {{ $quote->items->count() > 5 ? 'page-break-before: always;' : '' }}">
+            <table class="summary-table" style="margin-top: 0;">
+                <tr>
+                    <td class="summary-label">المجموع الفرعي:</td>
+                    <td class="summary-value">{{ number_format($quote->subtotal, 2) }} ريال</td>
+                </tr>
+                <tr>
+                    <td class="summary-label">الضريبة (15%):</td>
+                    <td class="summary-value">{{ number_format($quote->tax, 2) }} ريال</td>
+                </tr>
+                @if($quote->discount > 0)
+                <tr class="text-success">
+                    <td class="summary-label">الخصم:</td>
+                    <td class="summary-value">-{{ number_format($quote->discount, 2) }} ريال</td>
+                </tr>
+                @endif
+                <tr class="total-row">
+                    <td class="summary-label">الإجمالي:</td>
+                    <td class="summary-value">{{ number_format($quote->total, 2) }} ريال</td>
+                </tr>
+            </table>
+            
+            @if($quote->items->count() <= 5)
+            <table style="width: 100%; border-collapse: collapse; margin-top: 8px; table-layout: fixed; line-height: 2;">
+                <tr>
+                    <td style="width: 74%; vertical-align: top; padding: 0;">
+                        <div class="notes-box" style="border-right-color: #f0c71d; margin: 0;">
+                            <div class="notes-title" style="color: #f0c71d; margin-bottom: 6px;">معلومات مهمة:</div>
+                            <ul style="margin: 0 15px 0 0; padding: 0 18px; font-size: 10px; list-style-position: inside; line-height: 1.3;">
+                                <li>عرض السعر صالح لمدة 30 يوم من تاريخ الإصدار</li>
+                                <li>الأسعار المذكورة شاملة ضريبة القيمة المضافة (15%)</li>
+                                <li>يرجى مراجعة الخدمات والأسعار قبل التأكيد</li>
+                                <li>للاستفسارات والتواصل: <span dir="ltr" style="unicode-bidi: bidi-override; direction: ltr;">hello@yourevents.sa</span></li>
+                            </ul>
+                        </div>
+                    </td>
+                    <td style="width: 26%; vertical-align: top; padding: 0;">
+                        @if(file_exists(public_path('storage/extra/stamp.png')))
+                        <div class="inline-stamp">
+                            <img src="{{ public_path('storage/extra/stamp.png') }}" alt="ختم">
+                        </div>
+                        @endif
+                    </td>
+                </tr>
+            </table>
+            @else
+            <div class="notes-box" style="border-right-color: #f0c71d; margin-top: 80px;">
+                <div class="notes-title" style="color: #f0c71d;">معلومات مهمة:</div>
+                <ul style="margin: 0 15px 0 0; padding: 0 18px; font-size: 10px; list-style-position: inside;">
+                    <li>عرض السعر صالح لمدة 30 يوم من تاريخ الإصدار</li>
+                    <li>الأسعار المذكورة شاملة ضريبة القيمة المضافة (15%)</li>
+                    <li>يرجى مراجعة الخدمات والأسعار قبل التأكيد</li>
+                    <li>للاستفسارات والتواصل: <span dir="ltr" style="unicode-bidi: bidi-override; direction: ltr;">hello@yourevents.sa</span></li>
+                </ul>
+            </div>
+            @if(file_exists(public_path('storage/extra/stamp.png')))
+            <div class="inline-stamp">
+                <img src="{{ public_path('storage/extra/stamp.png') }}" alt="ختم">
+            </div>
             @endif
-            <tr class="total-row">
-                <td class="summary-label">الإجمالي:</td>
-                <td class="summary-value">{{ number_format($quote->total, 2) }} ريال</td>
-            </tr>
-        </table>
+            @endif
+        </div>
         
-        <!-- Customer Notes -->
         @if($quote->customer_notes)
         <div class="notes-box">
             <div class="notes-title">ملاحظات العميل:</div>
@@ -403,24 +467,12 @@
         </div>
         @endif
         
-        <!-- Admin Notes -->
         @if($quote->admin_notes)
         <div class="notes-box" style="border-right-color: #2dbcae;">
             <div class="notes-title" style="color: #2dbcae;">رد الإدارة:</div>
             <div>{{ $quote->admin_notes }}</div>
         </div>
         @endif
-        
-        <!-- Important Information -->
-        <div class="notes-box" style="border-right-color: #f0c71d;">
-            <div class="notes-title" style="color: #f0c71d;">معلومات مهمة:</div>
-            <div style="margin-right: 15px; font-size: 10px;">
-                • عرض السعر صالح لمدة 30 يوم من تاريخ الإصدار<br>
-                • الأسعار المذكورة شاملة ضريبة القيمة المضافة (15%)<br>
-                • يرجى مراجعة الخدمات والأسعار قبل التأكيد<br>
-                • للاستفسارات والتواصل: hello@yourevents.sa
-            </div>
-        </div>
         
         <!-- Footer -->
         <div class="footer">

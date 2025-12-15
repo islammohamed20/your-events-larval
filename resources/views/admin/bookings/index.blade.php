@@ -18,9 +18,11 @@
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{{ route('admin.bookings.index') }}">جميع الحجوزات</a></li>
                             <li><a class="dropdown-item" href="{{ route('admin.bookings.index', ['status' => 'pending']) }}">في الانتظار</a></li>
+                            <li><a class="dropdown-item" href="{{ route('admin.bookings.index', ['status' => 'awaiting_supplier']) }}">بانتظار المورد</a></li>
                             <li><a class="dropdown-item" href="{{ route('admin.bookings.index', ['status' => 'confirmed']) }}">مؤكدة</a></li>
                             <li><a class="dropdown-item" href="{{ route('admin.bookings.index', ['status' => 'completed']) }}">مكتملة</a></li>
                             <li><a class="dropdown-item" href="{{ route('admin.bookings.index', ['status' => 'cancelled']) }}">ملغية</a></li>
+                            <li><a class="dropdown-item" href="{{ route('admin.bookings.index', ['status' => 'expired']) }}">منتهية الصلاحية</a></li>
                         </ul>
                     </div>
                 </div>
