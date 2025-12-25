@@ -18,9 +18,10 @@ class AttributeController extends Controller
         $this->middleware(function ($request, $next) {
             $user = Auth::user();
             /** @var User|null $user */
-            if (!$user instanceof User || !$user->isAdmin()) {
+            if (! $user instanceof User || ! $user->isAdmin()) {
                 abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
             }
+
             return $next($request);
         });
     }
@@ -28,9 +29,10 @@ class AttributeController extends Controller
     public function index()
     {
         $attributes = Attribute::withCount('values')
-                              ->orderBy('order')
-                              ->orderBy('name')
-                              ->paginate(20);
+            ->orderBy('order')
+            ->orderBy('name')
+            ->paginate(20);
+
         return view('admin.attributes.index', compact('attributes'));
     }
 
@@ -48,40 +50,41 @@ class AttributeController extends Controller
                 'type' => 'required|in:select,radio,checkbox',
                 'order' => 'nullable|integer|min:0',
             ]);
-            
+
             // Handle checkbox value (convert to integer 0 or 1)
             $validated['is_active'] = $request->has('is_active') ? 1 : 0;
-            
+
             if (empty($validated['slug'])) {
                 $validated['slug'] = Str::slug($validated['name']);
             }
-            
+
             // Log for debugging
             Log::info('Creating attribute:', $validated);
-            
+
             $attribute = Attribute::create($validated);
-            
+
             Log::info('Attribute created successfully', ['id' => $attribute->id]);
-            
+
             return redirect()->route('admin.attributes.edit', $attribute)
-                           ->with('success', 'تم إنشاء الخاصية بنجاح. الآن يمكنك إضافة قيم لها.');
+                ->with('success', 'تم إنشاء الخاصية بنجاح. الآن يمكنك إضافة قيم لها.');
         } catch (\Exception $e) {
-            Log::error('Error creating attribute: ' . $e->getMessage(), [
+            Log::error('Error creating attribute: '.$e->getMessage(), [
                 'request_data' => $request->all(),
-                'exception' => $e->getTraceAsString()
+                'exception' => $e->getTraceAsString(),
             ]);
-            
+
             return redirect()->back()
-                           ->withInput()
-                           ->with('error', 'حدث خطأ أثناء إنشاء الخاصية: ' . $e->getMessage());
+                ->withInput()
+                ->with('error', 'حدث خطأ أثناء إنشاء الخاصية: '.$e->getMessage());
         }
     }
 
     public function edit(Attribute $attribute)
     {
-        $attribute->load(['values' => function($query) {
+        $attribute->load(['values' => function ($query) {
             $query->orderBy('order');
         }]);
+
         return view('admin.attributes.edit', compact('attribute'));
     }
 
@@ -89,25 +92,27 @@ class AttributeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255|unique:attributes,slug,' . $attribute->id,
+            'slug' => 'nullable|string|max:255|unique:attributes,slug,'.$attribute->id,
             'type' => 'required|in:select,radio,checkbox',
             'order' => 'nullable|integer|min:0',
         ]);
-        
+
         // Handle checkbox value (convert to integer 0 or 1)
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
-        
+
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug($validated['name']);
         }
-        
+
         $attribute->update($validated);
+
         return redirect()->route('admin.attributes.index')->with('success', 'تم تحديث الخاصية بنجاح');
     }
 
     public function destroy(Attribute $attribute)
     {
         $attribute->delete();
+
         return redirect()->route('admin.attributes.index')->with('success', 'تم حذف الخاصية بنجاح');
     }
 
@@ -119,15 +124,16 @@ class AttributeController extends Controller
             'slug' => 'nullable|string|max:255',
             'order' => 'nullable|integer|min:0',
         ]);
-        
+
         // Handle checkbox value (convert to integer 0 or 1)
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
-        
+
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug($validated['value']);
         }
-        
+
         $attribute->values()->create($validated);
+
         return redirect()->route('admin.attributes.edit', $attribute)->with('success', 'تم إضافة قيمة بنجاح');
     }
 
@@ -138,21 +144,23 @@ class AttributeController extends Controller
             'slug' => 'nullable|string|max:255',
             'order' => 'nullable|integer|min:0',
         ]);
-        
+
         // Handle checkbox value (convert to integer 0 or 1)
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
-        
+
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug($validated['value']);
         }
-        
+
         $value->update($validated);
+
         return redirect()->route('admin.attributes.edit', $attribute)->with('success', 'تم تحديث القيمة بنجاح');
     }
 
     public function destroyValue(Attribute $attribute, AttributeValue $value)
     {
         $value->delete();
+
         return redirect()->route('admin.attributes.edit', $attribute)->with('success', 'تم حذف القيمة بنجاح');
     }
 }

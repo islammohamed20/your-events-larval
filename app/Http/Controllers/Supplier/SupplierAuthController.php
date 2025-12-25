@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Supplier;
 
 use App\Http\Controllers\Controller;
-use App\Models\Supplier;
 use App\Models\OtpVerification;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -20,7 +20,7 @@ class SupplierAuthController extends Controller
         if (Auth::guard('supplier')->check()) {
             return redirect()->route('supplier.dashboard');
         }
-        
+
         return view('supplier.auth.login');
     }
 
@@ -36,12 +36,12 @@ class SupplierAuthController extends Controller
 
         $supplier = Supplier::where('email', $request->email)->first();
 
-        if (!$supplier) {
+        if (! $supplier) {
             return back()->withInput()->with('error', 'البريد الإلكتروني غير مسجل');
         }
 
         // التحقق من كلمة المرور
-        if (!Hash::check($request->password, $supplier->password)) {
+        if (! Hash::check($request->password, $supplier->password)) {
             return back()->withInput()->with('error', 'كلمة المرور غير صحيحة');
         }
 
@@ -51,7 +51,7 @@ class SupplierAuthController extends Controller
         }
 
         if ($supplier->status === 'rejected') {
-            return back()->withInput()->with('error', 'تم رفض طلبك. السبب: ' . ($supplier->rejection_reason ?? 'غير محدد'));
+            return back()->withInput()->with('error', 'تم رفض طلبك. السبب: '.($supplier->rejection_reason ?? 'غير محدد'));
         }
 
         if ($supplier->status === 'suspended') {
@@ -59,7 +59,7 @@ class SupplierAuthController extends Controller
         }
 
         // التحقق من تأكيد البريد الإلكتروني
-        if (!$supplier->email_verified_at) {
+        if (! $supplier->email_verified_at) {
             return back()->withInput()->with('error', 'يرجى تأكيد بريدك الإلكتروني أولاً');
         }
 
@@ -70,13 +70,13 @@ class SupplierAuthController extends Controller
             $request->session()->put('supplier_login_pending', true);
             $request->session()->put('supplier_login_remember', $request->filled('remember'));
             $request->session()->put('supplier_login_supplier_id', $supplier->id);
-            
+
             return redirect()->route('otp.verify.form')
                 ->with('success', 'تم إرسال كود التحقق لتأكيد تسجيل الدخول');
         } catch (\Exception $e) {
             return back()
                 ->withInput()
-                ->with('error', 'فشل في إرسال كود التحقق: ' . $e->getMessage());
+                ->with('error', 'فشل في إرسال كود التحقق: '.$e->getMessage());
         }
     }
 
@@ -86,7 +86,7 @@ class SupplierAuthController extends Controller
     public function logout(Request $request)
     {
         Auth::guard('supplier')->logout();
-        
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
@@ -113,10 +113,11 @@ class SupplierAuthController extends Controller
         try {
             OtpVerification::generate($request->email, 'password_reset');
             session(['supplier_reset_email' => $request->email]);
-            
+
             return redirect()->route('supplier.password.verify-otp')->with('success', 'تم إرسال رمز التحقق إلى بريدك الإلكتروني');
         } catch (\Exception $e) {
-            Log::error('Failed to send reset OTP: ' . $e->getMessage());
+            Log::error('Failed to send reset OTP: '.$e->getMessage());
+
             return back()->with('error', 'حدث خطأ أثناء إرسال رمز التحقق');
         }
     }
@@ -126,10 +127,10 @@ class SupplierAuthController extends Controller
      */
     public function showVerifyOtpForm()
     {
-        if (!session('supplier_reset_email')) {
+        if (! session('supplier_reset_email')) {
             return redirect()->route('supplier.password.forgot');
         }
-        
+
         return view('supplier.auth.verify-reset-otp');
     }
 
@@ -143,19 +144,19 @@ class SupplierAuthController extends Controller
         ]);
 
         $email = session('supplier_reset_email');
-        
-        if (!$email) {
+
+        if (! $email) {
             return redirect()->route('supplier.password.forgot')->with('error', 'انتهت صلاحية الجلسة');
         }
 
         $result = OtpVerification::verify($email, $request->otp, 'password_reset');
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return back()->with('error', $result['message']);
         }
 
         session(['supplier_reset_verified' => true]);
-        
+
         return redirect()->route('supplier.password.reset');
     }
 
@@ -164,10 +165,10 @@ class SupplierAuthController extends Controller
      */
     public function showResetPasswordForm()
     {
-        if (!session('supplier_reset_email') || !session('supplier_reset_verified')) {
+        if (! session('supplier_reset_email') || ! session('supplier_reset_verified')) {
             return redirect()->route('supplier.password.forgot');
         }
-        
+
         return view('supplier.auth.reset-password');
     }
 
@@ -181,14 +182,14 @@ class SupplierAuthController extends Controller
         ]);
 
         $email = session('supplier_reset_email');
-        
-        if (!$email || !session('supplier_reset_verified')) {
+
+        if (! $email || ! session('supplier_reset_verified')) {
             return redirect()->route('supplier.password.forgot')->with('error', 'انتهت صلاحية الجلسة');
         }
 
         $supplier = Supplier::where('email', $email)->first();
-        
-        if (!$supplier) {
+
+        if (! $supplier) {
             return redirect()->route('supplier.password.forgot')->with('error', 'المورد غير موجود');
         }
 

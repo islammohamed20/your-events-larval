@@ -40,12 +40,12 @@ class CompetitiveOrder extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($order) {
             if (empty($order->order_number)) {
-                $order->order_number = 'ORD-' . strtoupper(Str::random(8));
+                $order->order_number = 'ORD-'.strtoupper(Str::random(8));
             }
-            
+
             if (empty($order->expires_at)) {
                 $order->expires_at = now()->addHours(24);
             }
@@ -60,8 +60,8 @@ class CompetitiveOrder extends Model
     public function services()
     {
         return $this->belongsToMany(Service::class, 'order_services', 'competitive_order_id', 'service_id')
-                    ->withPivot('quantity', 'notes')
-                    ->withTimestamps();
+            ->withPivot('quantity', 'notes')
+            ->withTimestamps();
     }
 
     public function acceptedBySupplier()
@@ -77,8 +77,8 @@ class CompetitiveOrder extends Model
     public function notifiedSuppliers()
     {
         return $this->belongsToMany(Supplier::class, 'order_notifications', 'competitive_order_id', 'supplier_id')
-                    ->withPivot('notified_at', 'viewed_at', 'responded_at', 'response')
-                    ->withTimestamps();
+            ->withPivot('notified_at', 'viewed_at', 'responded_at', 'response')
+            ->withTimestamps();
     }
 
     public function isActive()
@@ -100,38 +100,39 @@ class CompetitiveOrder extends Model
     {
         return \DB::transaction(function () use ($supplier, $notes) {
             $order = self::lockForUpdate()->find($this->id);
-            
+
             if ($order->status !== 'pending') {
                 return false;
             }
-            
+
             if ($order->expires_at <= now()) {
                 $order->status = 'expired';
                 $order->save();
+
                 return false;
             }
-            
+
             $order->status = 'accepted';
             $order->accepted_by_supplier_id = $supplier->id;
             $order->accepted_at = now();
             $order->supplier_notes = $notes;
             $order->save();
-            
+
             $order->notifications()
-                  ->where('supplier_id', $supplier->id)
-                  ->update([
-                      'response' => 'accepted',
-                      'responded_at' => now(),
-                  ]);
-            
+                ->where('supplier_id', $supplier->id)
+                ->update([
+                    'response' => 'accepted',
+                    'responded_at' => now(),
+                ]);
+
             $order->notifications()
-                  ->where('supplier_id', '!=', $supplier->id)
-                  ->where('response', 'pending')
-                  ->update([
-                      'response' => 'expired',
-                      'responded_at' => now(),
-                  ]);
-            
+                ->where('supplier_id', '!=', $supplier->id)
+                ->where('response', 'pending')
+                ->update([
+                    'response' => 'expired',
+                    'responded_at' => now(),
+                ]);
+
             return true;
         });
     }
@@ -139,33 +140,33 @@ class CompetitiveOrder extends Model
     public function notifyEligibleSuppliers()
     {
         $serviceIds = $this->services()->pluck('services.id');
-        
-        $suppliers = Supplier::whereHas('services', function($query) use ($serviceIds) {
+
+        $suppliers = Supplier::whereHas('services', function ($query) use ($serviceIds) {
             $query->whereIn('services.id', $serviceIds);
         })
-        ->where('status', 'approved')
-        ->get();
-        
+            ->where('status', 'approved')
+            ->get();
+
         $notifiedCount = 0;
-        
+
         foreach ($suppliers as $supplier) {
             OrderNotification::create([
                 'competitive_order_id' => $this->id,
                 'supplier_id' => $supplier->id,
                 'notified_at' => now(),
             ]);
-            
+
             try {
                 \Mail::to($supplier->email)->send(new \App\Mail\OrderNotificationMail($this, $supplier));
                 $notifiedCount++;
             } catch (\Exception $e) {
-                \Log::error('Failed to send order notification: ' . $e->getMessage());
+                \Log::error('Failed to send order notification: '.$e->getMessage());
             }
         }
-        
+
         $this->notified_suppliers_count = $notifiedCount;
         $this->save();
-        
+
         return $notifiedCount;
     }
 
@@ -177,7 +178,7 @@ class CompetitiveOrder extends Model
             'expired' => '<span class="badge bg-secondary">منتهي</span>',
             'cancelled' => '<span class="badge bg-danger">ملغي</span>',
         ];
-        
+
         return $badges[$this->status] ?? '<span class="badge bg-light">غير معروف</span>';
     }
 
@@ -186,7 +187,7 @@ class CompetitiveOrder extends Model
         if ($this->isExpired()) {
             return 'منتهي';
         }
-        
+
         return $this->expires_at->diffForHumans();
     }
 }

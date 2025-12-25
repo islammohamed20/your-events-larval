@@ -17,17 +17,16 @@ class CustomersExport implements FromCollection, WithHeadings, WithMapping, With
     public function collection()
     {
         return User::where('is_admin', false)
-                  ->where('role', 'user')
-                  ->withCount(['quotes', 'bookings'])
-                  ->withSum(['bookings' => function($query) {
-                      $query->where('status', 'confirmed');
-                  }], 'total_amount')
-                  ->get();
+            ->where('role', 'user')
+            ->withCount(['quotes', 'bookings'])
+            ->withSum(['bookings' => function ($query) {
+                $query->where('status', 'confirmed');
+            }], 'total_amount')
+            ->get();
     }
 
     /**
-     * @param mixed $customer
-     * @return array
+     * @param  mixed  $customer
      */
     public function map($customer): array
     {
@@ -45,9 +44,6 @@ class CustomersExport implements FromCollection, WithHeadings, WithMapping, With
         ];
     }
 
-    /**
-     * @return array
-     */
     public function headings(): array
     {
         return [
@@ -65,7 +61,6 @@ class CustomersExport implements FromCollection, WithHeadings, WithMapping, With
     }
 
     /**
-     * @param Worksheet $sheet
      * @return array
      */
     public function styles(Worksheet $sheet)

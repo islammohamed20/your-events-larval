@@ -544,7 +544,7 @@
                             <div class="mb-4 form-check">
                                 <input type="checkbox" class="form-check-input" id="terms" required>
                                 <label class="form-check-label" for="terms" style="font-size: 14px;">
-                                    <i class="fas fa-check-square me-1" style="color: #F5576C;"></i>
+                                    
                                     أوافق على <a href="{{ route('terms') }}" target="_blank" class="text-link">الشروط والأحكام</a> و <a href="{{ route('privacy') }}" target="_blank" class="text-link">سياسة الخصوصية</a>
                                 </label>
                             </div>

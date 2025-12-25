@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use Exception;
 
 class EmailTestController extends Controller
 {
@@ -31,12 +31,12 @@ class EmailTestController extends Controller
         try {
             Mail::raw($request->message, function ($mail) use ($request) {
                 $mail->to($request->to_email)
-                     ->subject($request->subject);
+                    ->subject($request->subject);
             });
 
             return back()->with('success', 'تم إرسال البريد الإلكتروني بنجاح! ✅');
         } catch (Exception $e) {
-            return back()->with('error', 'فشل إرسال البريد: ' . $e->getMessage());
+            return back()->with('error', 'فشل إرسال البريد: '.$e->getMessage());
         }
     }
 

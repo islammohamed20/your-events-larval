@@ -56,9 +56,9 @@ class Attribute extends Model
     public function services()
     {
         return $this->belongsToMany(Service::class, 'attribute_service')
-                    ->withTimestamps()
-                    ->withPivot('order')
-                    ->orderBy('attribute_service.order');
+            ->withTimestamps()
+            ->withPivot('order')
+            ->orderBy('attribute_service.order');
     }
 
     /**

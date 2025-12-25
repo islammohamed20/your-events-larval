@@ -27,7 +27,7 @@ class BookingAcceptedBySupplierMail extends Mailable
     public function envelope()
     {
         return new \Illuminate\Mail\Mailables\Envelope(
-            subject: '🎉 تم قبول حجزك - ' . $this->booking->booking_reference,
+            subject: '🎉 تم قبول حجزك - '.$this->booking->booking_reference,
         );
     }
 

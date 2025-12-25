@@ -17,13 +17,13 @@ class HomepageSection extends Model
         'background_value',
         'is_active',
         'order',
-        'settings'
+        'settings',
     ];
 
     protected $casts = [
         'content' => 'array',
         'settings' => 'array',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
     ];
 
     // Get active sections ordered
@@ -41,7 +41,7 @@ class HomepageSection extends Model
     // Get background style
     public function getBackgroundStyle()
     {
-        if (!$this->background_value) {
+        if (! $this->background_value) {
             return '';
         }
 
@@ -51,7 +51,7 @@ class HomepageSection extends Model
             case 'gradient':
                 return "background: {$this->background_value};";
             case 'image':
-                return "background-image: url('" . asset('storage/' . $this->background_value) . "'); background-size: cover; background-position: center;";
+                return "background-image: url('".asset('storage/'.$this->background_value)."'); background-size: cover; background-position: center;";
             default:
                 return '';
         }

@@ -12,6 +12,7 @@ class HeroSlideController extends Controller
     public function index()
     {
         $slides = HeroSlide::orderBy('order')->get();
+
         return view('admin.hero-slides.index', compact('slides'));
     }
 
@@ -32,7 +33,7 @@ class HeroSlideController extends Controller
             'button_style' => 'required|in:primary,secondary,accent',
             'transition_effect' => 'required|in:fade,slide,zoom,flip',
             'duration' => 'required|integer|min:2000|max:15000',
-            'order' => 'nullable|integer'
+            'order' => 'nullable|integer',
         ]);
 
         if ($request->hasFile('image')) {
@@ -64,7 +65,7 @@ class HeroSlideController extends Controller
             'button_style' => 'required|in:primary,secondary,accent',
             'transition_effect' => 'required|in:fade,slide,zoom,flip',
             'duration' => 'required|integer|min:2000|max:15000',
-            'order' => 'nullable|integer'
+            'order' => 'nullable|integer',
         ]);
 
         if ($request->hasFile('image')) {
@@ -105,12 +106,12 @@ class HeroSlideController extends Controller
 
     public function toggleActive(HeroSlide $heroSlide)
     {
-        $heroSlide->update(['is_active' => !$heroSlide->is_active]);
+        $heroSlide->update(['is_active' => ! $heroSlide->is_active]);
 
         return response()->json([
             'success' => true,
             'is_active' => $heroSlide->is_active,
-            'message' => $heroSlide->is_active ? 'تم تفعيل السلايد' : 'تم إخفاء السلايد'
+            'message' => $heroSlide->is_active ? 'تم تفعيل السلايد' : 'تم إخفاء السلايد',
         ]);
     }
 }

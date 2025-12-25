@@ -12,9 +12,10 @@ class SettingController extends Controller
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (!auth()->check() || !auth()->user()->isAdmin()) {
+            if (! auth()->check() || ! auth()->user()->isAdmin()) {
                 abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
             }
+
             return $next($request);
         });
     }
@@ -22,6 +23,7 @@ class SettingController extends Controller
     public function index()
     {
         $settings = Setting::all()->groupBy('group');
+
         return view('admin.settings.index', compact('settings'));
     }
 
@@ -33,8 +35,8 @@ class SettingController extends Controller
 
         foreach ($request->input('settings', []) as $key => $value) {
             $setting = Setting::where('key', $key)->first();
-            
-            if (!$setting) {
+
+            if (! $setting) {
                 continue;
             }
 
@@ -44,7 +46,7 @@ class SettingController extends Controller
                 if ($setting->value) {
                     Storage::disk('public')->delete($setting->value);
                 }
-                
+
                 $file = $request->file("settings.{$key}");
                 $path = $file->store('settings', 'public');
                 $setting->value = $path;
@@ -60,6 +62,6 @@ class SettingController extends Controller
         Setting::clearCache();
 
         return redirect()->route('admin.settings.index')
-                       ->with('success', 'تم تحديث الإعدادات بنجاح');
+            ->with('success', 'تم تحديث الإعدادات بنجاح');
     }
 }

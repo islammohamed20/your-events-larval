@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Category;
-use App\Models\Service;
 use App\Models\Supplier;
 use App\Models\SupplierService;
 use Illuminate\Http\Request;
@@ -36,7 +35,7 @@ class SupplierController extends Controller
             $search = $request->q;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -51,6 +50,7 @@ class SupplierController extends Controller
     public function create()
     {
         $categories = Category::active()->ordered()->get();
+
         return view('admin.suppliers.create', compact('categories'));
     }
 
@@ -127,11 +127,12 @@ class SupplierController extends Controller
     public function show(Supplier $supplier)
     {
         // التأكد من أن المورد حقيقي وليس من جدول users
-        if (!in_array($supplier->supplier_type, ['company', 'individual'])) {
+        if (! in_array($supplier->supplier_type, ['company', 'individual'])) {
             abort(404, 'هذا ليس مورداً صحيحاً');
         }
-        
+
         $categories = Category::active()->ordered()->get();
+
         return view('admin.suppliers.show', compact('supplier', 'categories'));
     }
 
@@ -141,6 +142,7 @@ class SupplierController extends Controller
     public function edit(Supplier $supplier)
     {
         $categories = Category::active()->ordered()->get();
+
         return view('admin.suppliers.edit', compact('supplier', 'categories'));
     }
 
@@ -152,7 +154,7 @@ class SupplierController extends Controller
         $validated = $request->validate([
             'supplier_type' => 'required|in:company,individual',
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:suppliers,email,' . $supplier->id,
+            'email' => 'required|email|unique:suppliers,email,'.$supplier->id,
             'password' => 'nullable|string|min:6',
             'primary_phone' => 'required|string|max:255',
             'secondary_phone' => 'nullable|string|max:255',
@@ -191,7 +193,7 @@ class SupplierController extends Controller
         $supplier->supplier_type = $validated['supplier_type'];
         $supplier->name = $validated['name'];
         $supplier->email = $validated['email'];
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $supplier->password = Hash::make($validated['password']);
         }
         $supplier->primary_phone = $validated['primary_phone'];
@@ -227,9 +229,9 @@ class SupplierController extends Controller
         }
 
         $supplier->delete();
+
         return redirect()->route('admin.suppliers.index')->with('success', 'تم حذف المورد');
     }
-
 
     /**
      * تنزيل مستندات المورد
@@ -241,21 +243,21 @@ class SupplierController extends Controller
             'tax_certificate' => 'tax_certificate_file',
             'company_profile' => 'company_profile_file',
         ];
-        if (!array_key_exists($type, $map)) {
+        if (! array_key_exists($type, $map)) {
             abort(404, 'نوع الملف غير معروف');
         }
         $field = $map[$type];
         $path = $supplier->{$field};
-        
-        if (!$path) {
+
+        if (! $path) {
             abort(404, 'الملف غير موجود');
         }
-        
-        $fullPath = 'public/' . $path;
-        if (!Storage::exists($fullPath)) {
+
+        $fullPath = 'public/'.$path;
+        if (! Storage::exists($fullPath)) {
             abort(404, 'الملف غير موجود في النظام');
         }
-        
+
         return Storage::download($fullPath);
     }
 
@@ -267,12 +269,12 @@ class SupplierController extends Controller
         $prev = $supplier->status;
         if ($supplier->status !== 'approved') {
             $supplier->status = 'approved';
-            
+
             // تعيين تأكيد البريد الإلكتروني تلقائياً عند الموافقة
-            if (!$supplier->email_verified_at) {
+            if (! $supplier->email_verified_at) {
                 $supplier->email_verified_at = now();
             }
-            
+
             $supplier->save();
 
             ActivityLog::record(
@@ -298,16 +300,16 @@ class SupplierController extends Controller
 
                 \Illuminate\Support\Facades\Mail::send('emails.supplier-approval', $variables, function ($message) use ($supplier) {
                     $message->to($supplier->email)
-                        ->subject('🎉 تم قبولك كمورد لدى ' . config('app.name', 'Your Events') . ' – ابدأ الآن');
+                        ->subject('🎉 تم قبولك كمورد لدى '.config('app.name', 'Your Events').' – ابدأ الآن');
                 });
-                
+
                 \Illuminate\Support\Facades\Log::info('Supplier approval email sent successfully', [
                     'supplier_id' => $supplier->id,
                     'supplier_email' => $supplier->email,
                 ]);
             } catch (\Throwable $e) {
                 // لا نمنع الموافقة في حال فشل البريد، فقط نعرض إشعاراً
-                \Illuminate\Support\Facades\Log::error('Failed to send supplier approval email: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error('Failed to send supplier approval email: '.$e->getMessage());
             }
         }
 
@@ -335,7 +337,7 @@ class SupplierController extends Controller
             ActivityLog::record(
                 $supplier,
                 'supplier.rejected',
-                'تم رفض المورد' . ($data['reason'] ? (' - السبب: ' . $data['reason']) : ''),
+                'تم رفض المورد'.($data['reason'] ? (' - السبب: '.$data['reason']) : ''),
                 [
                     'from' => $prev,
                     'to' => 'rejected',
@@ -419,6 +421,7 @@ class SupplierController extends Controller
 
         return redirect()->route('admin.suppliers.show', $supplier)->with('success', 'تم إرجاع المورد إلى حالة قيد المراجعة');
     }
+
     /**
      * ربط خدمة بالمورد
      */

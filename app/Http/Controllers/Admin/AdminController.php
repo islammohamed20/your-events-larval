@@ -3,19 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use App\Models\User;
-use App\Models\Customer;
-use App\Models\Package;
-use App\Models\Service;
 use App\Models\Booking;
-use App\Models\Gallery;
-use App\Models\Review;
-use App\Models\Quote;
 use App\Models\EmailTemplate;
-use App\Models\OtpVerification;
-use App\Models\Visit;
+use App\Models\Gallery;
 use App\Models\LoginActivity;
+use App\Models\OtpVerification;
+use App\Models\Package;
+use App\Models\Quote;
+use App\Models\Review;
+use App\Models\Service;
+use App\Models\User;
+use App\Models\Visit;
+use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
@@ -24,9 +23,10 @@ class AdminController extends Controller
         $this->middleware(function ($request, $next) {
             $user = Auth::user();
             /** @var User|null $user */
-            if (!$user instanceof User || !$user->isAdmin()) {
+            if (! $user instanceof User || ! $user->isAdmin()) {
                 abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
             }
+
             return $next($request);
         });
     }
@@ -37,7 +37,7 @@ class AdminController extends Controller
         $stats = [
             'total_users' => User::count(),
             'admin_users' => User::where('is_admin', true)->count(),
-            'customers' => Customer::count(),
+            'customers' => User::where('is_admin', false)->count(),
             'packages' => Package::count(),
             'services' => Service::count(),
             'bookings' => Booking::count(),

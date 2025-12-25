@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\BookingConfirmation;
+use App\Models\Booking;
+use App\Models\CartItem;
 use App\Models\Quote;
 use App\Models\QuoteItem;
-use App\Models\CartItem;
-use App\Models\Booking;
 use App\Services\N8nNotificationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use App\Mail\BookingConfirmation;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Mpdf\Mpdf;
 
 class QuoteController extends Controller
@@ -83,11 +83,12 @@ class QuoteController extends Controller
         $itemsCreated = 0;
         foreach ($cartItems as $cartItem) {
             // تجاوز العناصر التي ليس لها خدمة (الخدمة محذوفة)
-            if (!$cartItem->service) {
+            if (! $cartItem->service) {
                 Log::warning('Cart item skipped - service not found', ['cart_item_id' => $cartItem->id, 'service_id' => $cartItem->service_id]);
+
                 continue;
             }
-            
+
             try {
                 QuoteItem::create([
                     'quote_id' => $quote->id,
@@ -104,7 +105,7 @@ class QuoteController extends Controller
             } catch (\Exception $e) {
                 Log::error('Failed to create quote item', [
                     'cart_item_id' => $cartItem->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
@@ -112,6 +113,7 @@ class QuoteController extends Controller
         // إذا لم يتم إنشاء أي عناصر، احذف العرض وأرجع خطأ
         if ($itemsCreated === 0) {
             $quote->delete();
+
             return redirect()->route('cart.index')->with('error', 'لم نتمكن من إنشاء عرض السعر. يرجى التحقق من السلة والمحاولة مرة أخرى.');
         }
 
@@ -126,7 +128,7 @@ class QuoteController extends Controller
             $quote->load('items.service', 'user');
             Mail::to(Auth::user()->email)->send(new \App\Mail\QuoteMail($quote));
         } catch (\Exception $e) {
-            Log::error('Failed to send quote email to customer: ' . $e->getMessage());
+            Log::error('Failed to send quote email to customer: '.$e->getMessage());
         }
 
         // إرسال إشعار n8n للإدارة (Gmail + WhatsApp)
@@ -134,7 +136,7 @@ class QuoteController extends Controller
             $this->n8nService->sendNewQuoteNotification($quote->fresh(['items', 'user']));
         } catch (\Exception $e) {
             // لا تفشل العملية إذا فشل الإشعار
-            Log::error('Failed to send n8n notification: ' . $e->getMessage());
+            Log::error('Failed to send n8n notification: '.$e->getMessage());
         }
 
         return redirect()->route('quotes.show', $quote)->with('success', 'تم إنشاء عرض السعر بنجاح! تم إرسال نسخة إلى بريدك الإلكتروني وسيتم مراجعته من قبل فريقنا قريباً.');
@@ -147,7 +149,7 @@ class QuoteController extends Controller
     {
         // Ensure user can only download their own quotes (or admin can download any)
         $user = Auth::user();
-        if ($quote->user_id !== $user->id && !$user->is_admin) {
+        if ($quote->user_id !== $user->id && ! $user->is_admin) {
             abort(403, 'غير مصرح لك بتحميل هذا العرض');
         }
 
@@ -191,9 +193,9 @@ class QuoteController extends Controller
         $mpdf->WriteHTML($html);
 
         // Output PDF as download
-        return response($mpdf->Output('quote-' . $quote->quote_number . '.pdf', 'S'))
+        return response($mpdf->Output('quote-'.$quote->quote_number.'.pdf', 'S'))
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="quote-' . $quote->quote_number . '.pdf"');
+            ->header('Content-Disposition', 'attachment; filename="quote-'.$quote->quote_number.'.pdf"');
     }
 
     /**
@@ -207,7 +209,7 @@ class QuoteController extends Controller
         }
 
         // Only allow editing if quote is still pending or under review
-        if (!in_array($quote->status, ['pending', 'under_review'])) {
+        if (! in_array($quote->status, ['pending', 'under_review'])) {
             return back()->with('error', 'لا يمكن تعديل عرض السعر بعد الموافقة عليه');
         }
 
@@ -276,7 +278,7 @@ class QuoteController extends Controller
             'card_holder_name' => 'required_if:payment_method,card|nullable|string|max:255',
             'card_last_four' => 'required_if:payment_method,card|nullable|size:4|regex:/^[0-9]{4}$/',
             'card_expiry_month' => 'required_if:payment_method,card|nullable|numeric|between:1,12',
-            'card_expiry_year' => 'required_if:payment_method,card|nullable|numeric|min:' . date('Y'),
+            'card_expiry_year' => 'required_if:payment_method,card|nullable|numeric|min:'.date('Y'),
             'special_requests' => 'nullable|string',
         ]);
 
@@ -297,7 +299,7 @@ class QuoteController extends Controller
             'payment_method' => $validated['payment_method'],
             'payment_status' => 'paid',
             'status' => 'awaiting_supplier',
-            'booking_reference' => 'BOOK-YE-' . str_pad(Booking::count() + 1, 6, '0', STR_PAD_LEFT),
+            'booking_reference' => 'BOOK-YE-'.str_pad(Booking::count() + 1, 6, '0', STR_PAD_LEFT),
             'expires_at' => now()->addHours(24),
         ]);
 
@@ -332,26 +334,26 @@ class QuoteController extends Controller
                 'captured_at' => now(),
             ]);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Payment record creation failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning('Payment record creation failed: '.$e->getMessage());
         }
 
         try {
             $booking->notifyEligibleSuppliers();
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Supplier notification failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning('Supplier notification failed: '.$e->getMessage());
         }
 
         try {
             Mail::to(Auth::user()->email)->send(new \App\Mail\QuotePaymentConfirmationMail($quote->fresh()));
         } catch (\Exception $e) {
-            Log::error('Failed to send quote payment confirmation email: ' . $e->getMessage());
+            Log::error('Failed to send quote payment confirmation email: '.$e->getMessage());
         }
 
         // Send booking confirmation email
         try {
             Mail::to(Auth::user()->email)->send(new BookingConfirmation($booking));
         } catch (\Exception $e) {
-            Log::error('Failed to send confirmation email: ' . $e->getMessage());
+            Log::error('Failed to send confirmation email: '.$e->getMessage());
         }
 
         return redirect()->route('quotes.show', $quote)->with('success', 'تم تأكيد عرض السعر وإنشاء الحجز بنجاح!');

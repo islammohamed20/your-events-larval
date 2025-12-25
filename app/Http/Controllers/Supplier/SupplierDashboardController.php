@@ -4,15 +4,15 @@ namespace App\Http\Controllers\Supplier;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
-use App\Models\Service;
-use App\Models\SupplierService;
 use App\Models\Quote;
+use App\Models\Service;
 use App\Models\Supplier;
+use App\Models\SupplierService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SupplierDashboardController extends Controller
 {
@@ -30,7 +30,7 @@ class SupplierDashboardController extends Controller
     public function index()
     {
         $supplier = $this->supplier();
-        
+
         // إحصائيات المورد
         $stats = [
             'total_services' => $supplier->services()->count(),
@@ -65,7 +65,7 @@ class SupplierDashboardController extends Controller
     {
         $supplier = $this->supplier();
         $serviceIds = $supplier->services()->pluck('services.id');
-        
+
         return Booking::whereIn('service_id', $serviceIds);
     }
 
@@ -75,7 +75,7 @@ class SupplierDashboardController extends Controller
     public function services(Request $request)
     {
         $supplier = $this->supplier();
-        
+
         $query = $supplier->services()->with(['category', 'thumbnailImage']);
 
         // فلترة حسب الحالة
@@ -89,7 +89,7 @@ class SupplierDashboardController extends Controller
         }
 
         $services = $query->paginate(12);
-        
+
         // الفئات المتاحة للمورد
         $categories = $supplier->serviceCategories;
 
@@ -102,7 +102,7 @@ class SupplierDashboardController extends Controller
     public function showService($id)
     {
         $supplier = $this->supplier();
-        
+
         $service = $supplier->services()
             ->with(['category', 'variations', 'thumbnailImage'])
             ->findOrFail($id);
@@ -122,17 +122,17 @@ class SupplierDashboardController extends Controller
     public function toggleServiceAvailability($id)
     {
         $supplier = $this->supplier();
-        
+
         $supplierService = SupplierService::where('supplier_id', $supplier->id)
             ->where('service_id', $id)
             ->firstOrFail();
 
         $supplierService->update([
-            'is_available' => !$supplierService->is_available,
+            'is_available' => ! $supplierService->is_available,
         ]);
 
         $status = $supplierService->is_available ? 'متاحة' : 'غير متاحة';
-        
+
         return back()->with('success', "تم تحديث حالة الخدمة إلى: {$status}");
     }
 
@@ -201,7 +201,7 @@ class SupplierDashboardController extends Controller
             'cancelled' => 'ملغي',
         ];
 
-        return back()->with('success', 'تم تحديث حالة الحجز إلى: ' . $statusNames[$request->status]);
+        return back()->with('success', 'تم تحديث حالة الحجز إلى: '.$statusNames[$request->status]);
     }
 
     /**
@@ -271,9 +271,9 @@ class SupplierDashboardController extends Controller
         })->with(['user', 'items', 'acceptedBySupplier']);
 
         // Hide quotes accepted by other suppliers
-        $query->where(function($q) use ($supplier) {
+        $query->where(function ($q) use ($supplier) {
             $q->whereNull('accepted_by_supplier_id')
-              ->orWhere('accepted_by_supplier_id', $supplier->id);
+                ->orWhere('accepted_by_supplier_id', $supplier->id);
         });
 
         if ($request->filled('status') && $request->status !== 'all') {
@@ -284,10 +284,10 @@ class SupplierDashboardController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('quote_number', 'like', "%{$search}%")
-                  ->orWhereHas('user', function ($uq) use ($search) {
-                      $uq->where('name', 'like', "%{$search}%")
-                         ->orWhere('email', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -307,7 +307,7 @@ class SupplierDashboardController extends Controller
         $serviceIds = $supplier->services()->pluck('services.id');
 
         $hasItems = $quote->items()->whereIn('service_id', $serviceIds)->exists();
-        if (!$hasItems) {
+        if (! $hasItems) {
             abort(404);
         }
 
@@ -332,7 +332,7 @@ class SupplierDashboardController extends Controller
 
         // Verify supplier has services in this quote
         $hasItems = $quote->items()->whereIn('service_id', $serviceIds)->exists();
-        if (!$hasItems) {
+        if (! $hasItems) {
             return back()->with('error', 'لا يمكنك قبول هذا العرض');
         }
 
@@ -344,7 +344,8 @@ class SupplierDashboardController extends Controller
         // Check if already accepted by another supplier (LOCK CHECK)
         if ($quote->accepted_by_supplier_id) {
             $acceptedSupplier = $quote->acceptedBySupplier;
-            return back()->with('error', 'تم قبول هذا العرض بالفعل من قبل مورد آخر: ' . ($acceptedSupplier->name ?? 'مورد'));
+
+            return back()->with('error', 'تم قبول هذا العرض بالفعل من قبل مورد آخر: '.($acceptedSupplier->name ?? 'مورد'));
         }
 
         // Accept the quote (FIRST SUPPLIER WINS)
@@ -364,7 +365,7 @@ class SupplierDashboardController extends Controller
         try {
             Mail::to($quote->user->email)->send(new \App\Mail\SupplierAcceptedQuoteMail($quote, $supplier));
         } catch (\Exception $e) {
-            Log::error('Failed to send supplier acceptance email: ' . $e->getMessage());
+            Log::error('Failed to send supplier acceptance email: '.$e->getMessage());
         }
 
         // Notify admin
@@ -372,7 +373,7 @@ class SupplierDashboardController extends Controller
             $adminEmail = config('mail.admin_email', 'admin@your-events.com');
             Mail::to($adminEmail)->send(new \App\Mail\AdminSupplierAcceptedNotification($quote, $supplier));
         } catch (\Exception $e) {
-            Log::error('Failed to send admin notification: ' . $e->getMessage());
+            Log::error('Failed to send admin notification: '.$e->getMessage());
         }
 
         return redirect()->route('supplier.quotes.show', $quote)->with('success', 'تم قبول عرض السعر بنجاح! سيتم التواصل معك من قبل العميل قريباً.');
@@ -388,7 +389,7 @@ class SupplierDashboardController extends Controller
 
         // Verify supplier has services in this quote
         $hasItems = $quote->items()->whereIn('service_id', $serviceIds)->exists();
-        if (!$hasItems) {
+        if (! $hasItems) {
             return back()->with('error', 'لا يمكنك رفض هذا العرض');
         }
 
@@ -408,7 +409,7 @@ class SupplierDashboardController extends Controller
     public function profile()
     {
         $supplier = $this->supplier()->load(['services', 'serviceCategories']);
-        
+
         return view('supplier.profile.index', compact('supplier'));
     }
 
@@ -445,7 +446,7 @@ class SupplierDashboardController extends Controller
 
         $supplier = $this->supplier();
 
-        if (!Hash::check($request->current_password, $supplier->password)) {
+        if (! Hash::check($request->current_password, $supplier->password)) {
             return back()->with('error', 'كلمة المرور الحالية غير صحيحة');
         }
 
@@ -462,10 +463,10 @@ class SupplierDashboardController extends Controller
     public function reports(Request $request)
     {
         $supplier = $this->supplier();
-        
+
         $period = $request->get('period', 'month');
-        
-        $startDate = match($period) {
+
+        $startDate = match ($period) {
             'week' => now()->subWeek(),
             'month' => now()->subMonth(),
             'quarter' => now()->subQuarter(),

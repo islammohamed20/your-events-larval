@@ -27,7 +27,7 @@ class QuotePaymentConfirmationMail extends Mailable
     public function envelope()
     {
         return new \Illuminate\Mail\Mailables\Envelope(
-            subject: '✅ تم استلام الدفع - ' . $this->quote->quote_number,
+            subject: '✅ تم استلام الدفع - '.$this->quote->quote_number,
         );
     }
 

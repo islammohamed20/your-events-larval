@@ -28,102 +28,134 @@ class CartController extends Controller
      */
     public function add(Request $request, Service $service)
     {
-        $validated = $request->validate([
-            'quantity' => 'nullable|integer|min:1|max:100',
-            'customer_notes' => 'nullable|string|max:1000',
-            'selections' => 'nullable|array',
-            'selected_variation_id' => 'nullable|integer',
-        ]);
-
-        $quantity = $validated['quantity'] ?? 1;
-        $selections = $validated['selections'] ?? null;
-
-        // Variation requirement and price determination
-        $itemPrice = $service->price ?? 0;
-        if ($service->has_variations) {
-            $variationId = $validated['selected_variation_id'] ?? null;
-            if (!$variationId) {
-                return response()->json(['success' => false, 'message' => 'يرجى اختيار جميع الخيارات قبل الإضافة للسلة.'], 422);
-            }
-            $variation = ServiceVariation::where('service_id', $service->id)
-                ->where('id', $variationId)
-                ->where('is_active', true)
-                ->first();
-            if (!$variation) {
-                return response()->json(['success' => false, 'message' => 'التركيبة المختارة غير متاحة.'], 422);
-            }
-            // استخدم السعر الفعّال للتنويعة (sale_price إن وجد وإلا السعر العادي)
-            $itemPrice = (float) ($variation->active_price ?? $variation->price);
-            // Ensure selections include variation_id so identical items merge correctly
-            if (!is_array($selections)) { $selections = []; }
-            $selections['_variation_id'] = (string)$variationId;
-        }
-
-        // Normalize selections (remove empty, sort arrays)
-        if (is_array($selections)) {
-            $normalized = [];
-            foreach ($selections as $key => $value) {
-                if (is_array($value)) {
-                    $vals = array_values(array_filter($value, function($v){ return $v !== null && $v !== ''; }));
-                    sort($vals);
-                    if (count($vals) > 0) {
-                        $normalized[$key] = $vals;
-                    }
-                } else {
-                    if ($value !== null && $value !== '') {
-                        $normalized[$key] = (string) $value;
-                    }
-                }
-            }
-            $selections = count($normalized) > 0 ? $normalized : null;
-        }
-
-        // Build base query for existing items of this service for current user/session
-        $cartItemQuery = CartItem::where('service_id', $service->id)
-            ->where(function ($query) {
-                if (Auth::check()) {
-                    $query->where('user_id', Auth::id());
-                } else {
-                    $query->where('session_id', session()->getId());
-                }
-            });
-
-        // Find an existing item with EXACT same selections
-        $existingItems = $cartItemQuery->get();
-        $cartItem = null;
-        foreach ($existingItems as $item) {
-            // Null == Null OR strict value equality (arrays/strings)
-            if ($item->selections == $selections) {
-                $cartItem = $item;
-                break;
-            }
-        }
-
-        if ($cartItem) {
-            // Update quantity only when selections match
-            $cartItem->quantity += $quantity;
-            if (isset($validated['customer_notes'])) {
-                $cartItem->customer_notes = $validated['customer_notes'];
-            }
-            $cartItem->save();
-        } else {
-            // Create new cart item
-            CartItem::create([
-                'user_id' => Auth::id(),
-                'session_id' => !Auth::check() ? session()->getId() : null,
-                'service_id' => $service->id,
-                'quantity' => $quantity,
-                'price' => $itemPrice,
-                'customer_notes' => $validated['customer_notes'] ?? null,
-                'selections' => $selections,
+        try {
+            $validated = $request->validate([
+                'quantity' => 'nullable|integer|min:1|max:100',
+                'customer_notes' => 'nullable|string|max:1000',
+                'selections' => 'nullable|array',
+                'selected_variation_id' => 'nullable|integer',
             ]);
-        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'تمت إضافة الخدمة إلى السلة بنجاح',
-            'cart_count' => CartItem::getCartCount(),
-        ]);
+            $quantity = $validated['quantity'] ?? 1;
+            $selections = $validated['selections'] ?? null;
+
+            // Variation requirement and price determination
+            $itemPrice = $service->price ?? 0;
+            if ($service->has_variations) {
+                $variationId = $validated['selected_variation_id'] ?? null;
+                if (! $variationId) {
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json(['success' => false, 'message' => 'يرجى اختيار جميع الخيارات قبل الإضافة للسلة.'], 422);
+                    }
+
+                    return redirect()->route('services.show', $service->id)->with('error', 'يرجى اختيار جميع الخيارات قبل الإضافة للسلة.');
+                }
+                $variation = ServiceVariation::where('service_id', $service->id)
+                    ->where('id', $variationId)
+                    ->where('is_active', true)
+                    ->first();
+                if (! $variation) {
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json(['success' => false, 'message' => 'التركيبة المختارة غير متاحة.'], 422);
+                    }
+
+                    return redirect()->back()->with('error', 'التركيبة المختارة غير متاحة.');
+                }
+                // استخدم السعر الفعّال للتنويعة (sale_price إن وجد وإلا السعر العادي)
+                $itemPrice = (float) ($variation->active_price ?? $variation->price);
+                // Ensure selections include variation_id so identical items merge correctly
+                if (! is_array($selections)) {
+                    $selections = [];
+                }
+                $selections['_variation_id'] = (string) $variationId;
+            }
+
+            // Normalize selections (remove empty, sort arrays)
+            if (is_array($selections)) {
+                $normalized = [];
+                foreach ($selections as $key => $value) {
+                    if (is_array($value)) {
+                        $vals = array_values(array_filter($value, function ($v) {
+                            return $v !== null && $v !== '';
+                        }));
+                        sort($vals);
+                        if (count($vals) > 0) {
+                            $normalized[$key] = $vals;
+                        }
+                    } else {
+                        if ($value !== null && $value !== '') {
+                            $normalized[$key] = (string) $value;
+                        }
+                    }
+                }
+                $selections = count($normalized) > 0 ? $normalized : null;
+            }
+
+            // Build base query for existing items of this service for current user/session
+            $cartItemQuery = CartItem::where('service_id', $service->id)
+                ->where(function ($query) {
+                    if (Auth::check()) {
+                        $query->where('user_id', Auth::id());
+                    } else {
+                        $query->where('session_id', session()->getId());
+                    }
+                });
+
+            // Find an existing item with EXACT same selections
+            $existingItems = $cartItemQuery->get();
+            $cartItem = null;
+            foreach ($existingItems as $item) {
+                // Null == Null OR strict value equality (arrays/strings)
+                if ($item->selections == $selections) {
+                    $cartItem = $item;
+                    break;
+                }
+            }
+
+            if ($cartItem) {
+                // Update quantity only when selections match
+                $cartItem->quantity += $quantity;
+                if (isset($validated['customer_notes'])) {
+                    $cartItem->customer_notes = $validated['customer_notes'];
+                }
+                $cartItem->save();
+            } else {
+                // Create new cart item
+                CartItem::create([
+                    'user_id' => Auth::id(),
+                    'session_id' => ! Auth::check() ? session()->getId() : null,
+                    'service_id' => $service->id,
+                    'quantity' => $quantity,
+                    'price' => $itemPrice,
+                    'customer_notes' => $validated['customer_notes'] ?? null,
+                    'selections' => $selections,
+                ]);
+            }
+
+            // إذا كان الطلب AJAX، أرجع JSON
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'تمت إضافة الخدمة إلى السلة بنجاح',
+                    'cart_count' => CartItem::getCartCount(),
+                ]);
+            }
+
+            // إذا كان طلب عادي، أرجع redirect مع رسالة
+            return redirect()->back()->with('success', 'تمت إضافة الخدمة إلى السلة بنجاح');
+
+        } catch (\Exception $e) {
+            \Log::error('Cart add error: '.$e->getMessage());
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'حدث خطأ أثناء الإضافة للسلة. حاول مرة أخرى.',
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'حدث خطأ أثناء الإضافة للسلة. حاول مرة أخرى.');
+        }
     }
 
     /**

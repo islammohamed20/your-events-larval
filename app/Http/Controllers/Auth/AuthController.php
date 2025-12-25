@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\OtpVerification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -37,9 +36,16 @@ class AuthController extends Controller
                     // تجاهل أي أخطاء تتعلق بعمود غير موجود أو مشاكل قاعدة البيانات
                 }
                 $request->session()->regenerate();
-                
+                try {
+                    DB::table(config('session.table', 'sessions'))
+                        ->where('user_id', $user->getAuthIdentifier())
+                        ->where('id', '!=', $request->session()->getId())
+                        ->delete();
+                } catch (\Throwable $e) {
+                }
+
                 return redirect()->intended(route('admin.dashboard'))
-                    ->with('success', 'مرحباً بك ' . $user->name);
+                    ->with('success', 'مرحباً بك '.$user->name);
             }
 
             // OTP للعملاء فقط: بعد التحقق، سنحوّل حسابات الموردين إلى لوحة الموردين تلقائياً
@@ -59,7 +65,8 @@ class AuthController extends Controller
             } catch (\Exception $e) {
                 Auth::logout();
                 $request->session()->forget(['login_pending', 'login_remember', 'login_user_id']);
-                return back()->withErrors(['error' => 'فشل في إرسال كود التحقق: ' . $e->getMessage()])
+
+                return back()->withErrors(['error' => 'فشل في إرسال كود التحقق: '.$e->getMessage()])
                     ->withInput();
             }
         }
@@ -105,16 +112,16 @@ class AuthController extends Controller
         // إرسال OTP للبريد الإلكتروني
         try {
             OtpVerification::generate($validated['email'], 'email_verification');
-            
+
             // حفظ البريد في الـ session
             $request->session()->put('otp_email', $validated['email']);
             $request->session()->put('otp_type', 'email_verification');
-            
+
             return redirect()->route('otp.verify.form')
                 ->with('success', 'تم إنشاء حسابك بنجاح! تم إرسال كود التحقق إلى بريدك الإلكتروني')
                 ->with('show_success_message', true);
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'فشل في إرسال كود التحقق: ' . $e->getMessage()])
+            return back()->withErrors(['error' => 'فشل في إرسال كود التحقق: '.$e->getMessage()])
                 ->withInput();
         }
     }

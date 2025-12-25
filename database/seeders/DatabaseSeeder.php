@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\User;
-use App\Models\Package;
-use App\Models\Service;
 use App\Models\Gallery;
+use App\Models\Package;
 use App\Models\Review;
+use App\Models\Service;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
     {
         // Note: No default admin user created for security reasons
         // Create admin user manually using: php artisan tinker
-        
+
         // Create sample user (optional - remove in production)
         // User::create([
         //     'name' => 'أحمد محمد',

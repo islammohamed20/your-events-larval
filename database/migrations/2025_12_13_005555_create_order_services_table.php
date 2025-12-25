@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('quantity')->default(1);
             $table->text('notes')->nullable();
             $table->timestamps();
-            
+
             // منع التكرار
             $table->unique(['competitive_order_id', 'service_id']);
         });

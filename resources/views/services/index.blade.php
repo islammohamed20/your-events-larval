@@ -152,10 +152,12 @@
                             <div class="card h-100 service-card">
                                 <!-- Service Image -->
                                 <div class="position-relative service-image-wrapper">
-                                    <img src="{{ $service->thumbnail_url }}" 
-                                         class="card-img-top service-image" 
-                                         alt="{{ $service->name }}"
-                                         style="object-fit: cover;">
+                                    <a href="{{ route('services.show', $service->id) }}" class="d-block" style="text-decoration: none;">
+                                        <img src="{{ $service->thumbnail_url }}" 
+                                             class="card-img-top service-image" 
+                                             alt="{{ $service->name }}"
+                                             style="object-fit: cover; cursor: pointer;">
+                                    </a>
                                     
                                     <!-- Wishlist Button -->
                                     @auth
@@ -166,6 +168,12 @@
                                             <i class="fas fa-heart {{ auth()->user()->hasInWishlist($service->id) ? 'text-danger' : 'text-muted' }}" 
                                                style="font-size: 1.2rem;"></i>
                                         </button>
+                                    @else
+                                        <a href="{{ route('login') }}?redirect={{ urlencode(url()->full()) }}"
+                                           class="btn btn-link wishlist-login-btn position-absolute top-0 end-0 m-2"
+                                           style="z-index: 10; background: rgba(255,255,255,0.95); border-radius: 50%; width: 40px; height: 40px; padding: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">
+                                            <i class="fas fa-heart text-muted" style="font-size: 1.2rem;"></i>
+                                        </a>
                                     @endauth
 
                                     <!-- Service Type Badge -->
@@ -685,7 +693,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({ quantity: 1 })
             })

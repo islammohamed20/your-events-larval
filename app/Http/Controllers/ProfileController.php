@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
+use App\Models\Quote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
-use App\Models\Quote;
-use App\Models\Booking;
 
 class ProfileController extends Controller
 {
@@ -27,8 +27,13 @@ class ProfileController extends Controller
             ->with(['package', 'service'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
-            
-        return view('profile.show', compact('user', 'bookings'));
+
+        $bookingCounts = [
+            'pending' => Booking::where('user_id', $user->id)->where('status', 'pending')->count(),
+            'confirmed' => Booking::where('user_id', $user->id)->where('status', 'confirmed')->count(),
+        ];
+
+        return view('profile.show', compact('user', 'bookings', 'bookingCounts'));
     }
 
     /**
@@ -38,6 +43,7 @@ class ProfileController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
+
         return view('profile.edit', compact('user'));
     }
 
@@ -53,7 +59,7 @@ class ProfileController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'company_name' => ['required', 'string', 'max:255'],
             'tax_number' => ['nullable', 'string', 'max:20'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'phone' => ['nullable', 'string', 'max:20'],
             'card_type' => ['nullable', 'in:visa,mastercard,mada'],
             'card_holder_name' => ['nullable', 'string', 'max:255'],
@@ -146,7 +152,7 @@ class ProfileController extends Controller
             // إعادة توجيه إلى الصفحة الرئيسية مع رسالة نجاح
             return redirect()->route('home')->with('success', 'تم حذف الحساب بنجاح.');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'فشل حذف الحساب: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'فشل حذف الحساب: '.$e->getMessage());
         }
     }
 }

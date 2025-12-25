@@ -21,10 +21,10 @@ return new class extends Migration
             $table->enum('response', ['pending', 'accepted', 'rejected', 'expired'])->default('pending');
             $table->text('rejection_reason')->nullable();
             $table->timestamps();
-            
+
             // Unique constraint: مورد واحد لا يمكن أن يحصل على نفس الحجز مرتين
             $table->unique(['booking_id', 'supplier_id']);
-            
+
             // Indexes للأداء
             $table->index('booking_id');
             $table->index('supplier_id');

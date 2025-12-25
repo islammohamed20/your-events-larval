@@ -17,7 +17,7 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         // Check if user is authenticated
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login')
                 ->with('error', 'يجب تسجيل الدخول للوصول إلى لوحة التحكم');
         }
@@ -25,8 +25,8 @@ class AdminMiddleware
         // Check if user is admin
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        
-        if (!$user->isAdmin()) {
+
+        if (! $user->isAdmin()) {
             abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
         }
 

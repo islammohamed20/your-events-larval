@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'الملف الشخصي') 'الملف الشخصي')
+@section('title', 'الملف الشخصي')
 
 @section('content')
 <div class="container py-5">
@@ -184,13 +184,13 @@
                         </div>
                         <div class="col-md-4">
                             <div class="p-3 border rounded">
-                                <h3 class="text-warning mb-0">{{ $bookings->where('status', 'pending')->count() }}</h3>
+                                <h3 class="text-warning mb-0">{{ $bookingCounts['pending'] }}</h3>
                                 <small class="text-muted">قيد الانتظار</small>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="p-3 border rounded">
-                                <h3 class="text-success mb-0">{{ $bookings->where('status', 'confirmed')->count() }}</h3>
+                                <h3 class="text-success mb-0">{{ $bookingCounts['confirmed'] }}</h3>
                                 <small class="text-muted">مؤكدة</small>
                             </div>
                         </div>
@@ -212,7 +212,7 @@
                             <thead>
                                 <tr>
                                     <th>رقم الحجز</th>
-                                    <th>الباقة</th>
+                                    <th>الخدمة/الباقة</th>
                                     <th>التاريخ</th>
                                     <th>الحالة</th>
                                     <th>الإجمالي</th>
@@ -222,8 +222,8 @@
                                 @foreach($bookings as $booking)
                                 <tr>
                                     <td>#{{ $booking->id }}</td>
-                                    <td>{{ $booking->package->name }}</td>
-                                    <td>{{ $booking->event_date }}</td>
+                                    <td>{{ optional($booking->package)->name ?? optional($booking->service)->name ?? '-' }}</td>
+                                    <td>{{ optional($booking->event_date)->format('Y-m-d') ?? '-' }}</td>
                                     <td>
                                         @if($booking->status == 'pending')
                                             <span class="badge bg-warning">قيد الانتظار</span>
@@ -233,7 +233,7 @@
                                             <span class="badge bg-danger">ملغاة</span>
                                         @endif
                                     </td>
-                                    <td>{{ number_format($booking->total_price, 2) }} ر.س</td>
+                                    <td>{{ number_format($booking->total_amount ?? 0, 2) }} ر.س</td>
                                 </tr>
                                 @endforeach
                             </tbody>

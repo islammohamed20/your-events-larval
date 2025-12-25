@@ -37,9 +37,9 @@ class Booking extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($booking) {
-            $booking->booking_reference = 'YE-' . strtoupper(Str::random(16));
+            $booking->booking_reference = 'YE-'.strtoupper(Str::random(16));
         });
     }
 

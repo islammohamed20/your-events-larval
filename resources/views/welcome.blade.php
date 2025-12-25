@@ -1024,7 +1024,8 @@
         <div class="text-center mb-5 position-relative" style="z-index: 2;" data-aos="fade-up">
             <div class="section-tag-pill purple mb-3">
                 <span class="d-inline-flex align-items-center gap-2" style="font-size: 0.9rem;">
-                    <i class="fas fa-th-large"></i><span class="fw-semibold" style="letter-spacing: 1px;">استكشف عالمنا</span>
+                    <img src="{{ asset('images/logo/logo_mail.png') }}" alt="Your Events" style="height: 20px; width: auto;">
+                    <span class="fw-semibold" style="letter-spacing: 1px;">استكشف عالمنا</span>
                 </span>
             </div>
             <h2 class="arabic-text section-heading" style="font-size: 2.8rem;">
@@ -1389,7 +1390,7 @@
                                         <div class="card h-100 border-0 shadow-sm" style="border-radius: 16px; overflow: hidden; transition: all 0.3s ease;">
                                             <!-- Badge: ثابت أعلى يسار بلون واحد -->
                                             @if($service->type)
-                                                <span class="badge bg-primary position-absolute top-0 start-0 m-2" style="background-color: rgb(13,110,253) !important; z-index: 10;">
+                                                <span class="badge bg-primary position-absolute top-0 start-0 m-2" style="background-color: #7269b0 !important; z-index: 10;">
                                                     {{ $service->type }}
                                                 </span>
                                             @endif
@@ -1421,11 +1422,12 @@
                                                     @if(method_exists($service, 'isVariable') && $service->isVariable())
                                                         <a href="{{ route('services.show', $service->id) }}" class="btn btn-sm btn-primary rounded-pill px-3">{{ __('common.select_option') }}</a>
                                                     @else
-                                                        <form action="{{ route('cart.add', $service) }}" method="POST" class="m-0">
-                                                            @csrf
-                                                            <input type="hidden" name="quantity" value="1">
-                                                            <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3">أضف للسلة</button>
-                                                        </form>
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-primary rounded-pill px-3 add-to-cart-btn"
+                                                                data-service-id="{{ $service->id }}"
+                                                                data-service-name="{{ $service->name }}">
+                                                            <i class="fas fa-cart-plus me-1"></i>أضف للسلة
+                                                        </button>
                                                     @endif
                                                 </div>
                                             </div>
@@ -1553,6 +1555,65 @@ function scrollCarousel(carouselId, direction) {
         behavior: 'smooth'
     });
 }
+
+// Add to cart functionality without page reload
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const serviceId = this.dataset.serviceId;
+            const serviceName = this.dataset.serviceName;
+            const originalHtml = this.innerHTML;
+            
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>جاري...';
+            
+            fetch(`/cart/add/${serviceId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ quantity: 1 })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update cart dropdown if function exists
+                    if (typeof window.updateCartDropdown === 'function') {
+                        window.updateCartDropdown();
+                    }
+                    // Update cart count
+                    const cartCountEl = document.querySelector('.cart-count, #cart-count');
+                    if (cartCountEl) {
+                        cartCountEl.textContent = data.cart_count;
+                    }
+                    
+                    this.innerHTML = '<i class="fas fa-check me-1"></i>تمت الإضافة!';
+                    this.classList.remove('btn-primary');
+                    this.classList.add('btn-success');
+                    
+                    setTimeout(() => {
+                        this.innerHTML = originalHtml;
+                        this.classList.remove('btn-success');
+                        this.classList.add('btn-primary');
+                        this.disabled = false;
+                    }, 2000);
+                } else {
+                    throw new Error(data.message || 'حدث خطأ');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.innerHTML = originalHtml;
+                this.disabled = false;
+                alert('حدث خطأ أثناء الإضافة للسلة. حاول مرة أخرى.');
+            });
+        });
+    });
+});
 </script>
 @endif
 
@@ -2571,7 +2632,7 @@ function scrollCarousel(carouselId, direction) {
                             padding: 14px 32px;
                             font-weight: 700;
                         ">
-                            <i class="fas fa-calendar-check me-2"></i>احجز الآن
+                            <i ></i>احجز الآن
                         </a>
                         <a href="{{ route('services.index') }}" class="btn btn-outline-primary" style="
                             border: 2px solid var(--primary-color);
@@ -2582,7 +2643,7 @@ function scrollCarousel(carouselId, direction) {
                             transition: all 0.3s ease;
                             font-weight: 600;
                         ">
-                            <i class="fas fa-arrow-left me-2"></i>استكشف الخدمات
+                            <i ></i>استكشف الخدمات
                         </a>
                     </div>
                 </div>
@@ -2633,7 +2694,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Enhanced CTA Section (Refactored) - Based on Promotional Banner Design -->
 <section class="cta-section-refactored" style="
-    background: linear-gradient(135deg, #1d2875 0%, #2a2f91 50%, #3c2ff7 100%);
+    background: linear-gradient(135deg, rgba(31, 20, 74, 0.95) 0%, rgba(45, 26, 94, 0.95) 50%, rgba(114, 105, 176, 0.95) 100%) !important;
     position: relative;
     overflow: hidden;
     color: white;

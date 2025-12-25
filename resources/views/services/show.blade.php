@@ -60,7 +60,7 @@
                         <h1 class="mb-0">{{ $service->name }}</h1>
                         @if($service->type)
                         <span class="badge bg-primary fs-6 px-3 py-2">
-                            <i class="fas fa-cogs me-2"></i>{{ $service->type }}
+                            <i ></i>{{ $service->type }}
                         </span>
                         @endif
                     </div>
@@ -189,8 +189,9 @@
                         </div>
                         @endif
                         
-                        <p class="text-muted mb-4">
-                            هل تريد الحصول على هذه الخدمة؟ احجز الآن واحصل على استشارة مجانية.
+                        <p class="text-muted mb-2 text-center">
+                            جاهز تبدأ؟<br>
+                            اطلب الخدمة، وفريق Your Events ينسّق الباقي.
                         </p>
                         
                         <!-- Add to Cart Form -->
@@ -301,36 +302,52 @@
                                     </div>
                                     @endif
                                     
-                                    <button type="submit" class="btn btn-primary w-100 mb-2">
-                                        <i class="fas fa-cart-plus me-2"></i>اضف إلي السلة
-                                    </button>
+                                    <div class="row g-2">
+                                        <div class="col-12 col-md-6">
+                                            <button type="submit" class="btn btn-primary w-100 mb-2">
+                                                <i class="fas fa-cart-plus me-2"></i>اضف إلي السلة
+                                            </button>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <a href="{{ route('booking.create', ['service_id' => $service->id]) }}" 
+                                               class="btn btn-success btn-lg w-100 mb-2">
+                                                <i class="fas fa-calendar-check me-2"></i>حجز مباشر
+                                            </a>
+                                        </div>
+                                    </div>
                                 </form>
                             </div>
                         </div>
                         
-                        <a href="{{ route('booking.create', ['service_id' => $service->id]) }}" 
-                           class="btn btn-success btn-lg w-100 mb-2">
-                            <i class="fas fa-calendar-check me-2"></i>حجز مباشر
-                        </a>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-6">
+                                @auth
+                                <button type="button" 
+                                        class="btn btn-outline-danger w-100 mb-3 wishlist-toggle-btn" 
+                                        data-service-id="{{ $service->id }}">
+                                    <i class="fas fa-heart me-2 {{ auth()->user()->hasInWishlist($service->id) ? '' : 'text-muted' }}"></i>
+                                    <span class="wishlist-text">
+                                        {{ auth()->user()->hasInWishlist($service->id) ? 'إزالة من المفضلة' : 'أضف للمفضلة' }}
+                                    </span>
+                                </button>
+                                @endauth
+                            </div>
+                        </div>
                         
-                        @auth
-                        <button type="button" 
-                                class="btn btn-outline-danger w-100 mb-3 wishlist-toggle-btn" 
-                                data-service-id="{{ $service->id }}">
-                            <i class="fas fa-heart me-2 {{ auth()->user()->hasInWishlist($service->id) ? '' : 'text-muted' }}"></i>
-                            <span class="wishlist-text">
-                                {{ auth()->user()->hasInWishlist($service->id) ? 'إزالة من المفضلة' : 'أضف للمفضلة' }}
-                            </span>
-                        </button>
-                        @else
-                        <a href="{{ route('login') }}" class="btn btn-outline-danger w-100 mb-3">
-                            <i class="far fa-heart me-2"></i>سجل دخولك لإضافة للمفضلة
-                        </a>
-                        @endauth
-                        
-                        <a href="{{ route('contact') }}" class="btn btn-outline-primary w-100">
-                            <i class="fas fa-phone me-2"></i>اتصل بنا
-                        </a>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-6">
+                                <a href="{{ route('contact') }}" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-phone me-2"></i>&nbsp;اتصل بنا
+                                </a>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                @guest
+                                <a href="{{ route('login') }}" class="btn btn-outline-danger w-100 mb-3">
+                                    <i class="far fa-heart me-2"></i>&nbsp;سجل دخولك لإضافة للمفضلة
+                                </a>
+                                @endguest
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -362,7 +379,7 @@
         
         <div class="text-center mt-5" data-aos="fade-up">
             <a href="{{ route('services.index') }}" class="btn btn-outline-primary">
-                <i class="fas fa-arrow-right me-2"></i>العودة إلى الخدمات
+                <i class="fas fa-arrow-right me-2"></i>&nbsp;العودة إلى الخدمات
             </a>
         </div>
     </div>
@@ -396,7 +413,7 @@
                                 <a href="{{ route('services.show', $s->id) }}" class="text-decoration-none">{{ $s->name }}</a>
                             </h6>
                             @if($s->category)
-                                <small class="text-muted mb-2">{{ $s->category->name }}</small>
+                                <small class="text-muted mb-2 d-block text-center">{{ $s->category->name }}</small>
                             @endif
                             {{-- إزالة العنوان الفرعي داخل الخدمات المشابهة لتقليل الازدحام --}}
                             <div class="mt-auto">
@@ -473,7 +490,7 @@
 }
 
 #add-to-cart-card {
-    animation: fadeIn 0.5s ease-in;
+    animation: none !important;
 }
 
 #add-to-cart-card .card-body {
@@ -487,6 +504,7 @@
 .card-body {
     position: relative;
     overflow: visible;
+    animation: none !important;
 }
 
 @keyframes fadeIn {
@@ -531,6 +549,17 @@
 .thumbnail-img:hover {
     transform: scale(1.05);
     border-color: #007bff;
+}
+.card, .card-body {
+    transition: none !important;
+}
+.card:hover, .card-body:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+.card:hover::before {
+    transform: none !important;
+}
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 </style>

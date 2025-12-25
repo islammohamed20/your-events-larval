@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('alt_text')->nullable();
             $table->integer('sort_order')->default(0);
             $table->timestamps();
-            
+
             $table->index(['type', 'is_featured']);
             $table->index('category');
             $table->index('sort_order');

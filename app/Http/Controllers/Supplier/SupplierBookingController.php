@@ -16,20 +16,20 @@ class SupplierBookingController extends Controller
     public function index(Request $request)
     {
         $supplier = Auth::guard('supplier')->user();
-        
+
         // الحجوزات الجديدة المتاحة للتنافس
         $availableBookings = Booking::whereHas('notifications', function ($query) use ($supplier) {
             $query->where('supplier_id', $supplier->id)
-                  ->where('response', 'pending');
+                ->where('response', 'pending');
         })
-        ->where('status', 'awaiting_supplier')
-        ->whereNull('supplier_id')
-        ->where('expires_at', '>', now())
-        ->with(['user', 'quote.items.service', 'notifications' => function ($query) use ($supplier) {
-            $query->where('supplier_id', $supplier->id);
-        }])
-        ->orderBy('expires_at', 'asc')
-        ->paginate(10);
+            ->where('status', 'awaiting_supplier')
+            ->whereNull('supplier_id')
+            ->where('expires_at', '>', now())
+            ->with(['user', 'quote.items.service', 'notifications' => function ($query) use ($supplier) {
+                $query->where('supplier_id', $supplier->id);
+            }])
+            ->orderBy('expires_at', 'asc')
+            ->paginate(10);
 
         // الحجوزات المقبولة من قبل هذا المورد
         $acceptedBookings = Booking::where('supplier_id', $supplier->id)
@@ -58,24 +58,24 @@ class SupplierBookingController extends Controller
     public function show($id)
     {
         $supplier = Auth::guard('supplier')->user();
-        
+
         $booking = Booking::with([
             'user',
             'quote.items.service',
             'notifications' => function ($query) use ($supplier) {
                 $query->where('supplier_id', $supplier->id);
-            }
+            },
         ])->findOrFail($id);
 
         // التحقق من أن المورد له علاقة بهذا الحجز
         $notification = $booking->notifications->first();
-        
-        if (!$notification && $booking->supplier_id !== $supplier->id) {
+
+        if (! $notification && $booking->supplier_id !== $supplier->id) {
             abort(403, 'ليس لديك صلاحية لعرض هذا الحجز');
         }
 
         // تسجيل المشاهدة
-        if ($notification && !$notification->viewed_at) {
+        if ($notification && ! $notification->viewed_at) {
             $notification->markAsViewed();
         }
 
@@ -96,15 +96,15 @@ class SupplierBookingController extends Controller
             ->where('response', 'pending')
             ->first();
 
-        if (!$notification) {
+        if (! $notification) {
             return redirect()->back()->with('error', 'لم يتم العثور على إشعار بهذا الحجز');
         }
 
         try {
             $booking->acceptBySupplier($supplier);
-            
+
             return redirect()->route('supplier.bookings.show', $booking->id)
-                           ->with('success', 'تم قبول الحجز بنجاح! سيتم إشعار العميل');
+                ->with('success', 'تم قبول الحجز بنجاح! سيتم إشعار العميل');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
@@ -128,14 +128,14 @@ class SupplierBookingController extends Controller
             ->where('response', 'pending')
             ->first();
 
-        if (!$notification) {
+        if (! $notification) {
             return redirect()->back()->with('error', 'لم يتم العثور على إشعار بهذا الحجز');
         }
 
         $booking->rejectBySupplier($supplier, $request->rejection_reason);
 
         return redirect()->route('supplier.bookings.index')
-                       ->with('success', 'تم رفض الحجز');
+            ->with('success', 'تم رفض الحجز');
     }
 
     /**
@@ -144,16 +144,16 @@ class SupplierBookingController extends Controller
     public function pendingCount()
     {
         $supplier = Auth::guard('supplier')->user();
-        
+
         $count = Booking::whereHas('notifications', function ($query) use ($supplier) {
             $query->where('supplier_id', $supplier->id)
-                  ->where('response', 'pending')
-                  ->whereNull('viewed_at');
+                ->where('response', 'pending')
+                ->whereNull('viewed_at');
         })
-        ->where('status', 'awaiting_supplier')
-        ->whereNull('supplier_id')
-        ->where('expires_at', '>', now())
-        ->count();
+            ->where('status', 'awaiting_supplier')
+            ->whereNull('supplier_id')
+            ->where('expires_at', '>', now())
+            ->count();
 
         return response()->json(['count' => $count]);
     }

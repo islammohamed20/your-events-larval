@@ -13,6 +13,7 @@ class BookingNotificationMail extends Mailable
     use Queueable, SerializesModels;
 
     public $booking;
+
     public $supplier;
 
     /**
@@ -30,7 +31,7 @@ class BookingNotificationMail extends Mailable
     public function envelope()
     {
         return new \Illuminate\Mail\Mailables\Envelope(
-            subject: '🔥 حجز جديد متاح للتنافس - ' . $this->booking->booking_reference,
+            subject: '🔥 حجز جديد متاح للتنافس - '.$this->booking->booking_reference,
         );
     }
 

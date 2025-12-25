@@ -9,7 +9,7 @@
             <div class="card shadow-lg border-0" style="border-radius: 15px;">
                 <!-- Header -->
                 <div class="card-header text-center py-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px 15px 0 0;">
-                    <div style="font-size: 60px; margin-bottom: 10px;">🔐</div>
+                    <img src="{{ asset('images/logo/White.png') }}" alt="Your Events" style="height: 60px; width: auto; margin-bottom: 10px;">
                     <h3 class="text-white mb-0">التحقق من البريد الإلكتروني</h3>
                 </div>
 

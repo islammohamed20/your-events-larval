@@ -3,21 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Package;
-use App\Models\Service;
 use App\Models\Booking;
 use App\Models\Gallery;
+use App\Models\Package;
 use App\Models\Review;
+use App\Models\Service;
+use App\Models\User;
 
 class AdminController extends Controller
 {
     public function __construct()
     {
         $this->middleware(function ($request, $next) {
-            if (!auth()->check() || !auth()->user()->isAdmin()) {
+            if (! auth()->check() || ! auth()->user()->isAdmin()) {
                 abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
             }
+
             return $next($request);
         });
     }
@@ -36,9 +37,9 @@ class AdminController extends Controller
         ];
 
         $recent_bookings = Booking::with(['package', 'service'])
-                                 ->latest()
-                                 ->take(5)
-                                 ->get();
+            ->latest()
+            ->take(5)
+            ->get();
 
         return view('admin.dashboard', compact('stats', 'recent_bookings'));
     }

@@ -2,8 +2,8 @@
 
 namespace App\Listeners;
 
-use Illuminate\Auth\Events\Login;
 use App\Models\LoginActivity;
+use Illuminate\Auth\Events\Login;
 
 class LogLoginActivity
 {

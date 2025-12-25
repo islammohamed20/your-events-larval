@@ -19,7 +19,7 @@
                         <div class="col-lg-6 col-md-12 mb-4">
                             <div class="card bg-dark border-primary">
                                 <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0 text-white">
+                                    <h6 class="mb-0 text-black">
                                         <i class="fas fa-calendar me-2"></i>
                                         رقم الحجز: {{ $booking->booking_reference }}
                                     </h6>
@@ -68,29 +68,29 @@
                                     
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <p class="text-white mb-2">
+                                            <p class="text-black mb-2">
                                                 <i class="fas fa-user me-2 text-primary"></i>
                                                 <strong>اسم العميل:</strong> {{ $booking->client_name }}
                                             </p>
-                                            <p class="text-white mb-2">
+                                            <p class="text-black mb-2">
                                                 <i class="fas fa-envelope me-2 text-primary"></i>
                                                 <strong>البريد الإلكتروني:</strong> {{ $booking->client_email }}
                                             </p>
-                                            <p class="text-white mb-2">
+                                            <p class="text-black mb-2">
                                                 <i class="fas fa-phone me-2 text-primary"></i>
                                                 <strong>الهاتف:</strong> {{ $booking->client_phone }}
                                             </p>
                                         </div>
                                         <div class="col-md-6">
-                                            <p class="text-white mb-2">
+                                            <p class="text-black mb-2">
                                                 <i class="fas fa-calendar-alt me-2 text-primary"></i>
                                                 <strong>تاريخ المناسبة:</strong> {{ $booking->event_date->format('Y-m-d') }}
                                             </p>
-                                            <p class="text-white mb-2">
+                                            <p class="text-black mb-2">
                                                 <i class="fas fa-map-marker-alt me-2 text-primary"></i>
                                                 <strong>المكان:</strong> {{ $booking->event_location }}
                                             </p>
-                                            <p class="text-white mb-2">
+                                            <p class="text-black mb-2">
                                                 <i class="fas fa-users me-2 text-primary"></i>
                                                 <strong>عدد الضيوف:</strong> {{ $booking->guests_count }}
                                             </p>
@@ -99,7 +99,7 @@
                                     
                                     @if($booking->package)
                                         <div class="mt-3 p-3 bg-secondary rounded">
-                                            <p class="text-white mb-1">
+                                            <p class="text-black mb-1">
                                                 <i class="fas fa-box me-2 text-primary"></i>
                                                 <strong>الباقة:</strong> {{ $booking->package->name }}
                                             </p>
@@ -127,7 +127,7 @@
                                     
                                     <div class="mt-3 pt-3 border-top border-secondary">
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <span class="text-white">
+                                            <span class="text-black">
                                                 <i class="fas fa-money-bill me-2 text-primary"></i>
                                                 <strong>المبلغ الإجمالي:</strong>
                                             </span>

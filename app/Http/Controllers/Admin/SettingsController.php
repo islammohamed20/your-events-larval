@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class SettingsController extends Controller
 {
@@ -19,9 +19,10 @@ class SettingsController extends Controller
         $this->middleware(function ($request, $next) {
             $user = Auth::user();
             /** @var User|null $user */
-            if (!$user instanceof User || !$user->isAdmin()) {
+            if (! $user instanceof User || ! $user->isAdmin()) {
                 abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
             }
+
             return $next($request);
         });
     }
@@ -32,7 +33,7 @@ class SettingsController extends Controller
     public function index()
     {
         $settings = $this->getAllSettings();
-        
+
         return view('admin.settings.index', compact('settings'));
     }
 
@@ -148,7 +149,7 @@ class SettingsController extends Controller
         if ($request->hasFile('site_logo')) {
             $logoPath = $request->file('site_logo')->store('settings', 'public');
             $settings['site_logo'] = $logoPath;
-            
+
             // Delete old logo if exists
             $oldLogo = $this->getSetting('site_logo');
             if ($oldLogo && Storage::disk('public')->exists($oldLogo)) {
@@ -159,7 +160,7 @@ class SettingsController extends Controller
         if ($request->hasFile('site_favicon')) {
             $faviconPath = $request->file('site_favicon')->store('settings', 'public');
             $settings['site_favicon'] = $faviconPath;
-            
+
             // Delete old favicon if exists
             $oldFavicon = $this->getSetting('site_favicon');
             if ($oldFavicon && Storage::disk('public')->exists($oldFavicon)) {
@@ -186,12 +187,12 @@ class SettingsController extends Controller
     {
         return Cache::remember('site_settings', 3600, function () {
             $settings = Setting::all()->pluck('value', 'key')->toArray();
-            
+
             // Merge with defaults if empty
             if (empty($settings)) {
                 return $this->getDefaultSettings();
             }
-            
+
             return array_merge($this->getDefaultSettings(), $settings);
         });
     }
@@ -210,7 +211,7 @@ class SettingsController extends Controller
     private function setSetting($key, $value, $type = 'text', $group = 'general')
     {
         Setting::set($key, $value, $type, $group);
-        
+
         // Clear cache
         Cache::forget('site_settings');
         Setting::clearCache();
@@ -323,12 +324,12 @@ class SettingsController extends Controller
     public function toggleMaintenance(Request $request)
     {
         $maintenanceMode = $request->input('maintenance_mode', false);
-        
+
         if ($maintenanceMode) {
             // Enable maintenance mode
             Artisan::call('down', [
                 '--render' => 'errors::503',
-                '--secret' => config('app.key')
+                '--secret' => config('app.key'),
             ]);
             $this->setSetting('maintenance_mode', '1', 'boolean');
         } else {
@@ -336,13 +337,13 @@ class SettingsController extends Controller
             Artisan::call('up');
             $this->setSetting('maintenance_mode', '0', 'boolean');
         }
-        
+
         $message = $maintenanceMode ? 'تم تفعيل وضع الصيانة' : 'تم إلغاء وضع الصيانة';
-        
+
         return response()->json([
             'success' => true,
             'message' => $message,
-            'maintenance_mode' => $maintenanceMode
+            'maintenance_mode' => $maintenanceMode,
         ]);
     }
 
@@ -352,7 +353,7 @@ class SettingsController extends Controller
     public function clearCache()
     {
         Cache::flush();
-        
+
         return redirect()->route('admin.settings.index')
             ->with('success', 'تم مسح الذاكرة المؤقتة بنجاح!');
     }
@@ -363,11 +364,11 @@ class SettingsController extends Controller
     public function exportSettings()
     {
         $settings = $this->getAllSettings();
-        
-        $filename = 'settings_backup_' . date('Y-m-d_H-i-s') . '.json';
-        
+
+        $filename = 'settings_backup_'.date('Y-m-d_H-i-s').'.json';
+
         return response()->json($settings)
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
     }
 
     /**
@@ -410,7 +411,7 @@ class SettingsController extends Controller
 
         $timestamp = date('Y-m-d_H-i-s');
         $backupDir = storage_path('app/backups');
-        if (!is_dir($backupDir)) {
+        if (! is_dir($backupDir)) {
             @mkdir($backupDir, 0755, true);
         }
         $sqlFile = "$backupDir/{$db}_{$timestamp}.sql";
@@ -430,14 +431,14 @@ class SettingsController extends Controller
             $exitCode = null;
             $output = [];
             exec($mysqldump, $output, $exitCode);
-            if ($exitCode !== 0 || !file_exists($sqlFile)) {
+            if ($exitCode !== 0 || ! file_exists($sqlFile)) {
                 return redirect()->route('admin.settings.index')
                     ->with('error', 'فشل إنشاء النسخة الاحتياطية. تأكد من توفر mysqldump وصلاحيات الكتابة.');
             }
 
             $finalPath = $sqlFile;
             if ($gzEnabled) {
-                $gzFile = $sqlFile . '.gz';
+                $gzFile = $sqlFile.'.gz';
                 $gz = gzopen($gzFile, 'w9');
                 gzwrite($gz, file_get_contents($sqlFile));
                 gzclose($gz);
@@ -447,8 +448,10 @@ class SettingsController extends Controller
 
             // Retention cleanup
             $retention = (int) ($this->getSetting('backup_retention', 7));
-            $files = glob($backupDir . '/*');
-            usort($files, function ($a, $b) { return filemtime($b) <=> filemtime($a); });
+            $files = glob($backupDir.'/*');
+            usort($files, function ($a, $b) {
+                return filemtime($b) <=> filemtime($a);
+            });
             if (count($files) > $retention) {
                 foreach (array_slice($files, $retention) as $old) {
                     @unlink($old);
@@ -464,10 +467,10 @@ class SettingsController extends Controller
             }
 
             return redirect()->route('admin.settings.index')
-                ->with('success', 'تم إنشاء النسخة الاحتياطية وحفظها بنجاح في: ' . basename($finalPath));
+                ->with('success', 'تم إنشاء النسخة الاحتياطية وحفظها بنجاح في: '.basename($finalPath));
         } catch (\Exception $e) {
             return redirect()->route('admin.settings.index')
-                ->with('error', 'حدث خطأ أثناء النسخ الاحتياطي: ' . $e->getMessage());
+                ->with('error', 'حدث خطأ أثناء النسخ الاحتياطي: '.$e->getMessage());
         }
     }
 
@@ -479,7 +482,7 @@ class SettingsController extends Controller
         $cloudEnabled = filter_var($this->getSetting('backup_cloud_enabled', false), FILTER_VALIDATE_BOOLEAN);
         $provider = $this->getSetting('backup_cloud_provider', 'none');
 
-        if (!$cloudEnabled || $provider === 'none') {
+        if (! $cloudEnabled || $provider === 'none') {
             return redirect()->route('admin.settings.index')
                 ->with('error', 'يرجى تفعيل الرفع للسحابة واختيار المزود أولاً.');
         }
@@ -487,22 +490,28 @@ class SettingsController extends Controller
         // Basic validation of required keys per provider
         $missing = [];
         if ($provider === 'google_drive') {
-            foreach (['google_drive_client_id','google_drive_client_secret','google_drive_refresh_token'] as $k) {
-                if (!$this->getSetting($k)) { $missing[] = $k; }
+            foreach (['google_drive_client_id', 'google_drive_client_secret', 'google_drive_refresh_token'] as $k) {
+                if (! $this->getSetting($k)) {
+                    $missing[] = $k;
+                }
             }
         } elseif ($provider === 'mega') {
-            foreach (['mega_email','mega_password'] as $k) {
-                if (!$this->getSetting($k)) { $missing[] = $k; }
+            foreach (['mega_email', 'mega_password'] as $k) {
+                if (! $this->getSetting($k)) {
+                    $missing[] = $k;
+                }
             }
         } elseif ($provider === 'onedrive') {
-            foreach (['onedrive_client_id','onedrive_client_secret','onedrive_refresh_token'] as $k) {
-                if (!$this->getSetting($k)) { $missing[] = $k; }
+            foreach (['onedrive_client_id', 'onedrive_client_secret', 'onedrive_refresh_token'] as $k) {
+                if (! $this->getSetting($k)) {
+                    $missing[] = $k;
+                }
             }
         }
 
-        if (!empty($missing)) {
+        if (! empty($missing)) {
             return redirect()->route('admin.settings.index')
-                ->with('error', 'إعدادات ناقصة: ' . implode(', ', $missing));
+                ->with('error', 'إعدادات ناقصة: '.implode(', ', $missing));
         }
 
         // Simulate a test upload

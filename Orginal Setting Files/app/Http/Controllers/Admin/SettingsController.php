@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class SettingsController extends Controller
@@ -22,7 +22,7 @@ class SettingsController extends Controller
     public function index()
     {
         $settings = $this->getAllSettings();
-        
+
         return view('admin.settings.index', compact('settings'));
     }
 
@@ -119,7 +119,7 @@ class SettingsController extends Controller
         if ($request->hasFile('site_logo')) {
             $logoPath = $request->file('site_logo')->store('settings', 'public');
             $settings['site_logo'] = $logoPath;
-            
+
             // Delete old logo if exists
             $oldLogo = $this->getSetting('site_logo');
             if ($oldLogo && Storage::disk('public')->exists($oldLogo)) {
@@ -130,7 +130,7 @@ class SettingsController extends Controller
         if ($request->hasFile('site_favicon')) {
             $faviconPath = $request->file('site_favicon')->store('settings', 'public');
             $settings['site_favicon'] = $faviconPath;
-            
+
             // Delete old favicon if exists
             $oldFavicon = $this->getSetting('site_favicon');
             if ($oldFavicon && Storage::disk('public')->exists($oldFavicon)) {
@@ -157,11 +157,11 @@ class SettingsController extends Controller
     {
         return Cache::remember('site_settings', 3600, function () {
             $settingsFile = storage_path('app/settings.json');
-            
+
             if (file_exists($settingsFile)) {
                 return json_decode(file_get_contents($settingsFile), true) ?: [];
             }
-            
+
             return $this->getDefaultSettings();
         });
     }
@@ -172,6 +172,7 @@ class SettingsController extends Controller
     private function getSetting($key, $default = null)
     {
         $settings = $this->getAllSettings();
+
         return $settings[$key] ?? $default;
     }
 
@@ -182,10 +183,10 @@ class SettingsController extends Controller
     {
         $settings = $this->getAllSettings();
         $settings[$key] = $value;
-        
+
         $settingsFile = storage_path('app/settings.json');
         file_put_contents($settingsFile, json_encode($settings, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-        
+
         // Clear cache
         Cache::forget('site_settings');
     }
@@ -277,13 +278,13 @@ class SettingsController extends Controller
     {
         $maintenanceMode = $request->input('maintenance_mode', false);
         $this->setSetting('maintenance_mode', $maintenanceMode);
-        
+
         $message = $maintenanceMode ? 'تم تفعيل وضع الصيانة' : 'تم إلغاء وضع الصيانة';
-        
+
         return response()->json([
             'success' => true,
             'message' => $message,
-            'maintenance_mode' => $maintenanceMode
+            'maintenance_mode' => $maintenanceMode,
         ]);
     }
 
@@ -293,7 +294,7 @@ class SettingsController extends Controller
     public function clearCache()
     {
         Cache::flush();
-        
+
         return redirect()->route('admin.settings.index')
             ->with('success', 'تم مسح الذاكرة المؤقتة بنجاح!');
     }
@@ -304,11 +305,11 @@ class SettingsController extends Controller
     public function exportSettings()
     {
         $settings = $this->getAllSettings();
-        
-        $filename = 'settings_backup_' . date('Y-m-d_H-i-s') . '.json';
-        
+
+        $filename = 'settings_backup_'.date('Y-m-d_H-i-s').'.json';
+
         return response()->json($settings)
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
     }
 
     /**

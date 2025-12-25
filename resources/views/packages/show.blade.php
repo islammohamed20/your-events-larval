@@ -160,13 +160,19 @@
                         <p class="text-muted mb-4">
                             احجز هذه الباقة الآن واحصل على خدمة مميزة لمناسبتك.
                         </p>
-                        <a href="{{ route('booking.create', ['package_id' => $package->id]) }}" 
-                           class="btn btn-primary btn-lg w-100 mb-3">
-                            <i class="fas fa-calendar-check me-2"></i>احجز الباقة
-                        </a>
-                        <a href="{{ route('contact') }}" class="btn btn-outline-primary w-100">
-                            <i class="fas fa-question-circle me-2"></i>استفسار عن الباقة
-                        </a>
+                        <div class="row g-2">
+                            <div class="col-12 col-md-6">
+                                <a href="{{ route('booking.create', ['package_id' => $package->id]) }}" 
+                                   class="btn btn-primary btn-lg w-100 mb-3">
+                                    <i class="fas fa-calendar-check me-2"></i>&nbsp;احجز الباقة
+                                </a>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <a href="{{ route('contact') }}" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-question-circle me-2"></i>&nbsp;استفسار عن الباقة
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -201,7 +207,7 @@
         
         <div class="text-center mt-5" data-aos="fade-up">
             <a href="{{ route('packages.index') }}" class="btn btn-outline-primary">
-                <i class="fas fa-arrow-right me-2"></i>العودة إلى الباقات
+                <i class="fas fa-arrow-right me-2"></i>&nbsp;العودة إلى الباقات
             </a>
         </div>
     </div>

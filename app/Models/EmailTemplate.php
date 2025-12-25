@@ -34,7 +34,7 @@ class EmailTemplate extends Model
         $body = $this->body;
 
         foreach ($data as $key => $value) {
-            $placeholder = '{{' . $key . '}}';
+            $placeholder = '{{'.$key.'}}';
             $subject = str_replace($placeholder, $value, $subject);
             $body = str_replace($placeholder, $value, $body);
         }

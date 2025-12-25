@@ -289,7 +289,7 @@
                     </tr>
                     <tr>
                         <td class="info-label">البريد الإلكتروني:</td>
-                        <td><strong>sales@yourevents.sa</strong></td>
+                        <td><strong>hello@yourevents.sa</strong></td>
                     </tr>
                     <tr>
                         <td class="info-label">الموقع الإلكتروني:</td>

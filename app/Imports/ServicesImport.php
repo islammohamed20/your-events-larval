@@ -3,55 +3,61 @@
 namespace App\Imports;
 
 use App\Models\Service;
-use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
-use Maatwebsite\Excel\Concerns\WithUpserts;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
+use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
-use Maatwebsite\Excel\Validators\Failure;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithUpserts;
+use Maatwebsite\Excel\Concerns\WithValidation;
 
-class ServicesImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFailure, WithUpserts, WithCustomCsvSettings
+class ServicesImport implements SkipsOnFailure, ToModel, WithCustomCsvSettings, WithHeadingRow, WithUpserts, WithValidation
 {
     use SkipsFailures;
 
     /**
-    * @param array $row
-    *
-    * @return \Illuminate\Database\Eloquent\Model|null
-    */
+     * @return \Illuminate\Database\Eloquent\Model|null
+     */
     public function model(array $row)
     {
         // Helpers for sanitization
         $sanitizeString = function ($value) {
-            if (!isset($value)) return null;
-            $value = (string)$value;
+            if (! isset($value)) {
+                return null;
+            }
+            $value = (string) $value;
             // Normalize to UTF-8
             $normalized = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
             // Remove non-printable control chars but KEEP newlines (\n) and carriage returns (\r)
             $normalized = preg_replace('/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/u', '', $normalized);
             // Trim but preserve internal newlines
             $normalized = preg_replace("/^[\s\r\n]+|[\s\r\n]+$/u", '', $normalized);
+
             return $normalized === '' ? null : $normalized;
         };
 
         $sanitizeText = $sanitizeString; // same behavior for now
 
         $sanitizeInt = function ($value) {
-            if (!isset($value)) return null;
+            if (! isset($value)) {
+                return null;
+            }
+
             // Accept only numeric values
-            return is_numeric($value) ? (int)$value : null;
+            return is_numeric($value) ? (int) $value : null;
         };
 
         $sanitizeDecimal = function ($value) {
-            if (!isset($value) || $value === '') return null;
-            return is_numeric($value) ? (float)$value : null;
+            if (! isset($value) || $value === '') {
+                return null;
+            }
+
+            return is_numeric($value) ? (float) $value : null;
         };
 
         // تحويل "نعم/لا" إلى boolean
-        $isActive = isset($row['is_active']) ? 
-            (in_array(trim(strtolower((string)$row['is_active'])), ['نعم', 'yes', '1', 'true']) ? 1 : 0) : 1;
+        $isActive = isset($row['is_active']) ?
+            (in_array(trim(strtolower((string) $row['is_active'])), ['نعم', 'yes', '1', 'true']) ? 1 : 0) : 1;
 
         // Map and sanitize incoming data
         $name = $sanitizeString($row['name'] ?? '');
@@ -68,8 +74,8 @@ class ServicesImport implements ToModel, WithHeadingRow, WithValidation, SkipsOn
         $categoryId = $sanitizeInt($row['category_id'] ?? null);
 
         // Derive service type correctly (enum: simple | variable)
-        $incomingServiceType = isset($row['service_type']) ? strtolower(trim((string)$row['service_type'])) : null;
-        $hasVariationsFlag = isset($row['has_variations']) && in_array(trim(strtolower((string)$row['has_variations'])), ['نعم','yes','1','true']);
+        $incomingServiceType = isset($row['service_type']) ? strtolower(trim((string) $row['service_type'])) : null;
+        $hasVariationsFlag = isset($row['has_variations']) && in_array(trim(strtolower((string) $row['has_variations'])), ['نعم', 'yes', '1', 'true']);
         $serviceType = ($incomingServiceType === 'variable' || $hasVariationsFlag) ? 'variable' : 'simple';
         $hasVariations = ($serviceType === 'variable');
 
@@ -91,8 +97,8 @@ class ServicesImport implements ToModel, WithHeadingRow, WithValidation, SkipsOn
         ];
 
         // إذا كان هناك ID، قم بالتحديث، وإلا أنشئ خدمة جديدة
-        if (isset($row['id']) && !empty($row['id'])) {
-            $data['id'] = (int)$row['id'];
+        if (isset($row['id']) && ! empty($row['id'])) {
+            $data['id'] = (int) $row['id'];
         }
 
         return new Service($data);

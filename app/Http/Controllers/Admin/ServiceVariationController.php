@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Service;
-use App\Models\ServiceVariation;
 use App\Models\Attribute;
 use App\Models\AttributeValue;
+use App\Models\Service;
+use App\Models\ServiceVariation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -16,6 +16,7 @@ class ServiceVariationController extends Controller
     {
         $service->load(['attributes.values', 'variations']);
         $variations = $service->variations;
+
         return view('admin.services.variations', compact('service', 'variations'));
     }
 
@@ -32,7 +33,7 @@ class ServiceVariationController extends Controller
 
         // Get attribute value IDs
         $valueIds = array_values($validated['attribute_values']);
-        
+
         // Build attributes array (attribute_name => value_name)
         $attributes = [];
         foreach ($validated['attribute_values'] as $attrId => $valueId) {
@@ -52,14 +53,14 @@ class ServiceVariationController extends Controller
         $existingVariation = $service->variations()
             ->where('attribute_value_ids', json_encode($valueIds))
             ->first();
-            
+
         if ($existingVariation) {
             return redirect()->back()
                 ->with('error', 'هذه التركيبة موجودة بالفعل')
                 ->withInput();
         }
 
-        $variation = new ServiceVariation();
+        $variation = new ServiceVariation;
         $variation->service_id = $service->id;
         $variation->sku = $sku;
         $variation->attributes = $attributes;
@@ -73,22 +74,22 @@ class ServiceVariationController extends Controller
         return redirect()->route('admin.services.variations.index', $service)
             ->with('success', 'تم إضافة التنويعة بنجاح');
     }
-    
+
     private function generateSKU(Service $service, array $attributes)
     {
         $sku = strtoupper(Str::slug($service->name, '-'));
         foreach ($attributes as $key => $value) {
-            $sku .= '-' . strtoupper(Str::slug($value, ''));
+            $sku .= '-'.strtoupper(Str::slug($value, ''));
         }
-        
+
         // Ensure uniqueness
         $counter = 1;
         $baseSku = $sku;
         while (ServiceVariation::where('sku', $sku)->exists()) {
-            $sku = $baseSku . '-' . $counter;
+            $sku = $baseSku.'-'.$counter;
             $counter++;
         }
-        
+
         return $sku;
     }
 
@@ -100,7 +101,7 @@ class ServiceVariationController extends Controller
 
         return response()->json([
             'success' => true,
-            'variation' => $variation
+            'variation' => $variation,
         ]);
     }
 
@@ -125,51 +126,52 @@ class ServiceVariationController extends Controller
         return redirect()->route('admin.services.variations.index', $service)
             ->with('success', 'تم تحديث التنويعة بنجاح');
     }
-    
+
     public function generate(Request $request, Service $service)
     {
         try {
             $defaultPrice = $request->input('default_price', $service->price ?? 0);
-            
+
             // Get all attributes and their values for this service
             $attributes = $service->attributes()->with('values')->get();
-            
+
             if ($attributes->count() === 0) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'لا توجد خصائص مرتبطة بهذه الخدمة'
+                    'message' => 'لا توجد خصائص مرتبطة بهذه الخدمة',
                 ]);
             }
-            
+
             // Generate all possible combinations
             $combinations = $this->generateCombinations($attributes);
-            
+
             $created = 0;
             $skipped = 0;
-            
+
             foreach ($combinations as $combination) {
                 // Check if variation already exists
                 $valueIds = array_column($combination, 'value_id');
                 $exists = $service->variations()
                     ->where('attribute_value_ids', json_encode($valueIds))
                     ->exists();
-                    
+
                 if ($exists) {
                     $skipped++;
+
                     continue;
                 }
-                
+
                 // Build attributes array
                 $attrs = [];
                 foreach ($combination as $item) {
                     $attrs[$item['attribute_name']] = $item['value_name'];
                 }
-                
+
                 // Generate SKU
                 $sku = $this->generateSKU($service, $attrs);
-                
+
                 // Create variation
-                $variation = new ServiceVariation();
+                $variation = new ServiceVariation;
                 $variation->service_id = $service->id;
                 $variation->sku = $sku;
                 $variation->attributes = $attrs;
@@ -177,33 +179,34 @@ class ServiceVariationController extends Controller
                 $variation->price = $defaultPrice;
                 $variation->is_active = 1;
                 $variation->save();
-                
+
                 $created++;
             }
-            
+
             return response()->json([
                 'success' => true,
-                'message' => "تم إنشاء {$created} تنويعة جديدة" . ($skipped > 0 ? " (تم تجاهل {$skipped} تنويعة موجودة مسبقاً)" : "")
+                'message' => "تم إنشاء {$created} تنويعة جديدة".($skipped > 0 ? " (تم تجاهل {$skipped} تنويعة موجودة مسبقاً)" : ''),
             ]);
-            
+
         } catch (\Exception $e) {
-            \Log::error('Generate variations error: ' . $e->getMessage());
+            \Log::error('Generate variations error: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'حدث خطأ: ' . $e->getMessage()
+                'message' => 'حدث خطأ: '.$e->getMessage(),
             ], 500);
         }
     }
-    
+
     private function generateCombinations($attributes, $currentIndex = 0, $currentCombination = [])
     {
         if ($currentIndex === $attributes->count()) {
             return [$currentCombination];
         }
-        
+
         $results = [];
         $currentAttribute = $attributes[$currentIndex];
-        
+
         foreach ($currentAttribute->values as $value) {
             $newCombination = $currentCombination;
             $newCombination[] = [
@@ -212,13 +215,13 @@ class ServiceVariationController extends Controller
                 'value_id' => $value->id,
                 'value_name' => $value->value,
             ];
-            
+
             $results = array_merge(
                 $results,
                 $this->generateCombinations($attributes, $currentIndex + 1, $newCombination)
             );
         }
-        
+
         return $results;
     }
 
@@ -229,6 +232,7 @@ class ServiceVariationController extends Controller
         }
 
         $variation->delete();
+
         return redirect()->route('admin.services.variations.index', $service)->with('success', 'تم حذف التنويع');
     }
 }

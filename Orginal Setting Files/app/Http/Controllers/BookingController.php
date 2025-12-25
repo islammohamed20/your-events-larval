@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\BookingConfirmation;
 use App\Models\Booking;
 use App\Models\Package;
 use App\Models\Service;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
-use App\Mail\BookingConfirmation;
+use Illuminate\Support\Facades\Mail;
 
 class BookingController extends Controller
 {
@@ -16,14 +16,14 @@ class BookingController extends Controller
     {
         $packages = Package::active()->get();
         $services = Service::active()->get();
-        
+
         $selectedPackage = null;
         $selectedService = null;
-        
+
         if ($request->has('package_id')) {
             $selectedPackage = Package::find($request->package_id);
         }
-        
+
         if ($request->has('service_id')) {
             $selectedService = Service::find($request->service_id);
         }
@@ -69,22 +69,24 @@ class BookingController extends Controller
         }
 
         return redirect()->route('booking.success', $booking->booking_reference)
-                         ->with('success', 'تم إرسال طلب الحجز بنجاح! سنتواصل معك قريباً.');
+            ->with('success', 'تم إرسال طلب الحجز بنجاح! سنتواصل معك قريباً.');
     }
 
     public function success($reference)
     {
         $booking = Booking::where('booking_reference', $reference)->firstOrFail();
+
         return view('booking.success', compact('booking'));
     }
 
     public function myBookings()
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
         $bookings = Booking::where('user_id', Auth::id())->latest()->get();
+
         return view('booking.my-bookings', compact('bookings'));
     }
 }

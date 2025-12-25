@@ -13,21 +13,21 @@ return new class extends Migration
     {
         // إضافة الحقول المخصصة إلى الخدمات
         Schema::table('services', function (Blueprint $table) {
-            if (!Schema::hasColumn('services', 'custom_fields')) {
+            if (! Schema::hasColumn('services', 'custom_fields')) {
                 $table->json('custom_fields')->nullable()->after('features');
             }
         });
 
         // إضافة اختيارات الحقول للسلة
         Schema::table('cart_items', function (Blueprint $table) {
-            if (!Schema::hasColumn('cart_items', 'selections')) {
+            if (! Schema::hasColumn('cart_items', 'selections')) {
                 $table->json('selections')->nullable()->after('customer_notes');
             }
         });
 
         // إضافة اختيارات الحقول لعناصر عروض الأسعار
         Schema::table('quote_items', function (Blueprint $table) {
-            if (!Schema::hasColumn('quote_items', 'selections')) {
+            if (! Schema::hasColumn('quote_items', 'selections')) {
                 $table->json('selections')->nullable()->after('customer_notes');
             }
         });

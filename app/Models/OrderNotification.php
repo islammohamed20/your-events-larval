@@ -33,7 +33,7 @@ class OrderNotification extends Model
 
     public function markAsViewed()
     {
-        if (!$this->viewed_at) {
+        if (! $this->viewed_at) {
             $this->viewed_at = now();
             $this->save();
         }

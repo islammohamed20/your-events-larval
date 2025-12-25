@@ -2,16 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\OtpVerification;
-use App\Models\ActivityLog;
-use App\Models\Visit;
-use App\Models\LoginActivity;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 use App\Exports\CustomersExport;
+use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
+use App\Models\LoginActivity;
+use App\Models\OtpVerification;
+use App\Models\User;
+use App\Models\Visit;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 
 class CustomerManagementController extends Controller
@@ -20,6 +19,7 @@ class CustomerManagementController extends Controller
     {
         // عرض العملاء فقط (غير المديرين)
         $customers = User::where('is_admin', false)->latest()->paginate(15);
+
         return view('admin.customers.index', compact('customers'));
     }
 
@@ -32,7 +32,7 @@ class CustomerManagementController extends Controller
 
         $bookings = $customer->bookings()->latest()->paginate(10);
         $quotes = $customer->quotes()->latest()->paginate(10);
-        
+
         return view('admin.customers.show', compact('customer', 'bookings', 'quotes'));
     }
 
@@ -73,7 +73,7 @@ class CustomerManagementController extends Controller
         $customer->update($validated);
 
         return redirect()->route('admin.customers.index')
-                         ->with('success', 'تم تحديث بيانات العميل بنجاح');
+            ->with('success', 'تم تحديث بيانات العميل بنجاح');
     }
 
     public function destroy(User $customer)
@@ -86,13 +86,13 @@ class CustomerManagementController extends Controller
         // التحقق من وجود حجوزات
         if ($customer->bookings()->count() > 0) {
             return redirect()->route('admin.customers.index')
-                             ->with('error', 'لا يمكن حذف العميل لأنه يحتوي على حجوزات');
+                ->with('error', 'لا يمكن حذف العميل لأنه يحتوي على حجوزات');
         }
 
         // التحقق من وجود عروض أسعار
         if ($customer->quotes()->count() > 0) {
             return redirect()->route('admin.customers.index')
-                             ->with('error', 'لا يمكن حذف العميل لأنه يحتوي على عروض أسعار');
+                ->with('error', 'لا يمكن حذف العميل لأنه يحتوي على عروض أسعار');
         }
 
         // تنظيف البيانات المرتبطة قبل الحذف النهائي
@@ -114,7 +114,7 @@ class CustomerManagementController extends Controller
         $customer->delete();
 
         return redirect()->route('admin.customers.index')
-                         ->with('success', 'تم حذف العميل بنجاح');
+            ->with('success', 'تم حذف العميل بنجاح');
     }
 
     public function quotes(User $customer)
@@ -125,6 +125,7 @@ class CustomerManagementController extends Controller
         }
 
         $quotes = $customer->quotes()->latest()->paginate(15);
+
         return view('admin.customers.quotes', compact('customer', 'quotes'));
     }
 
@@ -136,6 +137,7 @@ class CustomerManagementController extends Controller
         }
 
         $bookings = $customer->bookings()->whereNotNull('payment_status')->latest()->paginate(15);
+
         return view('admin.customers.payments', compact('customer', 'bookings'));
     }
 
@@ -158,16 +160,16 @@ class CustomerManagementController extends Controller
     public function search(Request $request)
     {
         $query = $request->get('q');
-        
+
         $customers = User::where('is_admin', false)
-                        ->where(function($q) use ($query) {
-                            $q->where('name', 'like', "%{$query}%")
-                              ->orWhere('email', 'like', "%{$query}%")
-                              ->orWhere('company_name', 'like', "%{$query}%")
-                              ->orWhere('phone', 'like', "%{$query}%");
-                        })
-                        ->latest()
-                        ->paginate(15);
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('email', 'like', "%{$query}%")
+                    ->orWhere('company_name', 'like', "%{$query}%")
+                    ->orWhere('phone', 'like', "%{$query}%");
+            })
+            ->latest()
+            ->paginate(15);
 
         return view('admin.customers.index', compact('customers'));
     }
@@ -180,12 +182,12 @@ class CustomerManagementController extends Controller
         $suspendedCustomers = User::where('is_admin', false)->where('status', 'suspended')->count();
 
         $customersWithBookings = User::where('is_admin', false)
-                                    ->whereHas('bookings')
-                                    ->count();
+            ->whereHas('bookings')
+            ->count();
 
         $customersWithQuotes = User::where('is_admin', false)
-                                  ->whereHas('quotes')
-                                  ->count();
+            ->whereHas('quotes')
+            ->count();
 
         $analytics = [
             'total' => $totalCustomers,

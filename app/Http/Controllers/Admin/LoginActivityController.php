@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\LoginActivity;
-use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class LoginActivityController extends Controller
@@ -21,14 +20,14 @@ class LoginActivityController extends Controller
         if ($request->filled('email')) {
             $email = $request->get('email');
             $query->whereHas('user', function ($q) use ($email) {
-                $q->where('email', 'like', '%' . $email . '%');
+                $q->where('email', 'like', '%'.$email.'%');
             });
         }
 
         if ($request->filled('name')) {
             $name = $request->get('name');
             $query->whereHas('user', function ($q) use ($name) {
-                $q->where('name', 'like', '%' . $name . '%');
+                $q->where('name', 'like', '%'.$name.'%');
             });
         }
 
@@ -44,7 +43,7 @@ class LoginActivityController extends Controller
         }
 
         if ($request->filled('ip')) {
-            $query->where('ip_address', 'like', '%' . $request->get('ip') . '%');
+            $query->where('ip_address', 'like', '%'.$request->get('ip').'%');
         }
 
         if ($request->filled('date_from')) {
@@ -77,4 +76,3 @@ class LoginActivityController extends Controller
         return view('admin.login-activities.index', compact('activities', 'stats', 'byMethod'));
     }
 }
-

@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\OtpVerification;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OtpManagementController extends Controller
 {
@@ -19,7 +19,7 @@ class OtpManagementController extends Controller
 
         // Filters
         if ($request->filled('email')) {
-            $query->where('email', 'like', '%' . $request->email . '%');
+            $query->where('email', 'like', '%'.$request->email.'%');
         }
 
         if ($request->filled('type')) {
@@ -52,8 +52,8 @@ class OtpManagementController extends Controller
         ];
 
         // Success rate
-        $stats['success_rate'] = $stats['total'] > 0 
-            ? round(($stats['verified'] / $stats['total']) * 100, 2) 
+        $stats['success_rate'] = $stats['total'] > 0
+            ? round(($stats['verified'] / $stats['total']) * 100, 2)
             : 0;
 
         // By type
@@ -64,10 +64,10 @@ class OtpManagementController extends Controller
 
         // Recent activity (last 7 days)
         $recentActivity = OtpVerification::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('count(*) as total'),
-                DB::raw('sum(case when status = "verified" then 1 else 0 end) as verified')
-            )
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('count(*) as total'),
+            DB::raw('sum(case when status = "verified" then 1 else 0 end) as verified')
+        )
             ->where('created_at', '>=', Carbon::now()->subDays(7))
             ->groupBy('date')
             ->orderBy('date', 'desc')
@@ -82,6 +82,7 @@ class OtpManagementController extends Controller
     public function show($id)
     {
         $otp = OtpVerification::findOrFail($id);
+
         return view('admin.otp.show', compact('otp'));
     }
 
@@ -103,12 +104,12 @@ class OtpManagementController extends Controller
     public function deleteOld(Request $request)
     {
         $request->validate([
-            'days' => 'required|integer|min:1|max:365'
+            'days' => 'required|integer|min:1|max:365',
         ]);
 
         $days = $request->days;
         $date = Carbon::now()->subDays($days);
-        
+
         $count = OtpVerification::where('created_at', '<', $date)->delete();
 
         return redirect()->back()->with('success', "تم حذف {$count} كود أقدم من {$days} يوم");
@@ -134,7 +135,7 @@ class OtpManagementController extends Controller
 
         // Apply same filters as index
         if ($request->filled('email')) {
-            $query->where('email', 'like', '%' . $request->email . '%');
+            $query->where('email', 'like', '%'.$request->email.'%');
         }
 
         if ($request->filled('type')) {
@@ -156,22 +157,22 @@ class OtpManagementController extends Controller
         $otps = $query->orderBy('created_at', 'desc')->get();
 
         // Generate CSV
-        $filename = 'otp_export_' . date('Y-m-d_H-i-s') . '.csv';
-        
+        $filename = 'otp_export_'.date('Y-m-d_H-i-s').'.csv';
+
         $headers = [
             'Content-Type' => 'text/csv; charset=utf-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 
-        $callback = function() use ($otps) {
+        $callback = function () use ($otps) {
             $file = fopen('php://output', 'w');
-            
+
             // BOM for UTF-8
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
+
             // Headers
             fputcsv($file, ['ID', 'البريد الإلكتروني', 'النوع', 'الحالة', 'المحاولات', 'تاريخ الإنشاء', 'تاريخ الانتهاء', 'تاريخ التحقق', 'IP']);
-            
+
             // Data
             foreach ($otps as $otp) {
                 fputcsv($file, [
@@ -186,7 +187,7 @@ class OtpManagementController extends Controller
                     $otp->ip_address ?? '-',
                 ]);
             }
-            
+
             fclose($file);
         };
 
@@ -212,9 +213,9 @@ class OtpManagementController extends Controller
                 ->groupBy('status')
                 ->get(),
             'last_7_days' => OtpVerification::select(
-                    DB::raw('DATE(created_at) as date'),
-                    DB::raw('count(*) as count')
-                )
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('count(*) as count')
+            )
                 ->where('created_at', '>=', Carbon::now()->subDays(7))
                 ->groupBy('date')
                 ->orderBy('date', 'asc')
@@ -236,6 +237,7 @@ class OtpManagementController extends Controller
             'booking_confirmation' => 'تأكيد الحجز',
             'payment_confirmation' => 'تأكيد الدفع',
         ];
+
         return $labels[$type] ?? $type;
     }
 
@@ -250,6 +252,7 @@ class OtpManagementController extends Controller
             'expired' => 'منتهي الصلاحية',
             'failed' => 'فشل',
         ];
+
         return $labels[$status] ?? $status;
     }
 }

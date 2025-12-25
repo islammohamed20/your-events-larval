@@ -26,15 +26,15 @@ class QuoteMail extends Mailable
      */
     public function build()
     {
-        $subject = match($this->quote->status) {
-            'under_review' => '🎉 جاهز لفعاليتك؟ عرضك صار بين يديك! - ' . $this->quote->quote_number,
-            'approved' => '🎉 جاهز لفعاليتك؟ عرضك صار بين يديك! - ' . $this->quote->quote_number,
-            'rejected' => 'تحديث بخصوص عرض السعر - ' . $this->quote->quote_number,
-            default => '🎉 جاهز لفعاليتك؟ عرضك صار بين يديك! - ' . $this->quote->quote_number,
+        $subject = match ($this->quote->status) {
+            'under_review' => '🎉 جاهز لفعاليتك؟ عرضك صار بين يديك! - '.$this->quote->quote_number,
+            'approved' => '🎉 جاهز لفعاليتك؟ عرضك صار بين يديك! - '.$this->quote->quote_number,
+            'rejected' => 'تحديث بخصوص عرض السعر - '.$this->quote->quote_number,
+            default => '🎉 جاهز لفعاليتك؟ عرضك صار بين يديك! - '.$this->quote->quote_number,
         };
 
         return $this->subject($subject)
-                    ->view('emails.quote')
-                    ->with(['quote' => $this->quote]);
+            ->view('emails.quote')
+            ->with(['quote' => $this->quote]);
     }
 }

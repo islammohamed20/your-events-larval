@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use App\Models\User;
-use App\Models\Quote;
 use App\Models\Booking;
 use App\Models\LoginActivity;
 use App\Models\OtpVerification;
+use App\Models\Quote;
+use App\Models\User;
 use App\Models\Visit;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ReportsController extends Controller
 {
@@ -214,10 +214,10 @@ class ReportsController extends Controller
         $csv[] = ['عدد الحجوزات', Booking::whereBetween('created_at', [$startDate, $endDate])->count()];
 
         // Build CSV response
-        $filename = 'report_' . now()->format('Ymd_His') . '.csv';
+        $filename = 'report_'.now()->format('Ymd_His').'.csv';
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ];
 
         $handle = fopen('php://temp', 'r+');
@@ -270,10 +270,10 @@ class ReportsController extends Controller
         $csv[] = ['نسبة النجاح (%)', $otpSuccessRate];
 
         // Build CSV response
-        $filename = 'security_report_' . now()->format('Ymd_His') . '.csv';
+        $filename = 'security_report_'.now()->format('Ymd_His').'.csv';
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ];
 
         $handle = fopen('php://temp', 'r+');

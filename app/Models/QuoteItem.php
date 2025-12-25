@@ -64,7 +64,7 @@ class QuoteItem extends Model
             // نعيد الـ Variation فقط، والواجهة ستستخدم accessor attributeValuesList لتحميل القيم مع العلاقة attribute
             return ServiceVariation::find($this->selections['_variation_id']);
         }
-        
+
         return null;
     }
 
@@ -77,7 +77,7 @@ class QuoteItem extends Model
         if (is_array($this->selections) && isset($this->selections['_variation_id'])) {
             return $this->selections['_variation_id'];
         }
-        
+
         return null;
     }
 }

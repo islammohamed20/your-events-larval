@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Supplier;
-use App\Models\Service;
 use App\Models\Category;
-use App\Models\SupplierService;
 use App\Models\OtpVerification;
+use App\Models\Service;
+use App\Models\Supplier;
+use App\Models\SupplierService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
 class SupplierController extends Controller
@@ -65,7 +63,7 @@ class SupplierController extends Controller
             'social_media.tiktok' => 'nullable|url',
             'terms_accepted' => 'required|accepted',
             'privacy_accepted' => 'required|accepted',
-            
+
             // Files
             'commercial_register_file' => 'required_if:supplier_type,company|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'tax_certificate_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
@@ -76,13 +74,13 @@ class SupplierController extends Controller
         // تحقق من أن جميع الخدمات تنتمي إلى الفئات المختارة
         $selectedServiceIds = $validated['services'];
         $selectedCategoryIds = $validated['categories'];
-        
+
         $services = Service::whereIn('id', $selectedServiceIds)->get();
         $invalidServices = $services->whereNotIn('category_id', $selectedCategoryIds);
-        
+
         if ($invalidServices->count() > 0) {
             return back()->withInput()->withErrors([
-                'services' => 'بعض الخدمات المختارة لا تنتمي إلى الفئات المحددة'
+                'services' => 'بعض الخدمات المختارة لا تنتمي إلى الفئات المحددة',
             ]);
         }
 
@@ -90,10 +88,10 @@ class SupplierController extends Controller
         $validated['terms_accepted'] = $request->boolean('terms_accepted');
         $validated['privacy_accepted'] = $request->boolean('privacy_accepted');
         $validated['status'] = 'pending';
-        
+
         // حول الفئات والخدمات إلى JSON للتوافقية
         $validated['services_offered'] = $selectedCategoryIds;
-        
+
         // أزل الحقول غير المطلوبة
         unset($validated['categories']);
         unset($validated['services']);
@@ -144,7 +142,7 @@ class SupplierController extends Controller
         try {
             OtpVerification::generate($supplier->email, 'email_verification');
         } catch (\Exception $e) {
-            Log::error('Failed to send supplier OTP: ' . $e->getMessage());
+            Log::error('Failed to send supplier OTP: '.$e->getMessage());
         }
 
         session(['supplier_email' => $supplier->email]);
@@ -159,14 +157,14 @@ class SupplierController extends Controller
     {
         // Prefer session email; fallback to query param then set session
         $email = $request->session()->get('supplier_email');
-        if (!$email) {
+        if (! $email) {
             $email = $request->query('email');
             if ($email) {
                 $request->session()->put('supplier_email', $email);
             }
         }
 
-        if (!$email) {
+        if (! $email) {
             return redirect()->route('suppliers.register')->with('error', 'يرجى التسجيل أولاً');
         }
 
@@ -184,21 +182,21 @@ class SupplierController extends Controller
 
         // Prefer session email; fallback to request payload
         $email = $request->session()->get('supplier_email') ?: $request->input('email');
-        
-        if (!$email) {
+
+        if (! $email) {
             return redirect()->route('suppliers.register')->with('error', 'انتهت صلاحية الجلسة');
         }
 
         $supplier = Supplier::where('email', $email)->first();
 
-        if (!$supplier) {
+        if (! $supplier) {
             return back()->with('error', 'البريد الإلكتروني غير صحيح');
         }
 
         // Verify OTP
         $result = OtpVerification::verify($email, $request->otp, 'email_verification');
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return back()->with('error', $result['message']);
         }
 
@@ -223,7 +221,7 @@ class SupplierController extends Controller
         // Get email either from request body or session
         $email = $request->input('email') ?: $request->session()->get('supplier_email');
 
-        if (!$email) {
+        if (! $email) {
             return response()->json([
                 'success' => false,
                 'message' => 'البريد الإلكتروني غير موجود في الجلسة. يرجى المحاولة مرة أخرى.',
@@ -231,7 +229,7 @@ class SupplierController extends Controller
         }
 
         $supplier = Supplier::where('email', $email)->first();
-        if (!$supplier) {
+        if (! $supplier) {
             return response()->json([
                 'success' => false,
                 'message' => 'هذا البريد الإلكتروني غير مسجل كمورد.',
@@ -243,7 +241,8 @@ class SupplierController extends Controller
             // Refresh session email to ensure continuity
             $request->session()->put('supplier_email', $email);
         } catch (\Throwable $e) {
-            Log::error('Failed to resend supplier OTP: ' . $e->getMessage());
+            Log::error('Failed to resend supplier OTP: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'حدث خطأ أثناء إرسال الرمز. حاول لاحقًا.',

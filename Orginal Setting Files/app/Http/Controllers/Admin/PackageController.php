@@ -12,6 +12,7 @@ class PackageController extends Controller
     public function index()
     {
         $packages = Package::latest()->get();
+
         return view('admin.packages.index', compact('packages'));
     }
 
@@ -40,7 +41,7 @@ class PackageController extends Controller
         Package::create($validated);
 
         return redirect()->route('admin.packages.index')
-                         ->with('success', 'تم إضافة الباقة بنجاح');
+            ->with('success', 'تم إضافة الباقة بنجاح');
     }
 
     public function edit(Package $package)
@@ -71,7 +72,7 @@ class PackageController extends Controller
         $package->update($validated);
 
         return redirect()->route('admin.packages.index')
-                         ->with('success', 'تم تحديث الباقة بنجاح');
+            ->with('success', 'تم تحديث الباقة بنجاح');
     }
 
     public function destroy(Package $package)
@@ -79,10 +80,10 @@ class PackageController extends Controller
         if ($package->image) {
             Storage::disk('public')->delete($package->image);
         }
-        
+
         $package->delete();
 
         return redirect()->route('admin.packages.index')
-                         ->with('success', 'تم حذف الباقة بنجاح');
+            ->with('success', 'تم حذف الباقة بنجاح');
     }
 }

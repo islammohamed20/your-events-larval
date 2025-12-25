@@ -16,7 +16,7 @@ class SupplierMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::guard('supplier')->check()) {
+        if (! Auth::guard('supplier')->check()) {
             return redirect()->route('supplier.login')->with('error', 'يرجى تسجيل الدخول أولاً');
         }
 
@@ -25,20 +25,21 @@ class SupplierMiddleware
         // التحقق من أن المورد موافق عليه
         if ($supplier->status !== 'approved') {
             Auth::guard('supplier')->logout();
-            
-            $message = match($supplier->status) {
+
+            $message = match ($supplier->status) {
                 'pending' => 'حسابك قيد المراجعة. سيتم إعلامك عند الموافقة.',
-                'rejected' => 'تم رفض طلبك. السبب: ' . ($supplier->rejection_reason ?? 'غير محدد'),
+                'rejected' => 'تم رفض طلبك. السبب: '.($supplier->rejection_reason ?? 'غير محدد'),
                 'suspended' => 'تم إيقاف حسابك. يرجى التواصل مع الإدارة.',
                 default => 'حسابك غير نشط.'
             };
-            
+
             return redirect()->route('supplier.login')->with('error', $message);
         }
 
         // التحقق من تأكيد البريد الإلكتروني
-        if (!$supplier->email_verified_at) {
+        if (! $supplier->email_verified_at) {
             Auth::guard('supplier')->logout();
+
             return redirect()->route('supplier.login')->with('error', 'يرجى تأكيد بريدك الإلكتروني أولاً');
         }
 

@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Customer;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class CustomerSeeder extends Seeder
 {
@@ -25,14 +24,14 @@ class CustomerSeeder extends Seeder
             'جدة',
             'الدمام',
             'الكويت',
-            'الشرقية'
+            'الشرقية',
         ];
 
         foreach ($users as $index => $user) {
             Customer::create([
                 'user_id' => $user->id,
-                'company_name' => 'شركة ' . $user->name,
-                'phone' => '050' . rand(10000000, 99999999),
+                'company_name' => 'شركة '.$user->name,
+                'phone' => '050'.rand(10000000, 99999999),
                 'city' => $citiesData[$index] ?? 'الرياض',
                 'status' => 'active',
                 'is_verified' => true,
@@ -40,6 +39,6 @@ class CustomerSeeder extends Seeder
             ]);
         }
 
-        echo "✅ تم إضافة " . count($users) . " عميل بنجاح\n";
+        echo '✅ تم إضافة '.count($users)." عميل بنجاح\n";
     }
 }

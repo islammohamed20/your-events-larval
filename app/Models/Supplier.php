@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-use App\Models\ActivityLog;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Supplier extends Authenticatable
 {
@@ -59,7 +58,7 @@ class Supplier extends Authenticatable
             'supplier_id',
             'service_id'
         )->withPivot('category_id', 'is_available')
-         ->withTimestamps();
+            ->withTimestamps();
     }
 
     /**
@@ -97,8 +96,8 @@ class Supplier extends Authenticatable
     public function receivedOrders()
     {
         return $this->belongsToMany(CompetitiveOrder::class, 'order_notifications', 'supplier_id', 'competitive_order_id')
-                    ->withPivot('notified_at', 'viewed_at', 'responded_at', 'response')
-                    ->withTimestamps();
+            ->withPivot('notified_at', 'viewed_at', 'responded_at', 'response')
+            ->withTimestamps();
     }
 
     /**
@@ -125,7 +124,7 @@ class Supplier extends Authenticatable
             case 'suspended':
                 return '<span class="badge bg-warning">معلق</span>';
             default:
-                return '<span class="badge bg-secondary">' . e($status) . '</span>';
+                return '<span class="badge bg-secondary">'.e($status).'</span>';
         }
     }
 }

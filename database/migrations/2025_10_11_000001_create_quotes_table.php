@@ -25,7 +25,7 @@ return new class extends Migration
             $table->timestamp('approved_at')->nullable();
             $table->timestamp('rejected_at')->nullable();
             $table->timestamps();
-            
+
             $table->index('quote_number');
             $table->index('status');
             $table->index('user_id');
@@ -42,7 +42,7 @@ return new class extends Migration
             $table->decimal('subtotal', 10, 2);
             $table->text('customer_notes')->nullable(); // ملاحظات خاصة بالخدمة
             $table->timestamps();
-            
+
             $table->index('quote_id');
             $table->index('service_id');
         });

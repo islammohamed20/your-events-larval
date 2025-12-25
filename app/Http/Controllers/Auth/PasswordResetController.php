@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\OtpVerification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -24,11 +24,11 @@ class PasswordResetController extends Controller
     public function sendResetOtp(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email'
+            'email' => 'required|email|exists:users,email',
         ], [
             'email.required' => 'البريد الإلكتروني مطلوب',
             'email.email' => 'صيغة البريد الإلكتروني غير صحيحة',
-            'email.exists' => 'البريد الإلكتروني غير مسجل'
+            'email.exists' => 'البريد الإلكتروني غير مسجل',
         ]);
 
         try {
@@ -42,7 +42,7 @@ class PasswordResetController extends Controller
                 ->with('success', 'تم إرسال كود التحقق إلى بريدك الإلكتروني');
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'فشل في إرسال كود التحقق: ' . $e->getMessage()])
+            return back()->withErrors(['error' => 'فشل في إرسال كود التحقق: '.$e->getMessage()])
                 ->withInput();
         }
     }
@@ -54,7 +54,7 @@ class PasswordResetController extends Controller
     {
         $email = $request->query('email') ?? $request->session()->get('reset_email');
 
-        if (!$email) {
+        if (! $email) {
             return redirect()->route('password.request')
                 ->with('error', 'الرجاء إدخال بريدك الإلكتروني أولاً');
         }
@@ -69,7 +69,7 @@ class PasswordResetController extends Controller
     {
         $request->validate([
             'email' => 'required|email',
-            'otp' => 'required|string|size:6'
+            'otp' => 'required|string|size:6',
         ]);
 
         $result = OtpVerification::verify($request->email, $request->otp, 'password_reset');
@@ -91,7 +91,7 @@ class PasswordResetController extends Controller
      */
     public function showResetForm(Request $request)
     {
-        if (!$request->session()->get('reset_verified')) {
+        if (! $request->session()->get('reset_verified')) {
             return redirect()->route('password.request')
                 ->with('error', 'يرجى التحقق من بريدك الإلكتروني أولاً');
         }
@@ -106,23 +106,23 @@ class PasswordResetController extends Controller
      */
     public function resetPassword(Request $request)
     {
-        if (!$request->session()->get('reset_verified')) {
+        if (! $request->session()->get('reset_verified')) {
             return redirect()->route('password.request')
                 ->with('error', 'يرجى التحقق من بريدك الإلكتروني أولاً');
         }
 
         $request->validate([
-            'password' => 'required|string|min:8|confirmed'
+            'password' => 'required|string|min:8|confirmed',
         ], [
             'password.required' => 'كلمة المرور مطلوبة',
             'password.min' => 'كلمة المرور يجب أن تكون 8 أحرف على الأقل',
-            'password.confirmed' => 'كلمة المرور غير متطابقة'
+            'password.confirmed' => 'كلمة المرور غير متطابقة',
         ]);
 
         $email = $request->session()->get('reset_email');
         $user = User::where('email', $email)->first();
 
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('password.request')
                 ->with('error', 'المستخدم غير موجود');
         }

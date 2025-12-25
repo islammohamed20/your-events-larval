@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Mail;
-use Carbon\Carbon;
 
 class OtpVerification extends Model
 {
@@ -17,7 +17,7 @@ class OtpVerification extends Model
         'verified_at',
         'attempts',
         'ip_address',
-        'user_agent'
+        'user_agent',
     ];
 
     protected $casts = [
@@ -68,41 +68,43 @@ class OtpVerification extends Model
             ->where('otp', $otp)
             ->first();
 
-        if (!$record) {
+        if (! $record) {
             return [
                 'success' => false,
-                'message' => 'كود التحقق غير صحيح أو منتهي الصلاحية'
+                'message' => 'كود التحقق غير صحيح أو منتهي الصلاحية',
             ];
         }
 
         // التحقق من عدد المحاولات
         if ($record->attempts >= 5) {
             $record->update(['status' => 'failed']);
+
             return [
                 'success' => false,
-                'message' => 'تم تجاوز الحد الأقصى للمحاولات. يرجى طلب كود جديد'
+                'message' => 'تم تجاوز الحد الأقصى للمحاولات. يرجى طلب كود جديد',
             ];
         }
 
         // التحقق من انتهاء الصلاحية
         if (Carbon::now()->isAfter($record->expires_at)) {
             $record->update(['status' => 'expired']);
+
             return [
                 'success' => false,
-                'message' => 'انتهت صلاحية كود التحقق. يرجى طلب كود جديد'
+                'message' => 'انتهت صلاحية كود التحقق. يرجى طلب كود جديد',
             ];
         }
 
         // تحديث الحالة
         $record->update([
             'status' => 'verified',
-            'verified_at' => Carbon::now()
+            'verified_at' => Carbon::now(),
         ]);
 
         return [
             'success' => true,
             'message' => 'تم التحقق بنجاح',
-            'record' => $record
+            'record' => $record,
         ];
     }
 
@@ -112,7 +114,7 @@ class OtpVerification extends Model
     public function incrementAttempts()
     {
         $this->increment('attempts');
-        
+
         if ($this->attempts >= 5) {
             $this->update(['status' => 'failed']);
         }
@@ -131,7 +133,7 @@ class OtpVerification extends Model
      */
     public function isValid()
     {
-        return $this->status === 'pending' && !$this->isExpired() && $this->attempts < 5;
+        return $this->status === 'pending' && ! $this->isExpired() && $this->attempts < 5;
     }
 
     /**
@@ -141,6 +143,7 @@ class OtpVerification extends Model
     {
         $min = pow(10, $length - 1);
         $max = pow(10, $length) - 1;
+
         return (string) random_int($min, $max);
     }
 
@@ -295,12 +298,12 @@ HTML;
             'typeLabel_placeholder',
             'otp_placeholder',
             'expiryMinutes_placeholder',
-            'email_placeholder'
+            'email_placeholder',
         ], [
             htmlspecialchars($typeLabel),
             htmlspecialchars($otp),
             htmlspecialchars($expiryMinutes),
-            htmlspecialchars($email)
+            htmlspecialchars($email),
         ], $html);
 
         try {
@@ -310,7 +313,7 @@ HTML;
                     ->html($html);
             });
         } catch (\Exception $e) {
-            \Log::error('OTP Email Error: ' . $e->getMessage());
+            \Log::error('OTP Email Error: '.$e->getMessage());
         }
     }
 

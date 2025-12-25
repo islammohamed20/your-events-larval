@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
@@ -31,7 +31,6 @@ class Order extends Model
     /**
      * العلاقات
      */
-
     public function customer()
     {
         return $this->belongsTo(User::class, 'customer_id');
@@ -72,7 +71,7 @@ class Order extends Model
     public function acceptBySupplier(int $supplierId): bool
     {
         // تحقق من أن الطلب ما زال متاح
-        if (!$this->isAvailable()) {
+        if (! $this->isAvailable()) {
             return false;
         }
 

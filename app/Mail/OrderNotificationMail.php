@@ -15,6 +15,7 @@ class OrderNotificationMail extends Mailable
     use Queueable, SerializesModels;
 
     public $order;
+
     public $supplier;
 
     public function __construct(CompetitiveOrder $order, Supplier $supplier)
@@ -26,7 +27,7 @@ class OrderNotificationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '🔥 فرصة عمل جديدة - طلب عاجل #' . $this->order->order_number,
+            subject: '🔥 فرصة عمل جديدة - طلب عاجل #'.$this->order->order_number,
         );
     }
 

@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\EmailTemplate;
 use App\Models\OtpVerification;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class EmailManagementController extends Controller
 {
@@ -52,10 +52,10 @@ class EmailManagementController extends Controller
 
         // Email Activity (last 7 days)
         $emailActivity = OtpVerification::select(
-                DB::raw('DATE(created_at) as date'),
-                DB::raw('count(*) as total'),
-                DB::raw('sum(case when status = "verified" then 1 else 0 end) as verified')
-            )
+            DB::raw('DATE(created_at) as date'),
+            DB::raw('count(*) as total'),
+            DB::raw('sum(case when status = "verified" then 1 else 0 end) as verified')
+        )
             ->where('created_at', '>=', Carbon::now()->subDays(7))
             ->groupBy('date')
             ->orderBy('date', 'asc')
@@ -85,11 +85,11 @@ class EmailManagementController extends Controller
 
         try {
             $useHtml = $request->has('use_html');
-            
+
             Mail::send([], [], function ($message) use ($request, $useHtml) {
                 $message->to($request->to_email)
                     ->subject($request->subject);
-                
+
                 if ($useHtml) {
                     $message->html($request->message);
                 } else {
@@ -99,13 +99,13 @@ class EmailManagementController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'تم إرسال البريد بنجاح إلى ' . $request->to_email
+                'message' => 'تم إرسال البريد بنجاح إلى '.$request->to_email,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'فشل الإرسال: ' . $e->getMessage()
+                'message' => 'فشل الإرسال: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -134,9 +134,9 @@ class EmailManagementController extends Controller
                     ->get(),
             ],
             'activity' => OtpVerification::select(
-                    DB::raw('DATE(created_at) as date'),
-                    DB::raw('count(*) as count')
-                )
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('count(*) as count')
+            )
                 ->where('created_at', '>=', Carbon::now()->subDays(30))
                 ->groupBy('date')
                 ->orderBy('date', 'asc')

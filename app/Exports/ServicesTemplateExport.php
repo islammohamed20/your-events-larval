@@ -10,9 +10,6 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class ServicesTemplateExport implements FromArray, WithHeadings, WithStyles
 {
-    /**
-     * @return array
-     */
     public function array(): array
     {
         // Return empty rows as template with examples
@@ -98,12 +95,12 @@ class ServicesTemplateExport implements FromArray, WithHeadings, WithStyles
         foreach ($categories as $id => $name) {
             $categoriesText .= "$id=$name, ";
         }
-        
+
         // Add notes to headers
         $sheet->getComment('A1')->getText()->createTextRun('رقم التعريف (فارغ=إنشاء، رقم=تحديث)');
         $sheet->getComment('B1')->getText()->createTextRun('اسم الخدمة (مطلوب)');
         $sheet->getComment('C1')->getText()->createTextRun('العنوان الفرعي (للألعاب فقط)');
-        $sheet->getComment('D1')->getText()->createTextRun('رقم الفئة: ' . rtrim($categoriesText, ', '));
+        $sheet->getComment('D1')->getText()->createTextRun('رقم الفئة: '.rtrim($categoriesText, ', '));
         $sheet->getComment('E1')->getText()->createTextRun('الوصف');
         $sheet->getComment('F1')->getText()->createTextRun('الوصف التسويقي');
         $sheet->getComment('G1')->getText()->createTextRun('وش نوفر؟');
@@ -113,7 +110,7 @@ class ServicesTemplateExport implements FromArray, WithHeadings, WithStyles
         $sheet->getComment('K1')->getText()->createTextRun('المدة');
         $sheet->getComment('L1')->getText()->createTextRun('النوع');
         $sheet->getComment('M1')->getText()->createTextRun('نشطة (نعم/لا)');
-        
+
         return [
             1 => [
                 'font' => ['bold' => true, 'size' => 11, 'color' => ['rgb' => 'FFFFFF']],
@@ -126,4 +123,3 @@ class ServicesTemplateExport implements FromArray, WithHeadings, WithStyles
         ];
     }
 }
-

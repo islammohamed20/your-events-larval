@@ -46,7 +46,7 @@ class BookingNotification extends Model
      */
     public function markAsViewed()
     {
-        if (!$this->viewed_at) {
+        if (! $this->viewed_at) {
             $this->update(['viewed_at' => now()]);
             $this->booking->increment('views_count');
         }

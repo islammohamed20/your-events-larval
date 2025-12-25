@@ -155,21 +155,29 @@
                              data-aos-delay="{{ $loop->index * 50 }}">
                             <div class="card h-100 service-card">
                                 <!-- Service Image -->
-                                <div class="position-relative">
-                                    <img src="{{ $service->thumbnail_url }}" 
-                                         class="card-img-top" 
-                                         alt="{{ $service->name }}"
-                                         style="height: 250px; object-fit: cover;">
+                                <div class="position-relative service-image-wrapper">
+                                    <a href="{{ route('services.show', $service->id) }}" class="d-block" style="text-decoration: none;">
+                                        <img src="{{ $service->thumbnail_url }}" 
+                                             class="card-img-top service-image-clickable" 
+                                             alt="{{ $service->name }}"
+                                             style="height: 250px; object-fit: cover; cursor: pointer;">
+                                    </a>
                                     
                                     <!-- Wishlist Button -->
                                     @auth
                                         <button type="button" 
                                                 class="btn btn-link wishlist-toggle-btn position-absolute top-0 end-0 m-2" 
                                                 data-service-id="{{ $service->id }}"
-                                                style="z-index: 10; background: rgba(255,255,255,0.95); border-radius: 50%; width: 40px; height: 40px; padding: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+                                                style="z-index: 100; background: rgba(255,255,255,0.95); border-radius: 50%; width: 40px; height: 40px; padding: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.2); pointer-events: auto;">
                                             <i class="fas fa-heart {{ auth()->user()->hasInWishlist($service->id) ? 'text-danger' : 'text-muted' }}" 
-                                               style="font-size: 1.2rem;"></i>
+                                               style="font-size: 1.2rem; pointer-events: none;"></i>
                                         </button>
+                                    @else
+                                        <a href="{{ route('login') }}?redirect={{ urlencode(url()->full()) }}"
+                                           class="btn btn-link wishlist-login-btn position-absolute top-0 end-0 m-2"
+                                           style="z-index: 100; background: rgba(255,255,255,0.95); border-radius: 50%; width: 40px; height: 40px; padding: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.2); pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">
+                                            <i class="fas fa-heart text-muted" style="font-size: 1.2rem; pointer-events: none;"></i>
+                                        </a>
                                     @endauth
 
                                     <!-- Service Type Badge -->
@@ -376,6 +384,22 @@
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 
+/* Service Image Clickable Styling */
+.service-image-wrapper {
+    overflow: hidden;
+    position: relative;
+}
+
+.service-image-clickable {
+    transition: transform 0.3s ease;
+    display: block;
+    width: 100%;
+}
+
+.service-image-wrapper:hover .service-image-clickable {
+    transform: scale(1.05);
+}
+
 .service-card .card-img-top {
     transition: transform 0.3s ease;
 }
@@ -425,6 +449,11 @@
 
 .service-title-link:hover {
     color: var(--primary-color, #667eea) !important;
+}
+
+/* Wishlist Button - ensure it doesn't block image clicks */
+.wishlist-toggle-btn {
+    pointer-events: auto !important;
 }
 
 /* Add to Cart Button */
@@ -606,7 +635,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({ quantity: 1 })
             })

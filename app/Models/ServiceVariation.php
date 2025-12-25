@@ -42,23 +42,23 @@ class ServiceVariation extends Model
      */
     public function attributeValues()
     {
-        if (empty($this->attribute_value_ids) || !is_array($this->attribute_value_ids)) {
+        if (empty($this->attribute_value_ids) || ! is_array($this->attribute_value_ids)) {
             // Return empty query builder
             return AttributeValue::query()->whereRaw('1 = 0');
         }
-        
+
         return AttributeValue::query()->whereIn('id', $this->attribute_value_ids);
     }
-    
+
     /**
      * Get attribute values as collection (helper method)
      */
     public function getAttributeValuesListAttribute()
     {
-        if (empty($this->attribute_value_ids) || !is_array($this->attribute_value_ids)) {
+        if (empty($this->attribute_value_ids) || ! is_array($this->attribute_value_ids)) {
             return collect([]);
         }
-        
+
         return AttributeValue::with('attribute')
             ->whereIn('id', $this->attribute_value_ids)
             ->get();
@@ -86,7 +86,7 @@ class ServiceVariation extends Model
     public function getFormattedAttributesAttribute()
     {
         // Prefer attribute_value_ids when available
-        if (!empty($this->attribute_value_ids) && is_array($this->attribute_value_ids)) {
+        if (! empty($this->attribute_value_ids) && is_array($this->attribute_value_ids)) {
             $formatted = [];
             foreach ($this->attribute_value_ids as $valId) {
                 $val = \App\Models\AttributeValue::find($valId);
@@ -94,11 +94,12 @@ class ServiceVariation extends Model
                     $formatted[$val->attribute->name] = $val->value;
                 }
             }
+
             return $formatted;
         }
 
         // Fallback to legacy attributes {slug => valueSlug}
-        if (!$this->attributes) {
+        if (! $this->attributes) {
             return [];
         }
 
@@ -107,13 +108,14 @@ class ServiceVariation extends Model
             $attribute = \App\Models\Attribute::where('slug', $key)->first();
             if ($attribute) {
                 $attributeValue = \App\Models\AttributeValue::where('attribute_id', $attribute->id)
-                                            ->where('slug', $value)
-                                            ->first();
+                    ->where('slug', $value)
+                    ->first();
                 if ($attributeValue) {
                     $formatted[$attribute->name] = $attributeValue->value;
                 }
             }
         }
+
         return $formatted;
     }
 

@@ -12,6 +12,7 @@ class HomepageController extends Controller
     public function index()
     {
         $sections = HomepageSection::orderBy('order')->get();
+
         return view('admin.homepage.index', compact('sections'));
     }
 
@@ -33,7 +34,7 @@ class HomepageController extends Controller
             'background_value' => 'nullable|string',
             'background_image' => 'nullable|image|max:5120',
             'order' => 'nullable|integer',
-            'settings' => 'nullable|array'
+            'settings' => 'nullable|array',
         ]);
 
         if ($request->hasFile('image')) {
@@ -143,12 +144,12 @@ class HomepageController extends Controller
 
     public function toggleActive(HomepageSection $section)
     {
-        $section->update(['is_active' => !$section->is_active]);
+        $section->update(['is_active' => ! $section->is_active]);
 
         return response()->json([
             'success' => true,
             'is_active' => $section->is_active,
-            'message' => $section->is_active ? 'تم تفعيل القسم' : 'تم إخفاء القسم'
+            'message' => $section->is_active ? 'تم تفعيل القسم' : 'تم إخفاء القسم',
         ]);
     }
 
@@ -214,7 +215,7 @@ class HomepageController extends Controller
                 'subtitle' => 'نحن هنا للإجابة على استفساراتك',
                 'is_active' => true,
                 'order' => 8,
-            ]
+            ],
         ];
 
         foreach ($defaults as $default) {

@@ -17,11 +17,11 @@ class HeroSlide extends Model
         'transition_effect',
         'duration',
         'is_active',
-        'order'
+        'order',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
     ];
 
     // Get active slides ordered

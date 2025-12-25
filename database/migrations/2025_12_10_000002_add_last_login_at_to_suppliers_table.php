@@ -4,14 +4,15 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
     public function up(): void
     {
         Schema::table('suppliers', function (Blueprint $table) {
-            if (!Schema::hasColumn('suppliers', 'last_login_at')) {
+            if (! Schema::hasColumn('suppliers', 'last_login_at')) {
                 $table->timestamp('last_login_at')->nullable()->after('email_verified_at');
             }
         });
@@ -29,4 +30,3 @@ return new class extends Migration {
         });
     }
 };
-

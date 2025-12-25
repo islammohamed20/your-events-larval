@@ -12,13 +12,13 @@ return new class extends Migration
     {
         $db = config('database.connections.mysql.database');
 
-        if (!empty($db)) {
+        if (! empty($db)) {
             // Ensure database default charset/collation supports Arabic
             DB::statement("ALTER DATABASE `{$db}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
         }
 
         // Convert services table to utf8mb4 to avoid Incorrect string value errors
-        DB::statement("ALTER TABLE `services` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        DB::statement('ALTER TABLE `services` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
     }
 
     /**

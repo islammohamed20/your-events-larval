@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\EmailTemplate;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class EmailTemplateController extends Controller
 {
@@ -16,6 +16,7 @@ class EmailTemplateController extends Controller
     public function index()
     {
         $templates = EmailTemplate::orderBy('type')->orderBy('name')->get();
+
         return view('admin.email-templates.index', compact('templates'));
     }
 
@@ -61,7 +62,7 @@ class EmailTemplateController extends Controller
     {
         $variables = $emailTemplate->getDefaultVariables();
         $sampleData = [];
-        
+
         foreach ($variables as $key => $label) {
             $sampleData[$key] = $label;
         }
@@ -89,7 +90,7 @@ class EmailTemplateController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:email_templates,slug,' . $emailTemplate->id,
+            'slug' => 'required|string|max:255|unique:email_templates,slug,'.$emailTemplate->id,
             'subject' => 'required|string|max:255',
             'body' => 'required|string',
             'type' => 'required|in:booking,welcome,reset_password,invoice,custom,supplier_approval',
@@ -120,12 +121,12 @@ class EmailTemplateController extends Controller
      */
     public function toggleActive(EmailTemplate $emailTemplate)
     {
-        $emailTemplate->update(['is_active' => !$emailTemplate->is_active]);
+        $emailTemplate->update(['is_active' => ! $emailTemplate->is_active]);
 
         return response()->json([
             'success' => true,
             'is_active' => $emailTemplate->is_active,
-            'message' => $emailTemplate->is_active ? 'تم تفعيل القالب' : 'تم تعطيل القالب'
+            'message' => $emailTemplate->is_active ? 'تم تفعيل القالب' : 'تم تعطيل القالب',
         ]);
     }
 
@@ -140,7 +141,7 @@ class EmailTemplateController extends Controller
 
         $variables = $emailTemplate->getDefaultVariables();
         $sampleData = [];
-        
+
         foreach ($variables as $key => $label) {
             $sampleData[$key] = $label;
         }
@@ -156,7 +157,7 @@ class EmailTemplateController extends Controller
 
             return back()->with('success', 'تم إرسال البريد التجريبي بنجاح! ✅');
         } catch (\Exception $e) {
-            return back()->with('error', 'فشل إرسال البريد: ' . $e->getMessage());
+            return back()->with('error', 'فشل إرسال البريد: '.$e->getMessage());
         }
     }
 
@@ -166,8 +167,8 @@ class EmailTemplateController extends Controller
     public function duplicate(EmailTemplate $emailTemplate)
     {
         $newTemplate = $emailTemplate->replicate();
-        $newTemplate->name = $emailTemplate->name . ' (نسخة)';
-        $newTemplate->slug = $emailTemplate->slug . '-copy-' . time();
+        $newTemplate->name = $emailTemplate->name.' (نسخة)';
+        $newTemplate->slug = $emailTemplate->slug.'-copy-'.time();
         $newTemplate->is_active = false;
         $newTemplate->save();
 

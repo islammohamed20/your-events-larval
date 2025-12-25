@@ -23,12 +23,14 @@ class PaymentController extends Controller
         }
 
         $payments = $query->paginate(20)->withQueryString();
+
         return view('admin.payments.index', compact('payments'));
     }
 
     public function show(Payment $payment)
     {
         $payment->load(['user', 'quote', 'booking']);
+
         return view('admin.payments.show', compact('payment'));
     }
 

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('service_id')->constrained('services')->onDelete('cascade'); // الخدمة
             $table->boolean('is_available')->default(true); // متاح أم لا
             $table->timestamps();
-            
+
             // منع التكرار (كل مورد خدمة واحدة)
             $table->unique(['user_id', 'service_id']);
         });

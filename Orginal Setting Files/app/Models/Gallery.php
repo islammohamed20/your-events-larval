@@ -20,13 +20,13 @@ class Gallery extends Model
         'file_size',
         'mime_type',
         'alt_text',
-        'sort_order'
+        'sort_order',
     ];
 
     protected $casts = [
         'is_featured' => 'boolean',
         'file_size' => 'integer',
-        'sort_order' => 'integer'
+        'sort_order' => 'integer',
     ];
 
     /**
@@ -66,18 +66,18 @@ class Gallery extends Model
      */
     public function getFormattedFileSizeAttribute()
     {
-        if (!$this->file_size) {
+        if (! $this->file_size) {
             return 'غير محدد';
         }
 
         $bytes = $this->file_size;
         $units = ['B', 'KB', 'MB', 'GB'];
-        
+
         for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
             $bytes /= 1024;
         }
-        
-        return round($bytes, 2) . ' ' . $units[$i];
+
+        return round($bytes, 2).' '.$units[$i];
     }
 
     /**
@@ -92,7 +92,7 @@ class Gallery extends Model
             'client_moments' => 'لحظات العملاء',
             'equipment' => 'المعدات',
             'team' => 'الفريق',
-            'other' => 'أخرى'
+            'other' => 'أخرى',
         ];
 
         return $categories[$this->category] ?? 'غير محدد';
@@ -112,8 +112,8 @@ class Gallery extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order', 'asc')
-                    ->orderBy('is_featured', 'desc')
-                    ->orderBy('created_at', 'desc');
+            ->orderBy('is_featured', 'desc')
+            ->orderBy('created_at', 'desc');
     }
 
     /**
@@ -121,7 +121,8 @@ class Gallery extends Model
      */
     public function toggleFeatured()
     {
-        $this->update(['is_featured' => !$this->is_featured]);
+        $this->update(['is_featured' => ! $this->is_featured]);
+
         return $this;
     }
 
@@ -141,7 +142,7 @@ class Gallery extends Model
 
         // Set sort order when creating
         static::creating(function ($gallery) {
-            if (!$gallery->sort_order) {
+            if (! $gallery->sort_order) {
                 $gallery->sort_order = static::max('sort_order') + 1;
             }
         });

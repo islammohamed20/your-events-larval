@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\Quote;
-use App\Models\Booking;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\CustomersExport;
 use App\Exports\CustomerDetailExport;
+use App\Exports\CustomersExport;
+use App\Models\Booking;
+use App\Models\Quote;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CustomerManagementController extends Controller
 {
@@ -20,9 +19,9 @@ class CustomerManagementController extends Controller
     {
         // Get only customers (non-admin users)
         $customers = User::where('is_admin', false)
-                        ->withCount(['quotes', 'bookings'])
-                        ->latest()
-                        ->paginate(15);
+            ->withCount(['quotes', 'bookings'])
+            ->latest()
+            ->paginate(15);
 
         // Statistics
         $stats = [
@@ -41,9 +40,8 @@ class CustomerManagementController extends Controller
     public function show($id)
     {
         $customer = User::where('is_admin', false)
-                       
-                       ->with(['quotes.items.service', 'bookings.package', 'bookings.service'])
-                       ->findOrFail($id);
+            ->with(['quotes.items.service', 'bookings.package', 'bookings.service'])
+            ->findOrFail($id);
 
         // Customer statistics
         $customerStats = [
@@ -63,13 +61,12 @@ class CustomerManagementController extends Controller
     public function quotes($id)
     {
         $customer = User::where('is_admin', false)
-                       
-                       ->findOrFail($id);
+            ->findOrFail($id);
 
         $quotes = Quote::where('user_id', $id)
-                      ->with(['items.service'])
-                      ->latest()
-                      ->paginate(10);
+            ->with(['items.service'])
+            ->latest()
+            ->paginate(10);
 
         return view('admin.customers.quotes', compact('customer', 'quotes'));
     }
@@ -80,24 +77,23 @@ class CustomerManagementController extends Controller
     public function payments($id)
     {
         $customer = User::where('is_admin', false)
-                       
-                       ->findOrFail($id);
+            ->findOrFail($id);
 
         $payments = Booking::where('user_id', $id)
-                          ->where('status', 'confirmed')
-                          ->with(['package', 'service'])
-                          ->latest()
-                          ->paginate(10);
+            ->where('status', 'confirmed')
+            ->with(['package', 'service'])
+            ->latest()
+            ->paginate(10);
 
         // Payment statistics
         $paymentStats = [
             'total_payments' => $payments->total(),
             'total_amount' => Booking::where('user_id', $id)
-                                   ->where('status', 'confirmed')
-                                   ->sum('total_amount'),
+                ->where('status', 'confirmed')
+                ->sum('total_amount'),
             'average_payment' => Booking::where('user_id', $id)
-                                      ->where('status', 'confirmed')
-                                      ->avg('total_amount'),
+                ->where('status', 'confirmed')
+                ->avg('total_amount'),
         ];
 
         return view('admin.customers.payments', compact('customer', 'payments', 'paymentStats'));
@@ -108,7 +104,7 @@ class CustomerManagementController extends Controller
      */
     public function exportCustomers()
     {
-        return Excel::download(new CustomersExport, 'customers-' . date('Y-m-d') . '.xlsx');
+        return Excel::download(new CustomersExport, 'customers-'.date('Y-m-d').'.xlsx');
     }
 
     /**
@@ -117,11 +113,10 @@ class CustomerManagementController extends Controller
     public function exportCustomerDetail($id)
     {
         $customer = User::where('is_admin', false)
-                       
-                       ->with(['quotes.items.service', 'bookings.package', 'bookings.service'])
-                       ->findOrFail($id);
+            ->with(['quotes.items.service', 'bookings.package', 'bookings.service'])
+            ->findOrFail($id);
 
-        return Excel::download(new CustomerDetailExport($customer), 'customer-' . $customer->id . '-' . date('Y-m-d') . '.xlsx');
+        return Excel::download(new CustomerDetailExport($customer), 'customer-'.$customer->id.'-'.date('Y-m-d').'.xlsx');
     }
 
     /**
@@ -130,18 +125,17 @@ class CustomerManagementController extends Controller
     public function search(Request $request)
     {
         $query = $request->get('q');
-        
+
         $customers = User::where('is_admin', false)
-                        
-                        ->where(function($q) use ($query) {
-                            $q->where('name', 'LIKE', "%{$query}%")
-                              ->orWhere('email', 'LIKE', "%{$query}%")
-                              ->orWhere('phone', 'LIKE', "%{$query}%")
-                              ->orWhere('company_name', 'LIKE', "%{$query}%");
-                        })
-                        ->withCount(['quotes', 'bookings'])
-                        ->latest()
-                        ->paginate(15);
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'LIKE', "%{$query}%")
+                    ->orWhere('email', 'LIKE', "%{$query}%")
+                    ->orWhere('phone', 'LIKE', "%{$query}%")
+                    ->orWhere('company_name', 'LIKE', "%{$query}%");
+            })
+            ->withCount(['quotes', 'bookings'])
+            ->latest()
+            ->paginate(15);
 
         return view('admin.customers.index', compact('customers'))->with('search', $query);
     }
@@ -153,22 +147,20 @@ class CustomerManagementController extends Controller
     {
         // Monthly customer registration
         $monthlyRegistrations = User::where('is_admin', false)
-                                  
-                                  ->selectRaw('MONTH(created_at) as month, COUNT(*) as count')
-                                  ->whereYear('created_at', date('Y'))
-                                  ->groupBy('month')
-                                  ->orderBy('month')
-                                  ->get();
+            ->selectRaw('MONTH(created_at) as month, COUNT(*) as count')
+            ->whereYear('created_at', date('Y'))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
 
         // Top customers by spending
         $topCustomers = User::where('is_admin', false)
-                           
-                           ->withSum(['bookings' => function($query) {
-                               $query->where('status', 'confirmed');
-                           }], 'total_amount')
-                           ->orderBy('bookings_sum_total_amount', 'desc')
-                           ->limit(10)
-                           ->get();
+            ->withSum(['bookings' => function ($query) {
+                $query->where('status', 'confirmed');
+            }], 'total_amount')
+            ->orderBy('bookings_sum_total_amount', 'desc')
+            ->limit(10)
+            ->get();
 
         // Quote conversion rate
         $totalQuotes = Quote::count();
@@ -176,8 +168,8 @@ class CustomerManagementController extends Controller
         $conversionRate = $totalQuotes > 0 ? ($approvedQuotes / $totalQuotes) * 100 : 0;
 
         return view('admin.customers.analytics', compact(
-            'monthlyRegistrations', 
-            'topCustomers', 
+            'monthlyRegistrations',
+            'topCustomers',
             'conversionRate'
         ));
     }
@@ -188,9 +180,8 @@ class CustomerManagementController extends Controller
     public function edit($id)
     {
         $customer = User::where('is_admin', false)
-                       
-                       ->withCount(['quotes', 'bookings'])
-                       ->findOrFail($id);
+            ->withCount(['quotes', 'bookings'])
+            ->findOrFail($id);
 
         return view('admin.customers.edit', compact('customer'));
     }
@@ -201,12 +192,11 @@ class CustomerManagementController extends Controller
     public function update(Request $request, $id)
     {
         $customer = User::where('is_admin', false)
-                       
-                       ->findOrFail($id);
+            ->findOrFail($id);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $customer->id,
+            'email' => 'required|email|max:255|unique:users,email,'.$customer->id,
             'phone' => 'nullable|string|max:20',
             'company_name' => 'required|string|max:255',
             'tax_number' => 'nullable|string|max:20',
@@ -223,7 +213,7 @@ class CustomerManagementController extends Controller
         $customer->update($validated);
 
         return redirect()->route('admin.customers.show', $customer->id)
-                         ->with('success', 'تم تحديث بيانات العميل بنجاح');
+            ->with('success', 'تم تحديث بيانات العميل بنجاح');
     }
 
     /**
@@ -232,8 +222,7 @@ class CustomerManagementController extends Controller
     public function updateCustomer(Request $request, $id)
     {
         $customer = User::where('is_admin', false)
-                       
-                       ->findOrFail($id);
+            ->findOrFail($id);
 
         $request->validate([
             'notes' => 'nullable|string|max:1000',
@@ -273,7 +262,7 @@ class CustomerManagementController extends Controller
 
             return redirect()->route('admin.customers.index')->with('success', 'تم حذف العميل بنجاح.');
         } catch (\Throwable $e) {
-            return redirect()->back()->with('error', 'فشل حذف العميل: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'فشل حذف العميل: '.$e->getMessage());
         }
     }
 }

@@ -37,7 +37,6 @@ class Customer extends Model
     /**
      * العلاقات
      */
-    
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -61,7 +60,6 @@ class Customer extends Model
     /**
      * Helper Methods
      */
-
     public function getFullNameAttribute()
     {
         return $this->user->name ?? 'Unknown';

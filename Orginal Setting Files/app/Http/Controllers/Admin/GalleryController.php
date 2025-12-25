@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Gallery;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class GalleryController extends Controller
@@ -19,6 +18,7 @@ class GalleryController extends Controller
     public function index()
     {
         $gallery = Gallery::ordered()->get();
+
         return view('admin.gallery.index', compact('gallery'));
     }
 
@@ -40,11 +40,11 @@ class GalleryController extends Controller
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $path = $file->store('gallery', 'public');
-            
+
             // Determine file type
             $mimeType = $file->getMimeType();
             $type = Str::startsWith($mimeType, 'image/') ? 'image' : 'video';
-            
+
             $galleryData = [
                 'title' => $validated['title'],
                 'description' => $validated['description'],
@@ -54,14 +54,14 @@ class GalleryController extends Controller
                 'is_featured' => $request->has('is_featured'),
                 'file_size' => $file->getSize(),
                 'mime_type' => $mimeType,
-                'alt_text' => $validated['title'] ?: 'صورة من معرض Your Events'
+                'alt_text' => $validated['title'] ?: 'صورة من معرض Your Events',
             ];
 
             Gallery::create($galleryData);
         }
 
         return redirect()->route('admin.gallery.index')
-                         ->with('success', 'تم إضافة العنصر إلى المعرض بنجاح!');
+            ->with('success', 'تم إضافة العنصر إلى المعرض بنجاح!');
     }
 
     public function destroy(Gallery $gallery)
@@ -70,16 +70,16 @@ class GalleryController extends Controller
         $gallery->delete();
 
         return redirect()->route('admin.gallery.index')
-                         ->with('success', 'تم حذف العنصر من المعرض بنجاح!');
+            ->with('success', 'تم حذف العنصر من المعرض بنجاح!');
     }
 
     public function toggleFeatured(Gallery $gallery)
     {
         $gallery->toggleFeatured();
-        
+
         $message = $gallery->is_featured ? 'تم تمييز العنصر بنجاح!' : 'تم إلغاء تمييز العنصر!';
 
         return redirect()->back()
-                         ->with('success', $message);
+            ->with('success', $message);
     }
 }

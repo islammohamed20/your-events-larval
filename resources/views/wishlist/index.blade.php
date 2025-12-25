@@ -64,10 +64,14 @@
                             @foreach($wishlists as $wishlist)
                                 <div class="col-md-6 mb-4">
                                     <div class="card h-100 shadow-sm">
-                                        <img src="{{ $wishlist->service->thumbnail_url }}" 
-                                             class="card-img-top" 
-                                             alt="{{ $wishlist->service->name }}"
-                                             style="height: 200px; object-fit: cover;">
+                                        <a href="{{ route('services.show', $wishlist->service) }}" style="text-decoration: none;">
+                                            <img src="{{ $wishlist->service->thumbnail_url }}" 
+                                                 class="card-img-top" 
+                                                 alt="{{ $wishlist->service->name }}"
+                                                 style="height: 200px; object-fit: cover; cursor: pointer; transition: transform 0.3s ease;"
+                                                 onmouseover="this.style.transform='scale(1.05)'"
+                                                 onmouseout="this.style.transform='scale(1)'">
+                                        </a>
                                         
                                         <div class="card-body d-flex flex-column">
                                             <h5 class="card-title arabic-text">{{ $wishlist->service->name }}</h5>
@@ -124,22 +128,36 @@ document.addEventListener('DOMContentLoaded', function() {
             const serviceName = this.dataset.serviceName;
             
             if (confirm(`هل تريد إزالة "${serviceName}" من قائمة المفضلة؟`)) {
+                const deleteBtn = this;
+                deleteBtn.disabled = true;
+                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                
                 fetch(`/wishlist/${wishlistId}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
                     }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('فشل في الحذف');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
                         location.reload();
+                    } else {
+                        throw new Error(data.message || 'حدث خطأ');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('حدث خطأ أثناء الإزالة');
+                    alert('حدث خطأ أثناء الإزالة. الرجاء المحاولة مرة أخرى.');
+                    deleteBtn.disabled = false;
+                    deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
                 });
             }
         });

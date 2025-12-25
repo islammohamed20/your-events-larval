@@ -14,19 +14,19 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // لا نشفر cookie app_locale
         $middleware->encryptCookies(except: ['app_locale']);
-        
+
         // Set application locale based on cookie/session/config
         // يجب أن يعمل هذا قبل باقي الـ middleware
         $middleware->append(\App\Http\Middleware\SetLocale::class);
-        
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'supplier' => \App\Http\Middleware\SupplierMiddleware::class,
             'supplier.guest' => \App\Http\Middleware\RedirectIfSupplier::class,
         ]);
-        
+
         // CSRF protection is enabled by default in Laravel 11
-        
+
         // Add security headers to all requests
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
 

@@ -15,6 +15,7 @@ class ContactMessageController extends Controller
             $query->where('status', $request->string('status'));
         }
         $messages = $query->paginate(15);
+
         return view('admin.contact-messages.index', compact('messages'));
     }
 
@@ -22,6 +23,7 @@ class ContactMessageController extends Controller
     {
         $message = DB::table('contact_messages')->find($id);
         abort_unless($message, 404);
+
         return view('admin.contact-messages.show', compact('message'));
     }
 
@@ -43,8 +45,8 @@ class ContactMessageController extends Controller
     public function destroy($id)
     {
         DB::table('contact_messages')->where('id', $id)->delete();
+
         return redirect()->route('admin.contact-messages.index')
             ->with('success', 'تم حذف الرسالة بنجاح');
     }
 }
-

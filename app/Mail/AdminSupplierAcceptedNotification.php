@@ -15,6 +15,7 @@ class AdminSupplierAcceptedNotification extends Mailable
     use Queueable, SerializesModels;
 
     public $quote;
+
     public $supplier;
 
     /**
@@ -32,7 +33,7 @@ class AdminSupplierAcceptedNotification extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'مورد قبل عرض سعر - ' . ($this->quote->quote_number ?? 'عرض سعر'),
+            subject: 'مورد قبل عرض سعر - '.($this->quote->quote_number ?? 'عرض سعر'),
         );
     }
 

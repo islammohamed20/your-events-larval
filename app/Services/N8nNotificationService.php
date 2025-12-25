@@ -16,8 +16,8 @@ class N8nNotificationService
 
     /**
      * إرسال إشعار عرض سعر جديد إلى n8n
-     * 
-     * @param \App\Models\Quote $quote
+     *
+     * @param  \App\Models\Quote  $quote
      * @return bool
      */
     public function sendNewQuoteNotification($quote)
@@ -25,6 +25,7 @@ class N8nNotificationService
         // التحقق من وجود webhook URL
         if (empty($this->webhookUrl)) {
             Log::warning('n8n webhook URL not configured');
+
             return false;
         }
 
@@ -42,8 +43,8 @@ class N8nNotificationService
                 'items_count' => $quote->items->count(),
                 'customer_notes' => $quote->customer_notes ?? 'لا توجد ملاحظات',
                 'created_at' => $quote->created_at->format('Y-m-d H:i:s'),
-                'quote_url' => url('/admin/quotes/' . $quote->id),
-                'items' => $quote->items->map(function($item) {
+                'quote_url' => url('/admin/quotes/'.$quote->id),
+                'items' => $quote->items->map(function ($item) {
                     return [
                         'service_name' => $item->service_name,
                         'quantity' => $item->quantity,
@@ -65,6 +66,7 @@ class N8nNotificationService
                     'quote_id' => $quote->id,
                     'quote_number' => $quote->quote_number,
                 ]);
+
                 return true;
             } else {
                 Log::error('n8n notification failed', [
@@ -72,6 +74,7 @@ class N8nNotificationService
                     'status' => $response->status(),
                     'body' => $response->body(),
                 ]);
+
                 return false;
             }
         } catch (\Exception $e) {
@@ -80,14 +83,15 @@ class N8nNotificationService
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return false;
         }
     }
 
     /**
      * إرسال إشعار موافقة على عرض السعر
-     * 
-     * @param \App\Models\Quote $quote
+     *
+     * @param  \App\Models\Quote  $quote
      * @return bool
      */
     public function sendQuoteApprovedNotification($quote)
@@ -99,8 +103,8 @@ class N8nNotificationService
 
     /**
      * إرسال إشعار رفض عرض السعر
-     * 
-     * @param \App\Models\Quote $quote
+     *
+     * @param  \App\Models\Quote  $quote
      * @return bool
      */
     public function sendQuoteRejectedNotification($quote)

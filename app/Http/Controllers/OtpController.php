@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\OtpVerification;
-use App\Models\User;
 use App\Models\Supplier;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Validator;
 
 class OtpController extends Controller
 {
@@ -22,13 +23,14 @@ class OtpController extends Controller
         $email = $request->session()->get('otp_email');
         $type = $request->session()->get('otp_type', 'email_verification');
 
-        if (!$email) {
+        if (! $email) {
             if ($type === 'login') {
                 return redirect()->route('login')->with('error', 'الرجاء تسجيل الدخول لإرسال كود التحقق');
             }
             if ($type === 'supplier_login') {
                 return redirect()->route('supplier.login')->with('error', 'الرجاء تسجيل الدخول كمورد لإرسال كود التحقق');
             }
+
             return redirect()->route('register')->with('error', 'الرجاء إدخال بريدك الإلكتروني أولاً');
         }
 
@@ -42,14 +44,14 @@ class OtpController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
-            'type' => 'required|in:email_verification,login,password_reset,booking_confirmation,payment_confirmation,supplier_login'
+            'type' => 'required|in:email_verification,login,password_reset,booking_confirmation,payment_confirmation,supplier_login',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
                 'message' => 'البيانات المدخلة غير صحيحة',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -57,12 +59,13 @@ class OtpController extends Controller
         $type = $request->type;
 
         // Rate limiting: 3 attempts per 5 minutes
-        $key = 'send-otp:' . $email;
+        $key = 'send-otp:'.$email;
         if (RateLimiter::tooManyAttempts($key, 3)) {
             $seconds = RateLimiter::availableIn($key);
+
             return response()->json([
                 'success' => false,
-                'message' => "تم تجاوز الحد الأقصى من المحاولات. حاول مرة أخرى بعد {$seconds} ثانية"
+                'message' => "تم تجاوز الحد الأقصى من المحاولات. حاول مرة أخرى بعد {$seconds} ثانية",
             ], 429);
         }
 
@@ -75,7 +78,7 @@ class OtpController extends Controller
                 if ($exists) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'البريد الإلكتروني مسجل مسبقاً'
+                        'message' => 'البريد الإلكتروني مسجل مسبقاً',
                     ], 422);
                 }
             }
@@ -83,10 +86,10 @@ class OtpController extends Controller
             // التحقق من وجود البريد في حالة إعادة التعيين أو تسجيل الدخول
             if (in_array($type, ['password_reset', 'login'])) {
                 $exists = User::where('email', $email)->exists();
-                if (!$exists) {
+                if (! $exists) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'البريد الإلكتروني غير مسجل'
+                        'message' => 'البريد الإلكتروني غير مسجل',
                     ], 422);
                 }
             }
@@ -94,10 +97,10 @@ class OtpController extends Controller
             // التحقق من وجود البريد لحالات تسجيل دخول الموردين
             if ($type === 'supplier_login') {
                 $exists = Supplier::where('email', $email)->exists();
-                if (!$exists) {
+                if (! $exists) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'البريد الإلكتروني غير مسجل كمورد'
+                        'message' => 'البريد الإلكتروني غير مسجل كمورد',
                     ], 422);
                 }
             }
@@ -112,14 +115,15 @@ class OtpController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'تم إرسال كود التحقق إلى بريدك الإلكتروني',
-                'expires_in' => 10 // minutes
+                'expires_in' => 10, // minutes
             ]);
 
         } catch (\Exception $e) {
-            Log::error('OTP Send Error: ' . $e->getMessage());
+            Log::error('OTP Send Error: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'حدث خطأ أثناء إرسال كود التحقق. حاول مرة أخرى'
+                'message' => 'حدث خطأ أثناء إرسال كود التحقق. حاول مرة أخرى',
             ], 500);
         }
     }
@@ -133,14 +137,14 @@ class OtpController extends Controller
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email',
                 'otp' => 'required|string|size:6',
-                'type' => 'required|in:email_verification,login,password_reset,booking_confirmation,payment_confirmation,supplier_login'
+                'type' => 'required|in:email_verification,login,password_reset,booking_confirmation,payment_confirmation,supplier_login',
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'البيانات المدخلة غير صحيحة',
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 
@@ -149,11 +153,11 @@ class OtpController extends Controller
             $type = $request->type;
 
             // Rate limiting: 5 attempts per minute
-            $key = 'verify-otp:' . $email;
+            $key = 'verify-otp:'.$email;
             if (RateLimiter::tooManyAttempts($key, 5)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'تم تجاوز الحد الأقصى من المحاولات. حاول مرة أخرى لاحقاً'
+                    'message' => 'تم تجاوز الحد الأقصى من المحاولات. حاول مرة أخرى لاحقاً',
                 ], 429);
             }
 
@@ -166,10 +170,10 @@ class OtpController extends Controller
                 ->latest()
                 ->first();
 
-            if (!$otpRecord) {
+            if (! $otpRecord) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'لا توجد عملية تحقق نشطة. يرجى طلب كود جديد'
+                    'message' => 'لا توجد عملية تحقق نشطة. يرجى طلب كود جديد',
                 ], 422);
             }
 
@@ -200,6 +204,13 @@ class OtpController extends Controller
                         if ($user) {
                             Auth::login($user, $remember);
                             $request->session()->regenerate();
+                            try {
+                                DB::table(config('session.table', 'sessions'))
+                                    ->where('user_id', $user->getAuthIdentifier())
+                                    ->where('id', '!=', $request->session()->getId())
+                                    ->delete();
+                            } catch (\Throwable $e) {
+                            }
 
                             // تحديث آخر تسجيل دخول
                             try {
@@ -222,12 +233,19 @@ class OtpController extends Controller
                                         $remember = (bool) $request->session()->get('login_remember', false);
                                         Auth::guard('supplier')->login($supplier, $remember);
                                         $request->session()->regenerate();
+                                        try {
+                                            DB::table(config('session.table', 'sessions'))
+                                                ->where('user_id', $supplier->getAuthIdentifier())
+                                                ->where('id', '!=', $request->session()->getId())
+                                                ->delete();
+                                        } catch (\Throwable $e) {
+                                        }
                                         $redirectUrl = route('supplier.dashboard');
                                     } else {
                                         $redirectUrl = url('/');
                                     }
                                 } catch (\Throwable $e) {
-                                    \Illuminate\Support\Facades\Log::error('Supplier auto-login after OTP failed: ' . $e->getMessage());
+                                    \Illuminate\Support\Facades\Log::error('Supplier auto-login after OTP failed: '.$e->getMessage());
                                     $redirectUrl = url('/');
                                 }
                             }
@@ -249,7 +267,7 @@ class OtpController extends Controller
                         // تنظيف بيانات الجلسة المؤقتة الخاصة بتسجيل الدخول
                         $request->session()->forget(['login_pending', 'login_remember', 'login_user_id']);
                     } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::error('Login after OTP failed: ' . $e->getMessage());
+                        \Illuminate\Support\Facades\Log::error('Login after OTP failed: '.$e->getMessage());
                     }
                 } elseif ($type === 'supplier_login') {
                     try {
@@ -264,6 +282,13 @@ class OtpController extends Controller
                             Auth::guard('supplier')->login($supplier, $remember);
                             $request->session()->regenerate();
                             try {
+                                DB::table(config('session.table', 'sessions'))
+                                    ->where('user_id', $supplier->getAuthIdentifier())
+                                    ->where('id', '!=', $request->session()->getId())
+                                    ->delete();
+                            } catch (\Throwable $e) {
+                            }
+                            try {
                                 $supplier->forceFill(['last_login_at' => now()])->save();
                             } catch (\Throwable $e) {
                             }
@@ -273,7 +298,7 @@ class OtpController extends Controller
                         }
                         $request->session()->forget(['supplier_login_pending', 'supplier_login_remember', 'supplier_login_supplier_id']);
                     } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::error('Supplier login after OTP failed: ' . $e->getMessage());
+                        \Illuminate\Support\Facades\Log::error('Supplier login after OTP failed: '.$e->getMessage());
                         $redirectUrl = route('supplier.login');
                     }
                 }
@@ -281,30 +306,30 @@ class OtpController extends Controller
                 Log::info('OTP verified successfully', [
                     'email' => $email,
                     'type' => $type,
-                    'session_data' => $request->session()->all()
+                    'session_data' => $request->session()->all(),
                 ]);
 
                 return response()->json([
                     'success' => true,
                     'message' => $result['message'],
-                    'redirect' => $redirectUrl
+                    'redirect' => $redirectUrl,
                 ]);
             }
 
             return response()->json([
                 'success' => false,
-                'message' => $result['message']
+                'message' => $result['message'],
             ], 422);
 
         } catch (\Exception $e) {
-            Log::error('OTP Verify Exception: ' . $e->getMessage(), [
+            Log::error('OTP Verify Exception: '.$e->getMessage(), [
                 'exception' => $e,
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return response()->json([
                 'success' => false,
-                'message' => 'حدث خطأ في النظام: ' . $e->getMessage()
+                'message' => 'حدث خطأ في النظام: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -334,7 +359,8 @@ class OtpController extends Controller
 
             return $urls[$type] ?? route('home');
         } catch (\Exception $e) {
-            Log::error('getRedirectUrl error: ' . $e->getMessage());
+            Log::error('getRedirectUrl error: '.$e->getMessage());
+
             return route('home');
         }
     }
@@ -348,20 +374,22 @@ class OtpController extends Controller
             'otp_verified' => $request->session()->get('otp_verified'),
             'otp_email' => $request->session()->get('otp_email'),
             'registration_data' => $request->session()->get('registration_data'),
-            'all_session' => $request->session()->all()
+            'all_session' => $request->session()->all(),
         ]);
 
         // التحقق من أن OTP تم التحقق منه
-        if (!$request->session()->get('otp_verified')) {
+        if (! $request->session()->get('otp_verified')) {
             Log::warning('OTP not verified in session');
+
             return redirect()->route('register')->with('error', 'يرجى التحقق من بريدك الإلكتروني أولاً');
         }
 
         // الحصول على بيانات التسجيل من الـ session
         $registrationData = $request->session()->get('registration_data');
-        
-        if (!$registrationData) {
+
+        if (! $registrationData) {
             Log::warning('Registration data not found in session');
+
             return redirect()->route('register')->with('error', 'انتهت صلاحية الجلسة. يرجى التسجيل مرة أخرى');
         }
 
@@ -392,12 +420,13 @@ class OtpController extends Controller
             return redirect('/')->with('success', 'تم إنشاء حسابك بنجاح! مرحباً بك في Your Events');
 
         } catch (\Exception $e) {
-            Log::error('Registration Error: ' . $e->getMessage(), [
+            Log::error('Registration Error: '.$e->getMessage(), [
                 'exception' => $e,
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return redirect()->back()
-                ->with('error', 'حدث خطأ أثناء إنشاء الحساب: ' . $e->getMessage());
+                ->with('error', 'حدث خطأ أثناء إنشاء الحساب: '.$e->getMessage());
         }
     }
 
@@ -407,6 +436,7 @@ class OtpController extends Controller
     public function cleanExpired()
     {
         OtpVerification::cleanExpired();
+
         return response()->json(['success' => true, 'message' => 'تم تنظيف الأكواد المنتهية']);
     }
 }

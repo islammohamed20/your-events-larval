@@ -30,19 +30,20 @@ class Package extends Model
         'persons_max' => 'integer',
         'is_active' => 'boolean',
     ];
-    
+
     /**
      * Get persons range text
      */
     public function getPersonsRangeAttribute()
     {
         if ($this->persons_min && $this->persons_max) {
-            return $this->persons_min . ' إلى ' . $this->persons_max . ' شخص';
+            return $this->persons_min.' إلى '.$this->persons_max.' شخص';
         } elseif ($this->persons_min) {
-            return $this->persons_min . ' شخص';
+            return $this->persons_min.' شخص';
         } elseif ($this->persons_max) {
-            return 'حتى ' . $this->persons_max . ' شخص';
+            return 'حتى '.$this->persons_max.' شخص';
         }
+
         return null;
     }
 

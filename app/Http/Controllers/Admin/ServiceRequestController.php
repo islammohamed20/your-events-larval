@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\ServiceRequest;
 use App\Models\Booking;
 use App\Models\Category;
 use App\Models\Service;
+use App\Models\ServiceRequest;
 use Illuminate\Http\Request;
 
 class ServiceRequestController extends Controller
@@ -93,18 +93,21 @@ class ServiceRequestController extends Controller
     public function destroy(ServiceRequest $serviceRequest)
     {
         $serviceRequest->delete();
+
         return redirect()->route('service-requests.index')->with('success', 'تم حذف الطلب بنجاح');
     }
 
     public function accept(ServiceRequest $serviceRequest)
     {
         $serviceRequest->update(['status' => 'accepted']);
+
         return back()->with('success', 'تم قبول الطلب بنجاح');
     }
 
     public function reject(ServiceRequest $serviceRequest)
     {
         $serviceRequest->update(['status' => 'rejected']);
+
         return back()->with('success', 'تم رفض الطلب');
     }
 }

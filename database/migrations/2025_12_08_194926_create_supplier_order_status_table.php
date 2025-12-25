@@ -18,7 +18,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
             $table->timestamp('accepted_at')->nullable();
             $table->timestamps();
-            
+
             // منع تكرار نفس المورد للطلب الواحد
             $table->unique(['order_id', 'supplier_id']);
         });

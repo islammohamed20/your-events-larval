@@ -13,7 +13,7 @@
                         <!-- Icon & Title -->
                         <div class="text-center mb-4">
                             <div class="mb-3">
-                                <i class="fas fa-envelope-open-text display-3 text-warning"></i>
+                                <img src="{{ asset('images/logo/White.png') }}" alt="Your Events" style="height: 60px; width: auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px; border-radius: 15px;">
                             </div>
                             <h2 class="fw-bold text-dark mb-2">تحقق من بريدك الإلكتروني</h2>
                             <p class="text-muted">

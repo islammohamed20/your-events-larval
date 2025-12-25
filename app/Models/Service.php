@@ -57,7 +57,7 @@ class Service extends Model
             'service_id',
             'supplier_id'
         )->withPivot('category_id', 'is_available')
-         ->withTimestamps();
+            ->withTimestamps();
     }
 
     /**
@@ -157,8 +157,10 @@ class Service extends Model
     {
         if ($this->isVariable()) {
             $minVariation = $this->variations()->active()->orderBy('price')->first();
+
             return $minVariation ? $minVariation->active_price : 0;
         }
+
         return $this->price ?? 0;
     }
 
@@ -169,8 +171,10 @@ class Service extends Model
     {
         if ($this->isVariable()) {
             $maxVariation = $this->variations()->active()->orderByDesc('price')->first();
+
             return $maxVariation ? $maxVariation->active_price : 0;
         }
+
         return $this->price ?? 0;
     }
 
@@ -183,11 +187,13 @@ class Service extends Model
             $min = $this->min_price;
             $max = $this->max_price;
             if ($min == $max) {
-                return number_format($min, 2) . ' ر.س';
+                return number_format($min, 2).' ر.س';
             }
-            return number_format($min, 2) . ' - ' . number_format($max, 2) . ' ر.س';
+
+            return number_format($min, 2).' - '.number_format($max, 2).' ر.س';
         }
-        return number_format($this->price ?? 0, 2) . ' ر.س';
+
+        return number_format($this->price ?? 0, 2).' ر.س';
     }
 
     /**

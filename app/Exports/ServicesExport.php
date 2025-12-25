@@ -12,8 +12,8 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class ServicesExport implements FromCollection, WithHeadings, WithMapping, WithStyles
 {
     /**
-    * @return \Illuminate\Support\Collection
-    */
+     * @return \Illuminate\Support\Collection
+     */
     public function collection()
     {
         return Service::with('category')->get();
@@ -74,12 +74,12 @@ class ServicesExport implements FromCollection, WithHeadings, WithMapping, WithS
         foreach ($categories as $id => $name) {
             $categoriesText .= "$id=$name, ";
         }
-        
+
         // Add notes to important headers
         $sheet->getComment('A1')->getText()->createTextRun('رقم التعريف');
         $sheet->getComment('B1')->getText()->createTextRun('اسم الخدمة (مطلوب)');
         $sheet->getComment('C1')->getText()->createTextRun('العنوان الفرعي');
-        $sheet->getComment('D1')->getText()->createTextRun('رقم الفئة: ' . rtrim($categoriesText, ', '));
+        $sheet->getComment('D1')->getText()->createTextRun('رقم الفئة: '.rtrim($categoriesText, ', '));
         $sheet->getComment('E1')->getText()->createTextRun('الوصف');
         $sheet->getComment('F1')->getText()->createTextRun('الوصف التسويقي');
         $sheet->getComment('G1')->getText()->createTextRun('وش نوفر؟');
@@ -89,7 +89,7 @@ class ServicesExport implements FromCollection, WithHeadings, WithMapping, WithS
         $sheet->getComment('K1')->getText()->createTextRun('المدة');
         $sheet->getComment('L1')->getText()->createTextRun('النوع');
         $sheet->getComment('M1')->getText()->createTextRun('نشطة (نعم/لا)');
-        
+
         return [
             1 => [
                 'font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => 'FFFFFF']],

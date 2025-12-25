@@ -1458,7 +1458,7 @@
         }
         
         .hover-social-twitter:hover {
-            color: #000000 !important;
+            color: #ffffff !important;
             transform: scale(1.2);
         }
         
@@ -2163,6 +2163,22 @@
     <style>
         /* منع تمرير الصفحة عند فتح الدروار */
         body.no-scroll { overflow: hidden; }
+        .btn-outline-primary {
+            color: #7269b0 !important;
+            border-color: #7269b0 !important;
+        }
+        .btn-outline-primary:hover,
+        .btn-outline-primary:focus,
+        .btn-outline-primary.active,
+        .btn-outline-primary:active {
+            background-color: #7269b0 !important;
+            border-color: #7269b0 !important;
+            color: #ffffff !important;
+        }
+        .badge.bg-primary {
+            background-color: #7269b0 !important;
+            color: #ffffff !important;
+        }
     </style>
     
     @yield('styles')
@@ -2195,7 +2211,7 @@
                     @if(\App\Models\Package::count() > 0)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('packages.*') ? 'active' : '' }}" href="{{ route('packages.index') }}">
-                            <i class="fas fa-box me-1"></i>الباقات
+                            <i ></i>الباقات
                         </a>
                     </li>
                     @endif
@@ -2293,28 +2309,31 @@
                                 </div>
                                 <span class="user-name">{{ Auth::user()->name }}</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end enhanced-dropdown animated-white-bg">
-                                <li><a class="dropdown-item" href="{{ route('profile.show') }}">
-                                    <i class="fas fa-user-circle me-2"></i>الملف الشخصي
+                            <ul class="dropdown-menu dropdown-menu-end enhanced-dropdown animated-white-bg" style="text-align: center; min-width: 200px;">
+                                <li><a class="dropdown-item" href="{{ route('profile.show') }}" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                    <i class="fas fa-user-circle"></i><span>الملف الشخصي</span>
                                 </a></li>
-                                <li><a class="dropdown-item" href="{{ route('booking.my-bookings') }}">
-                                    <i class="fas fa-calendar-check me-2"></i>حجوزاتي
+                                <li><a class="dropdown-item" href="{{ route('booking.my-bookings') }}" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                    <i class="fas fa-calendar-check"></i><span>حجوزاتي</span>
                                 </a></li>
-                                <li><a class="dropdown-item" href="{{ route('quotes.index') }}">
-                                    <i class="fas fa-file-invoice-dollar me-2"></i>عروض الأسعار
+                                <li><a class="dropdown-item" href="{{ route('quotes.index') }}" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                    <i class="fas fa-file-invoice-dollar"></i><span>عروض الأسعار</span>
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ route('wishlist.index') }}" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                    <i class="fas fa-heart"></i><span>المنتجات المفضلة</span>
                                 </a></li>
                                 @if(Auth::user()->is_admin)
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">
-                                        <i class="fas fa-tachometer-alt me-2"></i>{{ __('common.dashboard') }}
+                                    <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                        <i class="fas fa-tachometer-alt"></i><span>{{ __('common.dashboard') }}</span>
                                     </a></li>
                                 @endif
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                                    <form method="POST" action="{{ route('logout') }}" class="d-inline w-100">
                                         @csrf
-                                        <button type="submit" class="dropdown-item">
-                                            <i class="fas fa-sign-out-alt me-2"></i>تسجيل الخروج
+                                        <button type="submit" class="dropdown-item" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;">
+                                            <i class="fas fa-sign-out-alt"></i><span>تسجيل الخروج</span>
                                         </button>
                                     </form>
                                 </li>
@@ -2334,15 +2353,15 @@
                             @php $locale = app()->getLocale(); @endphp
                             <i class="fas fa-language me-1"></i>{{ $locale === 'ar' ? __('nav.arabic') : __('nav.english') }}
                         </a>
-                        <ul class="dropdown-menu animated-white-bg">
-                            <li><a class="dropdown-item" href="{{ route('lang.switch', ['locale' => 'ar']) }}">{{ __('nav.arabic') }}</a></li>
-                            <li><a class="dropdown-item" href="{{ route('lang.switch', ['locale' => 'en']) }}">{{ __('nav.english') }}</a></li>
+                        <ul class="dropdown-menu animated-white-bg" style="text-align: center; min-width: 120px;">
+                            <li><a class="dropdown-item" href="{{ route('lang.switch', ['locale' => 'ar']) }}" style="text-align: center;">{{ __('nav.arabic') }}</a></li>
+                            <li><a class="dropdown-item" href="{{ route('lang.switch', ['locale' => 'en']) }}" style="text-align: center;">{{ __('nav.english') }}</a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
                         <a class="btn btn-gold ms-2 cta-button" href="{{ route('services.index') }}">
                             <span class="btn-text">
-                                <i class="fas fa-calendar-plus me-1"></i>{{ __('buttons.establish_event') }}
+                                <i ></i>{{ __('buttons.establish_event') }}
                             </span>
                             <div class="btn-glow"></div>
                         </a>
@@ -2367,7 +2386,7 @@
                         <h5 class="mb-0 text-white"></h5>
                     </div>
                     <p class="text-white mb-3">
-                        نحن في Your Events نقدم خدمات تنظيم المناسبات والأحداث بأعلى مستويات الجودة والإبداع
+                        منصّة سعودية جمّعنا فيها كل خدمات تجهيز الفعاليات في مكان واحد.
                     </p>
                     <div class="d-flex gap-3">
                         @php
@@ -2388,7 +2407,9 @@
                         
                         @if($twitterUrl)
                             <a href="{{ $twitterUrl }}" target="_blank" rel="noopener noreferrer" class="text-white hover-social-twitter" title="X (Twitter)">
-                                <i class="fab fa-x-twitter fa-2x"></i>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                                </svg>
                             </a>
                         @endif
                         
@@ -2460,7 +2481,7 @@
                                     </a>
                                 </li>
                                 <li class="mb-2">
-                                    <span class="text-white">{{ \App\Models\Setting::get('contact_address', 'الرياض، المملكة العربية السعودية') }}</span>
+                                    <span class="text-white">{{ \App\Models\Setting::get('contact_address', 'المملكة العربية السعودية، مدينة الرياض، حي العليا، شارع العليا') }}</span>
                                 </li>
                                 <!-- <li class="mb-2 d-flex align-items-center">
                                     <i class="fas fa-clock text-primary me-2"></i>
@@ -2598,7 +2619,7 @@
                 @if(\App\Models\Package::count() > 0)
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('packages.*') ? 'active' : '' }}" href="{{ route('packages.index') }}">
-                        <i class="fas fa-box"></i>الباقات
+                        الباقات
                     </a>
                 </li>
                 @endif

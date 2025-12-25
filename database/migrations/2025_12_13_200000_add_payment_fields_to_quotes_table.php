@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('payment_reference')->nullable()->after('payment_method');
             $table->text('payment_notes')->nullable()->after('payment_reference');
         });
-        
+
         // Update status enum to remove 'booked' and add 'paid'
         DB::statement("ALTER TABLE quotes MODIFY COLUMN status ENUM('pending', 'under_review', 'approved', 'rejected', 'completed', 'paid') DEFAULT 'pending'");
     }
@@ -34,10 +34,10 @@ return new class extends Migration
                 'payment_date',
                 'payment_method',
                 'payment_reference',
-                'payment_notes'
+                'payment_notes',
             ]);
         });
-        
+
         DB::statement("ALTER TABLE quotes MODIFY COLUMN status ENUM('pending', 'approved', 'rejected', 'completed', 'booked') DEFAULT 'pending'");
     }
 };

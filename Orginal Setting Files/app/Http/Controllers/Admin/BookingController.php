@@ -24,6 +24,7 @@ class BookingController extends Controller
     public function show(Booking $booking)
     {
         $booking->load(['user', 'package', 'service']);
+
         return view('admin.bookings.show', compact('booking'));
     }
 
@@ -36,7 +37,7 @@ class BookingController extends Controller
         $booking->update($validated);
 
         return redirect()->back()
-                         ->with('success', 'تم تحديث حالة الحجز بنجاح');
+            ->with('success', 'تم تحديث حالة الحجز بنجاح');
     }
 
     public function destroy(Booking $booking)
@@ -44,6 +45,6 @@ class BookingController extends Controller
         $booking->delete();
 
         return redirect()->route('admin.bookings.index')
-                         ->with('success', 'تم حذف الحجز بنجاح');
+            ->with('success', 'تم حذف الحجز بنجاح');
     }
 }

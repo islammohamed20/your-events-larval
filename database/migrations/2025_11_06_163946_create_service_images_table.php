@@ -19,7 +19,7 @@ return new class extends Migration
             $table->boolean('is_thumbnail')->default(false); // هل هي صورة مصغرة؟
             $table->integer('sort_order')->default(0); // ترتيب العرض
             $table->timestamps();
-            
+
             // فهرس للبحث السريع عن الصورة المصغرة
             $table->index(['service_id', 'is_thumbnail']);
         });

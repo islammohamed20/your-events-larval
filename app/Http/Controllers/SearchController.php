@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Service;
 use App\Models\Package;
-use App\Models\Category;
+use App\Models\Service;
 use Illuminate\Http\Request;
 
 class SearchController extends Controller
@@ -13,45 +12,47 @@ class SearchController extends Controller
     {
         $query = $request->input('q');
         $type = $request->input('type', 'all'); // all, services, packages
-        
+
         if (empty($query)) {
             return redirect()->route('home')->with('error', 'الرجاء إدخال كلمة بحث');
         }
 
         $results = collect();
-        
+
         // Search in Services
         if ($type === 'all' || $type === 'services') {
             $services = Service::where('is_active', true)
-                ->where(function($q) use ($query) {
+                ->where(function ($q) use ($query) {
                     $q->where('name', 'LIKE', "%{$query}%")
-                      ->orWhere('description', 'LIKE', "%{$query}%")
-                      ->orWhere('features', 'LIKE', "%{$query}%");
+                        ->orWhere('description', 'LIKE', "%{$query}%")
+                        ->orWhere('features', 'LIKE', "%{$query}%");
                 })
                 ->with('category')
                 ->get()
-                ->map(function($service) {
+                ->map(function ($service) {
                     $service->result_type = 'service';
+
                     return $service;
                 });
-            
+
             $results = $results->merge($services);
         }
-        
+
         // Search in Packages
         if ($type === 'all' || $type === 'packages') {
             $packages = Package::where('is_active', true)
-                ->where(function($q) use ($query) {
+                ->where(function ($q) use ($query) {
                     $q->where('name', 'LIKE', "%{$query}%")
-                      ->orWhere('description', 'LIKE', "%{$query}%")
-                      ->orWhere('features', 'LIKE', "%{$query}%");
+                        ->orWhere('description', 'LIKE', "%{$query}%")
+                        ->orWhere('features', 'LIKE', "%{$query}%");
                 })
                 ->get()
-                ->map(function($package) {
+                ->map(function ($package) {
                     $package->result_type = 'package';
+
                     return $package;
                 });
-            
+
             $results = $results->merge($packages);
         }
 
@@ -59,14 +60,14 @@ class SearchController extends Controller
             'query' => $query,
             'results' => $results,
             'type' => $type,
-            'total' => $results->count()
+            'total' => $results->count(),
         ]);
     }
 
     public function autocomplete(Request $request)
     {
         $query = $request->input('q');
-        
+
         if (strlen($query) < 2) {
             return response()->json([]);
         }
@@ -76,13 +77,13 @@ class SearchController extends Controller
             ->select('id', 'name', 'image')
             ->limit(5)
             ->get()
-            ->map(function($service) {
+            ->map(function ($service) {
                 return [
                     'id' => $service->id,
                     'name' => $service->name,
                     'type' => 'service',
                     'url' => route('services.show', $service),
-                    'image' => $service->image ? asset('storage/' . $service->image) : null
+                    'image' => $service->image ? asset('storage/'.$service->image) : null,
                 ];
             });
 
@@ -91,13 +92,13 @@ class SearchController extends Controller
             ->select('id', 'name', 'image')
             ->limit(3)
             ->get()
-            ->map(function($package) {
+            ->map(function ($package) {
                 return [
                     'id' => $package->id,
                     'name' => $package->name,
                     'type' => 'package',
                     'url' => route('packages.show', $package),
-                    'image' => $package->image ? asset('storage/' . $package->image) : null
+                    'image' => $package->image ? asset('storage/'.$package->image) : null,
                 ];
             });
 

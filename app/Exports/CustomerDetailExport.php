@@ -16,9 +16,6 @@ class CustomerDetailExport implements WithMultipleSheets
         $this->customer = $customer;
     }
 
-    /**
-     * @return array
-     */
     public function sheets(): array
     {
         $sheets = [];
@@ -89,7 +86,7 @@ class CustomerQuotesSheet implements FromArray, WithTitle
         $data = [
             ['عروض الأسعار'],
             [''],
-            ['رقم العرض', 'الحالة', 'المجموع الفرعي', 'الضريبة', 'الخصم', 'الإجمالي', 'تاريخ الإنشاء']
+            ['رقم العرض', 'الحالة', 'المجموع الفرعي', 'الضريبة', 'الخصم', 'الإجمالي', 'تاريخ الإنشاء'],
         ];
 
         foreach ($this->customer->quotes as $quote) {
@@ -100,7 +97,7 @@ class CustomerQuotesSheet implements FromArray, WithTitle
                 number_format($quote->tax, 2),
                 number_format($quote->discount, 2),
                 number_format($quote->total, 2),
-                $quote->created_at->format('Y-m-d H:i:s')
+                $quote->created_at->format('Y-m-d H:i:s'),
             ];
         }
 
@@ -127,7 +124,7 @@ class CustomerPaymentsSheet implements FromArray, WithTitle
         $data = [
             ['المدفوعات المكتملة'],
             [''],
-            ['رقم المرجع', 'اسم العميل', 'تاريخ الحدث', 'المبلغ', 'الحالة', 'تاريخ الحجز']
+            ['رقم المرجع', 'اسم العميل', 'تاريخ الحدث', 'المبلغ', 'الحالة', 'تاريخ الحجز'],
         ];
 
         foreach ($this->customer->bookings->where('status', 'confirmed') as $booking) {
@@ -137,7 +134,7 @@ class CustomerPaymentsSheet implements FromArray, WithTitle
                 $booking->event_date ? $booking->event_date->format('Y-m-d') : '',
                 number_format($booking->total_amount, 2),
                 $booking->status,
-                $booking->created_at->format('Y-m-d H:i:s')
+                $booking->created_at->format('Y-m-d H:i:s'),
             ];
         }
 

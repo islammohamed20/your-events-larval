@@ -13,6 +13,7 @@ class PackageController extends Controller
     public function index()
     {
         $packages = Package::with('images')->latest()->get();
+
         return view('admin.packages.index', compact('packages'));
     }
 
@@ -46,15 +47,16 @@ class PackageController extends Controller
         }
 
         $validated['is_active'] = $request->has('is_active');
-        
+
         // تنظيف الخواص الفارغة وحفظ حالة الظهور
         if (isset($validated['attributes'])) {
-            $validated['attributes'] = array_filter($validated['attributes'], function($attr) {
-                return !empty($attr['name']);
+            $validated['attributes'] = array_filter($validated['attributes'], function ($attr) {
+                return ! empty($attr['name']);
             });
             // تحويل visible إلى boolean وإعادة ترقيم المصفوفة
-            $validated['attributes'] = array_values(array_map(function($attr) {
+            $validated['attributes'] = array_values(array_map(function ($attr) {
                 $attr['visible'] = isset($attr['visible']) && $attr['visible'] ? true : false;
+
                 return $attr;
             }, $validated['attributes']));
         }
@@ -75,12 +77,13 @@ class PackageController extends Controller
         }
 
         return redirect()->route('admin.packages.index')
-                         ->with('success', 'تم إضافة الباقة بنجاح');
+            ->with('success', 'تم إضافة الباقة بنجاح');
     }
 
     public function edit(Package $package)
     {
         $package->load('images');
+
         return view('admin.packages.edit', compact('package'));
     }
 
@@ -115,15 +118,16 @@ class PackageController extends Controller
         }
 
         $validated['is_active'] = $request->has('is_active');
-        
+
         // تنظيف الخواص الفارغة وحفظ حالة الظهور
         if (isset($validated['attributes'])) {
-            $validated['attributes'] = array_filter($validated['attributes'], function($attr) {
-                return !empty($attr['name']);
+            $validated['attributes'] = array_filter($validated['attributes'], function ($attr) {
+                return ! empty($attr['name']);
             });
             // تحويل visible إلى boolean وإعادة ترقيم المصفوفة
-            $validated['attributes'] = array_values(array_map(function($attr) {
+            $validated['attributes'] = array_values(array_map(function ($attr) {
                 $attr['visible'] = isset($attr['visible']) && $attr['visible'] ? true : false;
+
                 return $attr;
             }, $validated['attributes']));
         }
@@ -144,13 +148,13 @@ class PackageController extends Controller
         if ($request->hasFile('images')) {
             $currentMaxOrder = $package->images()->max('sort_order') ?? -1;
             $hasThumbnail = $package->images()->where('is_thumbnail', true)->exists();
-            
+
             foreach ($request->file('images') as $index => $image) {
                 $path = $image->store('packages', 'public');
                 $package->images()->create([
                     'image_path' => $path,
                     'alt_text' => $package->name,
-                    'is_thumbnail' => (!$hasThumbnail && $index === 0),
+                    'is_thumbnail' => (! $hasThumbnail && $index === 0),
                     'sort_order' => $currentMaxOrder + $index + 1,
                 ]);
             }
@@ -163,7 +167,7 @@ class PackageController extends Controller
         }
 
         return redirect()->route('admin.packages.edit', $package)
-                         ->with('success', 'تم تحديث الباقة بنجاح');
+            ->with('success', 'تم تحديث الباقة بنجاح');
     }
 
     public function destroy(Package $package)
@@ -172,19 +176,19 @@ class PackageController extends Controller
         $bookingsCount = \App\Models\Booking::where('package_id', $package->id)->count();
         if ($bookingsCount > 0) {
             return redirect()->route('admin.packages.index')
-                             ->with('error', "لا يمكن حذف الباقة \"{$package->name}\" لأنها مستخدمة في {$bookingsCount} حجز. يمكنك إيقاف نشاطها بدلاً من حذفها.");
+                ->with('error', "لا يمكن حذف الباقة \"{$package->name}\" لأنها مستخدمة في {$bookingsCount} حجز. يمكنك إيقاف نشاطها بدلاً من حذفها.");
         }
-        
+
         // حذف الصورة القديمة
         if ($package->image) {
             Storage::disk('public')->delete($package->image);
         }
-        
+
         // حذف جميع الصور المتعددة (سيتم حذفها تلقائياً عبر cascade)
         $package->delete();
 
         return redirect()->route('admin.packages.index')
-                         ->with('success', 'تم حذف الباقة بنجاح');
+            ->with('success', 'تم حذف الباقة بنجاح');
     }
 
     /**
@@ -197,6 +201,7 @@ class PackageController extends Controller
         }
 
         $image->delete();
+
         return response()->json(['success' => true, 'message' => 'تم حذف الصورة بنجاح']);
     }
 

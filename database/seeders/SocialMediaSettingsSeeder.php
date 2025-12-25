@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Setting;
+use Illuminate\Database\Seeder;
 
 class SocialMediaSettingsSeeder extends Seeder
 {
@@ -63,7 +62,7 @@ class SocialMediaSettingsSeeder extends Seeder
                 'type' => 'text',
                 'group' => 'social_media',
             ],
-            
+
             // Contact Info
             [
                 'key' => 'contact_address',
@@ -77,7 +76,7 @@ class SocialMediaSettingsSeeder extends Seeder
                 'type' => 'text',
                 'group' => 'general',
             ],
-            
+
             // SEO Settings
             [
                 'key' => 'meta_keywords',
@@ -91,7 +90,7 @@ class SocialMediaSettingsSeeder extends Seeder
                 'type' => 'image',
                 'group' => 'seo',
             ],
-            
+
             // Email Settings
             [
                 'key' => 'smtp_host',
@@ -123,7 +122,7 @@ class SocialMediaSettingsSeeder extends Seeder
                 'type' => 'select',
                 'group' => 'email',
             ],
-            
+
             // Maintenance Mode
             [
                 'key' => 'maintenance_mode',

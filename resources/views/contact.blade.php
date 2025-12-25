@@ -176,8 +176,10 @@
                             @endif
                             
                             @if($twitterUrl)
-                                <a href="{{ $twitterUrl }}" target="_blank" rel="noopener noreferrer" class="social-icon twitter" title="X (Twitter)">
-                                    <i class="fab fa-x-twitter"></i>
+                                <a href="{{ $twitterUrl }}" target="_blank" rel="noopener noreferrer" class="social-icon twitter" title="X (Twitter)" style="display: flex; align-items: center; justify-content: center;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                                    </svg>
                                 </a>
                             @endif
                             
@@ -236,66 +238,20 @@
     </div>
 </section>
 
+
 <!-- FAQ Section -->
 <section class="py-5">
     <div class="container">
-        <h2 class="section-title mb-5" data-aos="fade-up" style="background: none; -webkit-text-fill-color: #000000; color: #000000;">الأسئلة الشائعة</h2>
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="accordion" id="faqAccordion" data-aos="fade-up" data-aos-delay="100">
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                                كم يستغرق التحضير للمناسبة؟
-                            </button>
-                        </h2>
-                        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                يعتمد وقت التحضير على حجم المناسبة وتعقيدها. عادة ما نحتاج إلى أسبوعين على الأقل للمناسبات الصغيرة، وشهر أو أكثر للمناسبات الكبيرة. ننصح بالحجز مبكراً لضمان توفر جميع الخدمات المطلوبة.
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                                هل يمكنني تخصيص الباقة حسب احتياجاتي؟
-                            </button>
-                        </h2>
-                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                بالطبع! نوفر باقات قابلة للتخصيص وفقاً لاحتياجاتك الخاصة وميزانيتك. يمكنك إضافة أو إزالة خدمات من أي باقة، أو إنشاء باقة مخصصة بالكامل.
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                                ما هي طرق الدفع المتاحة؟
-                            </button>
-                        </h2>
-                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                نقبل جميع طرق الدفع: النقد، التحويل البنكي، الفيزا، الماستركارد، مدى، وكذلك الدفع الإلكتروني عبر التطبيقات البنكية. يمكن تقسيط المبلغ على دفعات حسب الاتفاق.
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                                هل تقدمون خدمات خارج الرياض؟
-                            </button>
-                        </h2>
-                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body">
-                                نعم، نقدم خدماتنا في جميع أنحاء المملكة العربية السعودية. قد تطبق رسوم إضافية للمناسبات خارج الرياض حسب المسافة والخدمات المطلوبة.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <h2 class="section-title mb-4 text-center" data-aos="fade-up" style="background: none; -webkit-text-fill-color: #000000; color: #000000;">أسئلة شائعة – Your Events</h2>
+        <div class="text-center" data-aos="fade-up" data-aos-delay="100">
+            <p class="text-muted mb-4">لديك أسئلة؟ لدينا الإجابات!</p>
+            <a href="{{ route('faq') }}" class="btn btn-primary btn-lg px-5 py-3" style="border-radius: 50px; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: all 0.3s ease;">
+                <i class="fas fa-question-circle me-2"></i>اعرض جميع الأسئلة الشائعة
+            </a>
         </div>
     </div>
 </section>
+
 @endsection
 
 @push('styles')
@@ -344,11 +300,14 @@
     }
     
     .social-icon.twitter {
-        background: #000000ff;
+        background: #ffffff;
+        color: #000000;
+        border: 2px solid #000000;
     }
     
     .social-icon.twitter:hover {
-        background: #1a1a1a;
+        background: #f0f0f0;
+        color: #000000;
     }
     
     .social-icon.snapchat {
@@ -377,3 +336,4 @@
     }
 </style>
 @endpush
+

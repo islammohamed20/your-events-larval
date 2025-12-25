@@ -20,7 +20,7 @@ return new class extends Migration
             $table->decimal('price', 10, 2)->nullable()->default(0); // نسخة من السعر (يمكن أن يكون 0 للخدمات بدون سعر محدد)
             $table->text('customer_notes')->nullable(); // ملاحظات العميل على الخدمة
             $table->timestamps();
-            
+
             $table->index('user_id');
             $table->index('session_id');
             $table->index('service_id');

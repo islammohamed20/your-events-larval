@@ -13,25 +13,25 @@ return new class extends Migration
     {
         Schema::table('services', function (Blueprint $table) {
             // إضافة حقول جديدة للخدمات
-            if (!Schema::hasColumn('services', 'category_id')) {
+            if (! Schema::hasColumn('services', 'category_id')) {
                 $table->foreignId('category_id')->nullable()->after('id')->constrained()->nullOnDelete();
             }
-            if (!Schema::hasColumn('services', 'price')) {
+            if (! Schema::hasColumn('services', 'price')) {
                 $table->decimal('price', 10, 2)->nullable()->after('description');
             }
-            if (!Schema::hasColumn('services', 'service_type')) {
+            if (! Schema::hasColumn('services', 'service_type')) {
                 $table->enum('service_type', ['simple', 'variable'])->default('simple')->after('price');
             }
-            if (!Schema::hasColumn('services', 'duration')) {
+            if (! Schema::hasColumn('services', 'duration')) {
                 $table->integer('duration')->nullable()->after('service_type')->comment('المدة بالساعات');
             }
-            if (!Schema::hasColumn('services', 'type')) {
+            if (! Schema::hasColumn('services', 'type')) {
                 $table->string('type')->nullable()->after('duration');
             }
-            if (!Schema::hasColumn('services', 'features')) {
+            if (! Schema::hasColumn('services', 'features')) {
                 $table->json('features')->nullable()->after('type');
             }
-            if (!Schema::hasColumn('services', 'custom_fields')) {
+            if (! Schema::hasColumn('services', 'custom_fields')) {
                 $table->json('custom_fields')->nullable()->after('features');
             }
         });
@@ -51,7 +51,7 @@ return new class extends Migration
                 'duration',
                 'type',
                 'features',
-                'custom_fields'
+                'custom_fields',
             ]);
         });
     }

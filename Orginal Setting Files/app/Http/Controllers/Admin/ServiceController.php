@@ -12,6 +12,7 @@ class ServiceController extends Controller
     public function index()
     {
         $services = Service::latest()->get();
+
         return view('admin.services.index', compact('services'));
     }
 
@@ -42,7 +43,7 @@ class ServiceController extends Controller
         Service::create($validated);
 
         return redirect()->route('admin.services.index')
-                         ->with('success', 'تم إضافة الخدمة بنجاح');
+            ->with('success', 'تم إضافة الخدمة بنجاح');
     }
 
     public function edit(Service $service)
@@ -75,7 +76,7 @@ class ServiceController extends Controller
         $service->update($validated);
 
         return redirect()->route('admin.services.index')
-                         ->with('success', 'تم تحديث الخدمة بنجاح');
+            ->with('success', 'تم تحديث الخدمة بنجاح');
     }
 
     public function destroy(Service $service)
@@ -83,10 +84,10 @@ class ServiceController extends Controller
         if ($service->image) {
             Storage::disk('public')->delete($service->image);
         }
-        
+
         $service->delete();
 
         return redirect()->route('admin.services.index')
-                         ->with('success', 'تم حذف الخدمة بنجاح');
+            ->with('success', 'تم حذف الخدمة بنجاح');
     }
 }

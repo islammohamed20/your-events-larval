@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\OtpVerification;
 use App\Models\ActivityLog;
-use App\Models\Visit;
 use App\Models\LoginActivity;
+use App\Models\OtpVerification;
+use App\Models\User;
+use App\Models\Visit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -18,6 +18,7 @@ class UserController extends Controller
     public function index()
     {
         $users = User::latest()->paginate(15);
+
         return view('admin.users.index', compact('users'));
     }
 
@@ -49,12 +50,13 @@ class UserController extends Controller
         User::create($validated);
 
         return redirect()->route('admin.users.index')
-                         ->with('success', 'تم إنشاء المستخدم بنجاح');
+            ->with('success', 'تم إنشاء المستخدم بنجاح');
     }
 
     public function show(User $user)
     {
         $bookings = $user->bookings()->latest()->paginate(10);
+
         return view('admin.users.show', compact('user', 'bookings'));
     }
 
@@ -91,7 +93,7 @@ class UserController extends Controller
         $user->update($validated);
 
         return redirect()->route('admin.users.index')
-                         ->with('success', 'تم تحديث المستخدم بنجاح');
+            ->with('success', 'تم تحديث المستخدم بنجاح');
     }
 
     public function destroy(User $user)
@@ -99,13 +101,13 @@ class UserController extends Controller
         // Prevent deleting the current admin user
         if ($user->id === Auth::id()) {
             return redirect()->route('admin.users.index')
-                             ->with('error', 'لا يمكنك حذف حسابك الخاص');
+                ->with('error', 'لا يمكنك حذف حسابك الخاص');
         }
 
         // Check if user has bookings
         if ($user->bookings()->count() > 0) {
             return redirect()->route('admin.users.index')
-                             ->with('error', 'لا يمكن حذف المستخدم لأنه يحتوي على حجوزات');
+                ->with('error', 'لا يمكن حذف المستخدم لأنه يحتوي على حجوزات');
         }
 
         // Cleanup related data before permanent deletion
@@ -134,7 +136,7 @@ class UserController extends Controller
         $user->delete();
 
         return redirect()->route('admin.users.index')
-                         ->with('success', 'تم حذف المستخدم بنجاح');
+            ->with('success', 'تم حذف المستخدم بنجاح');
     }
 
     public function toggleAdmin(User $user)
@@ -142,14 +144,14 @@ class UserController extends Controller
         // Prevent removing admin privileges from the current user
         if ($user->id === Auth::id() && $user->is_admin) {
             return redirect()->route('admin.users.index')
-                             ->with('error', 'لا يمكنك إزالة صلاحيات الإدارة من حسابك الخاص');
+                ->with('error', 'لا يمكنك إزالة صلاحيات الإدارة من حسابك الخاص');
         }
 
-        $user->update(['is_admin' => !$user->is_admin]);
+        $user->update(['is_admin' => ! $user->is_admin]);
 
         $message = $user->is_admin ? 'تم منح صلاحيات الإدارة للمستخدم' : 'تم إزالة صلاحيات الإدارة من المستخدم';
 
         return redirect()->route('admin.users.index')
-                         ->with('success', $message);
+            ->with('success', $message);
     }
 }

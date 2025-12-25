@@ -1,14 +1,13 @@
 <?php
 
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
+use App\Models\Category;
 use App\Models\Service;
 use App\Models\ServiceVariation;
-use App\Models\Category;
-use App\Models\User;
 use App\Models\Supplier;
+use App\Models\User;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 // Artisan command to set price for all services and variations
 Artisan::command('services:set-price {value=1}', function (string $value) {
@@ -65,6 +64,7 @@ Artisan::command('services:set-price-by-type {type} {value=1} {--dry-run}', func
     $count = $services->count();
     if ($count === 0) {
         $this->warn('No services found matching the given type or category.');
+
         return 0;
     }
 
@@ -72,9 +72,10 @@ Artisan::command('services:set-price-by-type {type} {value=1} {--dry-run}', func
 
     if ($this->option('dry-run')) {
         foreach ($services as $service) {
-            $this->line("- [ID {$service->id}] {$service->name} (current price: " . ($service->isVariable() ? $service->min_price . '-' . $service->max_price : $service->price) . ")");
+            $this->line("- [ID {$service->id}] {$service->name} (current price: ".($service->isVariable() ? $service->min_price.'-'.$service->max_price : $service->price).')');
         }
         $this->info('Dry-run complete. No updates performed.');
+
         return 0;
     }
 
@@ -104,6 +105,7 @@ Artisan::command('services:set-price-by-type {type} {value=1} {--dry-run}', func
     $this->info("Updated services: {$servicesUpdated}");
     $this->info("Updated variations: {$variationsUpdated}");
     $this->info('Done.');
+
     return 0;
 })->purpose('Set price for services by type or category name');
 
@@ -116,8 +118,9 @@ Artisan::command('services:delete-by-category {name} {--dry-run}', function (str
         ->orWhere('name_en', $name)
         ->first();
 
-    if (!$category) {
+    if (! $category) {
         $this->error('Category not found by name or name_en.');
+
         return 1;
     }
 
@@ -127,6 +130,7 @@ Artisan::command('services:delete-by-category {name} {--dry-run}', function (str
 
     if ($count === 0) {
         $this->info('No services found for the given category.');
+
         return 0;
     }
 
@@ -139,6 +143,7 @@ Artisan::command('services:delete-by-category {name} {--dry-run}', function (str
             $this->line("- [ID {$service->id}] {$service->name}");
         }
         $this->info('Dry-run complete. No deletions were performed.');
+
         return 0;
     }
 
@@ -150,7 +155,7 @@ Artisan::command('services:delete-by-category {name} {--dry-run}', function (str
                 try {
                     \Illuminate\Support\Facades\Storage::disk('public')->delete($service->image);
                 } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::warning('Failed to delete service image: ' . $service->image . ' error: ' . $e->getMessage());
+                    \Illuminate\Support\Facades\Log::warning('Failed to delete service image: '.$service->image.' error: '.$e->getMessage());
                 }
             }
             // Delete the service; related images are handled in model events
@@ -159,6 +164,7 @@ Artisan::command('services:delete-by-category {name} {--dry-run}', function (str
     });
 
     $this->info("Deleted {$count} services successfully.");
+
     return 0;
 })->purpose('Delete all services belonging to a category by name');
 
@@ -167,8 +173,9 @@ Artisan::command('user:convert-to-supplier {email} {--force-password=}', functio
     $this->info("Converting user {$email} to supplier...");
 
     $user = User::where('email', $email)->first();
-    if (!$user) {
+    if (! $user) {
         $this->error('User not found.');
+
         return 1;
     }
 
@@ -206,6 +213,7 @@ Artisan::command('user:convert-to-supplier {email} {--force-password=}', functio
         'is_admin' => false,
     ])->save();
 
-    $this->info('Done. Supplier ID: ' . $supplier->id);
+    $this->info('Done. Supplier ID: '.$supplier->id);
+
     return 0;
 })->purpose('Convert existing user to supplier and revoke admin privileges');

@@ -184,7 +184,7 @@ class CategoryController extends Controller
      */
     public function toggleActive(Category $category)
     {
-        $category->update(['is_active' => !$category->is_active]);
+        $category->update(['is_active' => ! $category->is_active]);
 
         return back()->with('success', 'تم تحديث حالة الفئة بنجاح');
     }

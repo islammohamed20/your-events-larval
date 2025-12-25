@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Wishlist;
 use App\Models\Service;
+use App\Models\Wishlist;
 use Illuminate\Http\Request;
 
 class WishlistController extends Controller
@@ -19,6 +19,7 @@ class WishlistController extends Controller
     public function index()
     {
         $wishlists = auth()->user()->wishlists()->with('service')->latest()->get();
+
         return view('wishlist.index', compact('wishlists'));
     }
 
@@ -32,7 +33,7 @@ class WishlistController extends Controller
         ]);
 
         $service = Service::findOrFail($request->service_id);
-        
+
         // Check if already in wishlist
         $exists = auth()->user()->wishlists()
             ->where('service_id', $request->service_id)
@@ -41,7 +42,7 @@ class WishlistController extends Controller
         if ($exists) {
             return response()->json([
                 'success' => false,
-                'message' => 'الخدمة موجودة بالفعل في قائمة الأمنيات'
+                'message' => 'الخدمة موجودة بالفعل في قائمة الأمنيات',
             ]);
         }
 
@@ -52,7 +53,7 @@ class WishlistController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'تمت إضافة الخدمة إلى قائمة الأمنيات',
-            'count' => auth()->user()->wishlists()->count()
+            'count' => auth()->user()->wishlists()->count(),
         ]);
     }
 
@@ -68,7 +69,7 @@ class WishlistController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'تم إزالة الخدمة من قائمة الأمنيات',
-                'count' => auth()->user()->wishlists()->count()
+                'count' => auth()->user()->wishlists()->count(),
             ]);
         }
 
@@ -91,21 +92,23 @@ class WishlistController extends Controller
 
         if ($wishlist) {
             $wishlist->delete();
+
             return response()->json([
                 'success' => true,
                 'action' => 'removed',
                 'message' => 'تم إزالة الخدمة من قائمة الأمنيات',
-                'count' => auth()->user()->wishlists()->count()
+                'count' => auth()->user()->wishlists()->count(),
             ]);
         } else {
             auth()->user()->wishlists()->create([
                 'service_id' => $request->service_id,
             ]);
+
             return response()->json([
                 'success' => true,
                 'action' => 'added',
                 'message' => 'تمت إضافة الخدمة إلى قائمة الأمنيات',
-                'count' => auth()->user()->wishlists()->count()
+                'count' => auth()->user()->wishlists()->count(),
             ]);
         }
     }
@@ -116,7 +119,7 @@ class WishlistController extends Controller
     public function count()
     {
         return response()->json([
-            'count' => auth()->user()->wishlists()->count()
+            'count' => auth()->user()->wishlists()->count(),
         ]);
     }
 }

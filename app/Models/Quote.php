@@ -52,10 +52,10 @@ class Quote extends Model
         $lastQuote = self::whereYear('created_at', $year)
             ->orderBy('id', 'desc')
             ->first();
-        
+
         $number = $lastQuote ? intval(substr($lastQuote->quote_number, -5)) + 1 : 1;
-        
-        return 'QT-' . $year . str_pad($number, 5, '0', STR_PAD_LEFT);
+
+        return 'QT-'.$year.str_pad($number, 5, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -217,7 +217,7 @@ class Quote extends Model
         static::updated(function ($quote) {
             $changes = $quote->getChanges();
             unset($changes['updated_at']);
-            if (!empty($changes)) {
+            if (! empty($changes)) {
                 \App\Models\ActivityLog::record($quote, 'updated', 'تم تعديل عرض السعر', [
                     'changes' => $changes,
                 ]);

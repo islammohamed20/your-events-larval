@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class Booking extends Model
 {
@@ -51,9 +51,9 @@ class Booking extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($booking) {
-            $booking->booking_reference = 'YE-' . now()->format('Y-m-d-H-i-s') . '-' . substr((string) microtime(true), -3);
+            $booking->booking_reference = 'YE-'.now()->format('Y-m-d-H-i-s').'-'.substr((string) microtime(true), -3);
         });
 
         // Logging events
@@ -69,7 +69,7 @@ class Booking extends Model
             $changes = $booking->getChanges();
             // Avoid logging only timestamps updates with no meaningful changes
             unset($changes['updated_at']);
-            if (!empty($changes)) {
+            if (! empty($changes)) {
                 \App\Models\ActivityLog::record($booking, 'updated', 'تم تعديل الحجز', [
                     'changes' => $changes,
                 ]);
@@ -131,19 +131,19 @@ class Booking extends Model
     public function getEligibleSuppliers()
     {
         // جمع جميع الخدمات من quote items
-        if (!$this->quote_id) {
+        if (! $this->quote_id) {
             return collect();
         }
 
         $serviceIds = $this->quote->items()->pluck('service_id')->unique();
-        
+
         // البحث عن الموردين الذين قاموا بتسجيل هذه الخدمات
         return Supplier::whereHas('services', function ($query) use ($serviceIds) {
             $query->whereIn('services.id', $serviceIds);
         })
-        ->where('status', 'approved')
-        ->whereNotNull('email_verified_at')
-        ->get();
+            ->where('status', 'approved')
+            ->whereNotNull('email_verified_at')
+            ->get();
     }
 
     /**
@@ -152,7 +152,7 @@ class Booking extends Model
     public function notifyEligibleSuppliers()
     {
         $suppliers = $this->getEligibleSuppliers();
-        
+
         foreach ($suppliers as $supplier) {
             // إنشاء الإشعار
             BookingNotification::create([
@@ -165,7 +165,7 @@ class Booking extends Model
             try {
                 Mail::to($supplier->email)->send(new \App\Mail\BookingNotificationMail($this, $supplier));
             } catch (\Exception $e) {
-                Log::error('Failed to send booking notification email to supplier: ' . $supplier->email . ' - ' . $e->getMessage());
+                Log::error('Failed to send booking notification email to supplier: '.$supplier->email.' - '.$e->getMessage());
             }
         }
 
@@ -178,7 +178,7 @@ class Booking extends Model
      */
     public function acceptBySupplier(Supplier $supplier, $notes = null)
     {
-        return DB::transaction(function () use ($supplier, $notes) {
+        return DB::transaction(function () use ($supplier) {
             // قفل الحجز للتحديث لتجنب race conditions
             $booking = self::where('id', $this->id)->lockForUpdate()->first();
 
@@ -224,7 +224,7 @@ class Booking extends Model
             try {
                 Mail::to($booking->user->email)->send(new \App\Mail\BookingAcceptedBySupplierMail($booking));
             } catch (\Exception $e) {
-                Log::error('Failed to send booking accepted email: ' . $e->getMessage());
+                Log::error('Failed to send booking accepted email: '.$e->getMessage());
             }
 
             // تسجيل في activity log
@@ -274,7 +274,7 @@ class Booking extends Model
      */
     public function isActive()
     {
-        return $this->status === 'awaiting_supplier' && !$this->isExpired();
+        return $this->status === 'awaiting_supplier' && ! $this->isExpired();
     }
 
     /**

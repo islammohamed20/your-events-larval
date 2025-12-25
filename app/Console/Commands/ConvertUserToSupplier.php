@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Models\User;
 use App\Models\Supplier;
+use App\Models\User;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 
 class ConvertUserToSupplier extends Command
@@ -31,8 +31,9 @@ class ConvertUserToSupplier extends Command
 
         $user = User::where('email', $email)->first();
 
-        if (!$user) {
-            $this->error('User not found for email: ' . $email);
+        if (! $user) {
+            $this->error('User not found for email: '.$email);
+
             return self::FAILURE;
         }
 
@@ -82,11 +83,10 @@ class ConvertUserToSupplier extends Command
         ])->save();
 
         $this->info('Conversion completed successfully.');
-        $this->line('- Supplier ID: ' . $supplier->id);
-        $this->line('- Supplier email: ' . $supplier->email);
-        $this->line('- User role set to: ' . $user->role . ' and is_admin revoked');
+        $this->line('- Supplier ID: '.$supplier->id);
+        $this->line('- Supplier email: '.$supplier->email);
+        $this->line('- User role set to: '.$user->role.' and is_admin revoked');
 
         return self::SUCCESS;
     }
 }
-

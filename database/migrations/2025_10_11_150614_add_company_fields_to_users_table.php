@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->string('company_name')->after('name'); // اسم الجهة (إجباري)
             $table->string('tax_number')->nullable()->after('company_name'); // الرقم الضريبي (اختياري)
-            
+
             $table->index('company_name');
             $table->index('tax_number');
         });

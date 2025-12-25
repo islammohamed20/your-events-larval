@@ -15,6 +15,7 @@ class SupplierAcceptedQuoteMail extends Mailable
     use Queueable, SerializesModels;
 
     public $quote;
+
     public $supplier;
 
     /**
@@ -32,7 +33,7 @@ class SupplierAcceptedQuoteMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'قبول عرض السعر من المورد - ' . ($this->quote->quote_number ?? 'عرض سعر'),
+            subject: 'قبول عرض السعر من المورد - '.($this->quote->quote_number ?? 'عرض سعر'),
         );
     }
 

@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use App\Models\Service;
 use App\Http\Controllers\Api\OrderController;
+use App\Models\Service;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -12,8 +12,8 @@ Route::get('/user', function (Request $request) {
 // Get services by category
 Route::get('/services', function (Request $request) {
     $categoryId = $request->query('category_id');
-    
-    if (!$categoryId) {
+
+    if (! $categoryId) {
         return response()->json([]);
     }
 
@@ -22,7 +22,7 @@ Route::get('/services', function (Request $request) {
         ->whereNotNull('name')
         ->select('id', 'name', 'subtitle')
         ->get()
-        ->filter(function($service) {
+        ->filter(function ($service) {
             return $service->id && $service->name;
         })
         ->values();

@@ -15,6 +15,7 @@ class SupplierQuoteApprovedNotification extends Mailable
     use Queueable, SerializesModels;
 
     public $quote;
+
     public $supplier;
 
     /**

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->integer('order')->default(0); // ترتيب العرض
             $table->boolean('is_active')->default(true); // نشطة أم لا
             $table->timestamps();
-            
+
             $table->index('is_active');
             $table->index('order');
         });

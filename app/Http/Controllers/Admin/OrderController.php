@@ -31,7 +31,7 @@ class OrderController extends Controller
         }
 
         $orders = $query->orderByDesc('created_at')->paginate(20);
-        
+
         return view('admin.orders.index', compact('orders'));
     }
 
@@ -41,6 +41,7 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         $order->load(['customer', 'supplier', 'service', 'category', 'supplierStatuses.supplier']);
+
         return view('admin.orders.show', compact('order'));
     }
 
@@ -65,6 +66,7 @@ class OrderController extends Controller
     public function destroy(Order $order)
     {
         $order->delete();
+
         return redirect()->route('admin.orders.index')->with('success', 'تم حذف الطلب بنجاح');
     }
 }

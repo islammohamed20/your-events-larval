@@ -1,30 +1,28 @@
 <?php
 
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ServicesController;
-use App\Http\Controllers\PackagesController;
-use App\Http\Controllers\GalleryController;
-use App\Http\Controllers\BookingController;
-use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\AdminController;
-use App\Http\Controllers\Admin\PackageController as AdminPackageController;
-use Illuminate\Support\Facades\Cookie;
-use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
+use App\Http\Controllers\Admin\AttributeController as AdminAttributeController;
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
 use App\Http\Controllers\Admin\GalleryController as AdminGalleryController;
-use App\Http\Controllers\Admin\SettingsController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\QuoteController;
-use App\Http\Controllers\CustomerManagementController;
-use App\Http\Controllers\Admin\AttributeController as AdminAttributeController;
+use App\Http\Controllers\Admin\PackageController as AdminPackageController;
+use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Admin\ServiceVariationController as AdminServiceVariationController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CustomerManagementController;
+use App\Http\Controllers\GalleryController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PackagesController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\ServicesController;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\ContactController;
 
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -42,7 +40,8 @@ Route::get('/robots.txt', function () {
     $lines[] = 'Disallow: /verify-otp';
     $lines[] = 'Disallow: /password/verify-otp';
     $lines[] = 'Disallow: /wishlist';
-    $lines[] = 'Sitemap: ' . URL::to('/sitemap.xml');
+    $lines[] = 'Sitemap: '.URL::to('/sitemap.xml');
+
     return response(implode("\n", $lines), 200)->header('Content-Type', 'text/plain');
 })->name('robots');
 
@@ -109,10 +108,16 @@ Route::get('/sitemap.xml', function () {
     $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
     foreach ($urls as $u) {
         $xml .= '<url>';
-        $xml .= '<loc>' . e($u['loc']) . '</loc>';
-        if (!empty($u['lastmod'])) $xml .= '<lastmod>' . e($u['lastmod']) . '</lastmod>';
-        if (!empty($u['changefreq'])) $xml .= '<changefreq>' . e($u['changefreq']) . '</changefreq>';
-        if (!empty($u['priority'])) $xml .= '<priority>' . e($u['priority']) . '</priority>';
+        $xml .= '<loc>'.e($u['loc']).'</loc>';
+        if (! empty($u['lastmod'])) {
+            $xml .= '<lastmod>'.e($u['lastmod']).'</lastmod>';
+        }
+        if (! empty($u['changefreq'])) {
+            $xml .= '<changefreq>'.e($u['changefreq']).'</changefreq>';
+        }
+        if (! empty($u['priority'])) {
+            $xml .= '<priority>'.e($u['priority']).'</priority>';
+        }
         $xml .= '</url>';
     }
     $xml .= '</urlset>';
@@ -120,15 +125,16 @@ Route::get('/sitemap.xml', function () {
     return response($xml, 200)->header('Content-Type', 'application/xml');
 })->name('sitemap');
 
-// Language Switch Route  
+// Language Switch Route
 Route::get('/lang/{locale}', function ($locale) {
     $supported = ['ar', 'en'];
-    if (!in_array($locale, $supported)) {
+    if (! in_array($locale, $supported)) {
         return redirect()->back();
     }
-    
+
     // إعادة التوجيه مع حفظ اللغة في cookie
     $response = redirect()->back();
+
     return $response->withCookie(Cookie::make(
         'app_locale',
         $locale,
@@ -145,10 +151,11 @@ Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::get('/search/autocomplete', [SearchController::class, 'autocomplete'])->name('search.autocomplete');
 
 // Supplier Registration Routes
-use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\Supplier\SupplierAuthController;
-use App\Http\Controllers\Supplier\SupplierDashboardController;
 use App\Http\Controllers\Supplier\SupplierBookingController;
+use App\Http\Controllers\Supplier\SupplierDashboardController;
+use App\Http\Controllers\SupplierController;
+
 Route::get('/suppliers/register', [SupplierController::class, 'create'])->name('suppliers.register');
 Route::post('/suppliers/register', [SupplierController::class, 'store'])->name('suppliers.store');
 Route::get('/suppliers/verify-otp', [SupplierController::class, 'showVerifyOtp'])->name('suppliers.verify-otp');
@@ -163,21 +170,23 @@ Route::get('/services', [ServicesController::class, 'index'])->name('services.in
 Route::get('/services/{id}', [ServicesController::class, 'show'])->name('services.show');
 
 // AJAX endpoint to get variation price by selected value ids
-Route::post('/services/{service}/get-variation', function(\Illuminate\Http\Request $request, \App\Models\Service $service){
+Route::post('/services/{service}/get-variation', function (\Illuminate\Http\Request $request, \App\Models\Service $service) {
     $validated = $request->validate([
         'value_ids' => 'required|array',
         'value_ids.*' => 'integer',
     ]);
     $ids = array_map('intval', array_values($validated['value_ids']));
     sort($ids);
-    $variation = $service->variations()->where('is_active', true)->get()->first(function($var) use ($ids){
+    $variation = $service->variations()->where('is_active', true)->get()->first(function ($var) use ($ids) {
         $existing = array_map('intval', (array) $var->attribute_value_ids);
         sort($existing);
+
         return $existing === $ids;
     });
     if ($variation) {
-        return response()->json(['success' => true, 'price' => (float)$variation->price, 'variation_id' => $variation->id]);
+        return response()->json(['success' => true, 'price' => (float) $variation->price, 'variation_id' => $variation->id]);
     }
+
     return response()->json(['success' => false, 'message' => 'لا يوجد سعر لهذه التركيبة'], 404);
 })->name('services.get-variation');
 
@@ -206,6 +215,11 @@ Route::get('/privacy', function () {
     return view('privacy');
 })->name('privacy');
 
+// FAQ Route
+Route::get('/faq', function () {
+    return view('faq');
+})->name('faq');
+
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
@@ -215,6 +229,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Password Reset Routes with OTP
 use App\Http\Controllers\Auth\PasswordResetController;
+
 Route::get('/forgot-password', [PasswordResetController::class, 'showForgotForm'])->name('password.request');
 Route::post('/forgot-password', [PasswordResetController::class, 'sendResetOtp'])->name('password.email');
 Route::get('/password/verify-otp', [PasswordResetController::class, 'showOtpVerifyForm'])->name('password.otp.verify');
@@ -224,22 +239,23 @@ Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']
 
 // OTP Routes
 use App\Http\Controllers\OtpController;
+
 Route::get('/verify-otp', [OtpController::class, 'showVerifyForm'])->name('otp.verify.form');
 Route::post('/otp/send', [OtpController::class, 'sendOtp'])->name('otp.send')->middleware('throttle:3,5');
 Route::post('/otp/verify', [OtpController::class, 'verifyOtp'])->name('otp.verify')->middleware('throttle:5,1');
 Route::post('/otp/resend', [OtpController::class, 'resendOtp'])->name('otp.resend')->middleware('throttle:3,5');
-Route::get('/register/complete', function() {
+Route::get('/register/complete', function () {
     return view('auth.register-complete');
 })->name('register.complete');
 Route::post('/register/complete', [OtpController::class, 'completeRegistration'])->name('register.complete.post');
 
 // OTP Test Page (للاختبار فقط - احذفها في الإنتاج)
-Route::get('/otp-test', function() {
+Route::get('/otp-test', function () {
     return view('otp-test');
 })->name('otp.test');
 
 // Email Preview (للمعاينة أثناء التطوير فقط - احذفها في الإنتاج)
-Route::get('/preview/email/supplier-otp', function() {
+Route::get('/preview/email/supplier-otp', function () {
     return view('emails.supplier-otp', [
         'otp' => '845680',
         'supplierName' => 'مورد تجريبي',
@@ -275,14 +291,14 @@ Route::middleware('auth')->group(function () {
     Route::patch('/quotes/{quote}/notes', [QuoteController::class, 'updateNotes'])->name('quotes.update-notes');
     Route::get('/quotes/{quote}/payment', [QuoteController::class, 'showPayment'])->name('quotes.payment');
     Route::post('/quotes/{quote}/payment', [QuoteController::class, 'processPayment'])->name('quotes.process-payment');
-    
+
     // Wishlist Routes
     Route::get('/wishlist', [\App\Http\Controllers\WishlistController::class, 'index'])->name('wishlist.index');
     Route::post('/wishlist', [\App\Http\Controllers\WishlistController::class, 'store'])->name('wishlist.store');
     Route::post('/wishlist/toggle', [\App\Http\Controllers\WishlistController::class, 'toggle'])->name('wishlist.toggle');
     Route::delete('/wishlist/{wishlist}', [\App\Http\Controllers\WishlistController::class, 'destroy'])->name('wishlist.destroy');
     Route::get('/wishlist/count', [\App\Http\Controllers\WishlistController::class, 'count'])->name('wishlist.count');
-    
+
     // Profile Routes
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -297,22 +313,22 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Ensure {service} route-model binding only matches numeric IDs
     Route::pattern('service', '[0-9]+');
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
-    
+
     // Categories Management
     Route::resource('categories', \App\Http\Controllers\Admin\CategoryController::class);
     Route::patch('categories/{category}/toggle-active', [\App\Http\Controllers\Admin\CategoryController::class, 'toggleActive'])->name('categories.toggle-active');
-    
+
     // Contact Messages Management
     Route::get('contact-messages', [\App\Http\Controllers\Admin\ContactMessageController::class, 'index'])->name('contact-messages.index');
     Route::get('contact-messages/{contactMessage}', [\App\Http\Controllers\Admin\ContactMessageController::class, 'show'])->name('contact-messages.show');
     Route::patch('contact-messages/{contactMessage}/status', [\App\Http\Controllers\Admin\ContactMessageController::class, 'updateStatus'])->name('contact-messages.update-status');
     Route::delete('contact-messages/{contactMessage}', [\App\Http\Controllers\Admin\ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
-    
+
     // Packages Management
     Route::resource('packages', AdminPackageController::class);
     Route::delete('packages/{package}/images/{image}', [AdminPackageController::class, 'deleteImage'])->name('packages.images.delete');
     Route::post('packages/{package}/images/{image}/set-thumbnail', [AdminPackageController::class, 'setThumbnail'])->name('packages.images.set-thumbnail');
-    
+
     // Services Management
     // Redirect accidental GET on bulk-delete to services list with a helpful message
     Route::get('services/bulk-delete', function () {
@@ -328,7 +344,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('services/export/excel', [AdminServiceController::class, 'export'])->name('services.export');
     Route::post('services/import/excel', [AdminServiceController::class, 'import'])->name('services.import');
     Route::get('services/download/template', [AdminServiceController::class, 'downloadTemplate'])->name('services.template');
-    
+
     // Service Images Management
     Route::delete('services/{service}/images/{image}', [AdminServiceController::class, 'deleteImage'])->name('services.images.delete');
     Route::post('services/{service}/images/{image}/set-thumbnail', [AdminServiceController::class, 'setThumbnail'])->name('services.images.set-thumbnail');
@@ -408,13 +424,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('services/{service}/variations/{variation}', [AdminServiceVariationController::class, 'edit'])->name('services.variations.edit');
     Route::put('services/{service}/variations/{variation}', [AdminServiceVariationController::class, 'update'])->name('services.variations.update');
     Route::delete('services/{service}/variations/{variation}', [AdminServiceVariationController::class, 'destroy'])->name('services.variations.destroy');
-    
+
     // Bookings Management
     Route::get('bookings', [AdminBookingController::class, 'index'])->name('bookings.index');
     Route::get('bookings/{booking}', [AdminBookingController::class, 'show'])->name('bookings.show');
     Route::patch('bookings/{booking}/status', [AdminBookingController::class, 'updateStatus'])->name('bookings.update-status');
     Route::delete('bookings/{booking}', [AdminBookingController::class, 'destroy'])->name('bookings.destroy');
-    
+
     // Quotes Management
     Route::get('quotes', [\App\Http\Controllers\Admin\QuoteController::class, 'index'])->name('quotes.index');
     Route::get('quotes/{quote}', [\App\Http\Controllers\Admin\QuoteController::class, 'show'])->name('quotes.show');
@@ -430,14 +446,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     // Login Activities
     Route::get('login-activities', [\App\Http\Controllers\Admin\LoginActivityController::class, 'index'])->name('login-activities.index');
-    
+
     // Gallery Management
     Route::get('gallery', [AdminGalleryController::class, 'index'])->name('gallery.index');
     Route::get('gallery/create', [AdminGalleryController::class, 'create'])->name('gallery.create');
     Route::post('gallery', [AdminGalleryController::class, 'store'])->name('gallery.store');
     Route::delete('gallery/{gallery}', [AdminGalleryController::class, 'destroy'])->name('gallery.destroy');
     Route::patch('gallery/{gallery}/featured', [AdminGalleryController::class, 'toggleFeatured'])->name('gallery.toggle-featured');
-    
+
     // User Management (Authorized Admin Users)
     Route::prefix('user-management')->name('user-management.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])->name('index');
@@ -450,7 +466,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::post('/{user}/toggle-admin', [\App\Http\Controllers\Admin\UserManagementController::class, 'toggleAdmin'])->name('toggle-admin');
         Route::get('/permissions/manage', [\App\Http\Controllers\Admin\UserManagementController::class, 'permissions'])->name('permissions');
     });
-    
+
     // Customer Management
     Route::get('customers', [CustomerManagementController::class, 'index'])->name('customers.index');
     Route::get('customers/{customer}', [CustomerManagementController::class, 'show'])->name('customers.show');
@@ -463,7 +479,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('customers/{customer}/export', [CustomerManagementController::class, 'exportCustomerDetail'])->name('customers.export-detail');
     Route::get('customers/search', [CustomerManagementController::class, 'search'])->name('customers.search');
     Route::get('customers/analytics', [CustomerManagementController::class, 'analytics'])->name('customers.analytics');
-    
+
     // Suppliers Management
     Route::get('suppliers/create', [\App\Http\Controllers\Admin\SupplierController::class, 'create'])->name('suppliers.create');
     Route::post('suppliers', [\App\Http\Controllers\Admin\SupplierController::class, 'store'])->name('suppliers.store');
@@ -496,6 +512,7 @@ Route::get('/api/services', function (\Illuminate\Http\Request $request) {
         ->orderBy('name')
         ->limit(500)
         ->get();
+
     return response()->json($services);
 });
 
@@ -514,35 +531,35 @@ Route::prefix('supplier')->name('supplier.')->group(function () {
         Route::get('/reset-password', [SupplierAuthController::class, 'showResetPasswordForm'])->name('reset-password');
         Route::post('/reset-password', [SupplierAuthController::class, 'resetPassword'])->name('reset-password.post');
     });
-    
+
     // Authenticated supplier routes
     Route::middleware('supplier')->group(function () {
         // Dashboard
         Route::get('/', [SupplierDashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard', [SupplierDashboardController::class, 'index'])->name('dashboard.index');
-        
+
         // Services
         Route::get('/services', [SupplierDashboardController::class, 'services'])->name('services.index');
         Route::get('/services/{id}', [SupplierDashboardController::class, 'showService'])->name('services.show');
         Route::patch('/services/{id}/toggle', [SupplierDashboardController::class, 'toggleServiceAvailability'])->name('services.toggle');
-        
+
         // Competitive Bookings (New System)
         Route::get('/bookings', [SupplierBookingController::class, 'index'])->name('bookings.index');
         Route::get('/bookings/{booking}', [SupplierBookingController::class, 'show'])->name('bookings.show');
         Route::post('/bookings/{booking}/accept', [SupplierBookingController::class, 'accept'])->name('bookings.accept');
         Route::post('/bookings/{booking}/reject', [SupplierBookingController::class, 'reject'])->name('bookings.reject');
         Route::get('/bookings/count/pending', [SupplierBookingController::class, 'pendingCount'])->name('bookings.pending-count');
-        
+
         // Customers
         Route::get('/customers', [SupplierDashboardController::class, 'customers'])->name('customers.index');
         Route::get('/customers/{id}', [SupplierDashboardController::class, 'showCustomer'])->name('customers.show');
-        
+
         // Profile
         Route::get('/profile', [SupplierDashboardController::class, 'profile'])->name('profile.index');
         Route::put('/profile', [SupplierDashboardController::class, 'updateProfile'])->name('profile.update');
         Route::get('/profile/password', [SupplierDashboardController::class, 'editPassword'])->name('profile.password');
         Route::put('/profile/password', [SupplierDashboardController::class, 'updatePassword'])->name('profile.password.update');
-        
+
         // Reports
         Route::get('/reports', [SupplierDashboardController::class, 'reports'])->name('reports.index');
 

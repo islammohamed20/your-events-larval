@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Supplier;
 use App\Models\SupplierOrderStatus;
 use App\Models\SupplierService;
-use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -53,7 +53,7 @@ class OrderController extends Controller
                     'supplier' => $supplier,
                 ], function ($message) use ($supplier, $order) {
                     $message->to($supplier->email)
-                        ->subject('طلب جديد - ' . $order->service->name);
+                        ->subject('طلب جديد - '.$order->service->name);
                 });
             }
         }
@@ -73,7 +73,7 @@ class OrderController extends Controller
     {
         $supplierId = $request->query('supplier_id');
 
-        if (!$supplierId) {
+        if (! $supplierId) {
             return response()->json([
                 'message' => 'supplier_id مطلوب',
             ], 400);
@@ -81,14 +81,14 @@ class OrderController extends Controller
 
         $order = Order::find($orderId);
 
-        if (!$order) {
+        if (! $order) {
             return response()->json([
                 'message' => 'الطلب غير موجود',
             ], 404);
         }
 
         // التحقق من أن الطلب ما زال متاح
-        if (!$order->isAvailable()) {
+        if (! $order->isAvailable()) {
             return response()->json([
                 'message' => 'تم إسناد الطلب لمورد آخر بالفعل',
                 'supplier_id' => $order->supplier_id,
@@ -99,7 +99,7 @@ class OrderController extends Controller
         // قبول الطلب
         $success = $order->acceptBySupplier($supplierId);
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
                 'message' => 'فشل قبول الطلب',
             ], 400);
@@ -120,7 +120,7 @@ class OrderController extends Controller
         $order = Order::with(['customer', 'supplier', 'service', 'category', 'supplierStatuses.supplier'])
             ->find($id);
 
-        if (!$order) {
+        if (! $order) {
             return response()->json(['message' => 'الطلب غير موجود'], 404);
         }
 

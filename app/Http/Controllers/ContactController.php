@@ -33,6 +33,7 @@ class ContactController extends Controller
             Log::error('Failed to save contact message', [
                 'error' => $e->getMessage(),
             ]);
+
             return back()
                 ->withInput()
                 ->with('error', 'حدث خطأ أثناء إرسال رسالتك. حاول مرة أخرى لاحقاً.');
@@ -41,4 +42,3 @@ class ContactController extends Controller
         return back()->with('success', 'تم إرسال رسالتك بنجاح! سنقوم بالرد عليك قريباً.');
     }
 }
-

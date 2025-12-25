@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->enum('registration_source', ['web', 'admin', 'supplier_registration', 'api', 'social'])
-                  ->default('web')
-                  ->after('email')
-                  ->comment('مصدر التسجيل');
+                ->default('web')
+                ->after('email')
+                ->comment('مصدر التسجيل');
             $table->index('registration_source');
         });
     }
