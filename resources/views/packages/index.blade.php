@@ -4,7 +4,7 @@
 
 @section('content')
 <!-- Page Header -->
-<section class="hero-section" style="padding: 0; background-image: url({{ Storage::url('extra/packetge-banner.jpg') }}); background-position: center; background-size: cover; background-repeat: no-repeat; min-height: 205px; display: flex; align-items: center;">
+<section class="hero-section" style="padding: 0; background-image: url('{{ Storage::url('extra/packetge-banner.jpg') }}'); background-position: center; background-size: cover; background-repeat: no-repeat; min-height: 205px; display: flex; align-items: center;">
 </section>
 
 <!-- Packages Grid -->

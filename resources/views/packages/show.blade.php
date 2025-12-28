@@ -100,9 +100,9 @@
                                     <i class="fas fa-list-check me-2 text-primary"></i>
                                     مميزات الباقة
                                 </h5>
-                                <div class="row">
+                                <div class="row package-features">
                                     @foreach($validFeatures as $feature)
-                                        <div class="col-md-6 mb-2">
+                                        <div class="col-md-6 mb-2 feature-item">
                                             <i class="fas fa-check text-primary me-2"></i>{{ $feature }}
                                         </div>
                                     @endforeach
@@ -130,7 +130,6 @@
                                             <div class="card h-100 border-0 bg-light">
                                                 <div class="card-body">
                                                     <h6 class="card-title text-primary mb-2">
-                                                        <i class="fas fa-cog me-1"></i>
                                                         {{ $attr['name'] }}
                                                     </h6>
                                                     @if(!empty($attr['description']))
@@ -290,6 +289,19 @@
 
 .carousel-indicators button.active {
     background-color: var(--primary-color, #1f144a);
+}
+.fa-list-alt.text-primary,
+.fa-list-check.text-primary {
+    color: #7269b0 !important;
+}
+.package-features .fa-check.text-primary {
+    color: #7269b0 !important;
+}
+.package-features .feature-item {
+    color: #7269b0;
+}
+.card-title.text-primary {
+    color: #7269b0 !important;
 }
 </style>
 

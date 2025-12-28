@@ -6,6 +6,20 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'لوحة تحكم المورد') - Your Events</title>
     
+    @php
+        $faviconSetting = \App\Models\Setting::get('favicon') ?: \App\Models\Setting::get('site_favicon');
+        $faviconUrlSetting = \App\Models\Setting::get('favicon_url');
+        $fallbackFaviconUrl = asset('images/logo/logo.png');
+        $faviconUrl = $faviconSetting
+            ? (filter_var($faviconSetting, FILTER_VALIDATE_URL) ? $faviconSetting : url(Storage::url($faviconSetting)))
+            : ($faviconUrlSetting ? (filter_var($faviconUrlSetting, FILTER_VALIDATE_URL) ? $faviconUrlSetting : url($faviconUrlSetting)) : $fallbackFaviconUrl);
+        $faviconPath = parse_url($faviconUrl, PHP_URL_PATH);
+        $faviconExt = strtolower(pathinfo($faviconPath ?? $faviconUrl, PATHINFO_EXTENSION));
+        $faviconType = $faviconExt === 'ico' ? 'image/x-icon' : ($faviconExt === 'svg' ? 'image/svg+xml' : 'image/png');
+    @endphp
+    <link rel="icon" type="{{ $faviconType }}" href="{{ $faviconUrl }}">
+    <link rel="shortcut icon" type="{{ $faviconType }}" href="{{ $faviconUrl }}">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">

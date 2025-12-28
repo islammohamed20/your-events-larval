@@ -84,7 +84,7 @@
                     @if($service->description || $service->marketing_description)
                     <div class="mb-4">
                         <h5 class="mb-3">
-                            <i class="fas fa-align-left text-primary me-2"></i>الوصف
+                            <i class="fas fa-align-left text-primary me-2"></i>&nbsp;الوصف
                         </h5>
                         <div class="text-muted" style="line-height: 1.8;">
                             {!! nl2br(e($service->description ?: $service->marketing_description)) !!}
@@ -304,8 +304,9 @@
                                     
                                     <div class="row g-2">
                                         <div class="col-12 col-md-6">
-                                            <button type="submit" class="btn btn-primary w-100 mb-2">
-                                                <i class="fas fa-cart-plus me-2"></i>اضف إلي السلة
+                                            <button type="submit" class="btn btn-primary w-100 mb-2 d-flex align-items-center justify-content-center gap-2 text-center">
+                                                <i class="fas fa-cart-plus"></i>
+                                                <span>اضف إلي السلة</span>
                                             </button>
                                         </div>
                                         <div class="col-12 col-md-6">
@@ -335,19 +336,21 @@
                         </div>
                         
                         <div class="row g-2">
-                            <div class="col-12 col-md-6">
+                            <div class="col-12">
                                 <a href="{{ route('contact') }}" class="btn btn-outline-primary w-100">
                                     <i class="fas fa-phone me-2"></i>&nbsp;اتصل بنا
                                 </a>
                             </div>
-                            <div class="col-12 col-md-6">
-                                @guest
+                        </div>
+                        @guest
+                        <div class="row g-2">
+                            <div class="col-12">
                                 <a href="{{ route('login') }}" class="btn btn-outline-danger w-100 mb-3">
                                     <i class="far fa-heart me-2"></i>&nbsp;سجل دخولك لإضافة للمفضلة
                                 </a>
-                                @endguest
                             </div>
                         </div>
+                        @endguest
                     </div>
                 </div>
                 
@@ -560,7 +563,35 @@
 .card:hover::before {
     transform: none !important;
 }
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+
+#service-price-display {
+    color: #7269b0 !important;
+}
+.fa-align-left.text-primary,
+.fa-gift.text-primary,
+.fa-clock.text-primary,
+.fa-envelope.text-primary {
+    color: #7269b0 !important;
+}
+.card-title.mb-1,
+.card-title.mb-1 a {
+    color: #7269b0 !important;
+}
+.card-title.mb-1 a:hover {
+    color: #7269b0 !important;
+}
+@media (min-width: 992px) {
+    #add-to-cart-form .btn {
+        font-size: 0.95rem !important;
+        white-space: nowrap;
+    }
+}
+@media (min-width: 768px) and (max-width: 991.98px) {
+    #add-to-cart-form .btn {
+        font-size: 0.9rem !important;
+        white-space: nowrap;
+        padding: .5rem .75rem !important;
+    }
 }
 </style>
 

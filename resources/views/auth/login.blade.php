@@ -377,20 +377,12 @@
 </style>
 
 <section class="auth-section py-5">
-    <!-- Floating Icons -->
-    <div class="floating-icon">🎭</div>
-    <div class="floating-icon">🎪</div>
-    <div class="floating-icon">🎨</div>
-    <div class="floating-icon">🎬</div>
-    <div class="floating-icon">🎯</div>
-    <div class="floating-icon">🎊</div>
-    
     <div class="container auth-container">
         <div class="row justify-content-center">
             <div class="col-lg-5 col-md-7">
                 <div class="card auth-card" data-aos="fade-up">
                     <div class="auth-header">
-                        <h1>🎉 حيااااك الله</h1>
+                        <h1>حيااااك الله</h1>
                         <p>سجّل دخولك وعيش رحلة تجهيز فعاليتك</p>
                     </div>
                     
@@ -410,12 +402,9 @@
                             
                             <div class="mb-4">
                                 <label for="email" class="form-label">
-                                    <i class="fas fa-envelope"></i> البريد الإلكتروني
+                                    البريد الإلكتروني
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-at"></i>
-                                    </span>
                                     <input type="email" class="form-control" name="email" id="email" 
                                            value="{{ old('email') }}" placeholder="hello@yourevents.sa" required autofocus>
                                 </div>
@@ -423,12 +412,9 @@
 
                             <div class="mb-4">
                                 <label for="password" class="form-label">
-                                    <i class="fas fa-lock"></i> كلمة المرور
+                                    كلمة المرور
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-key"></i>
-                                    </span>
                                     <input type="password" class="form-control" name="password" id="password" placeholder="xxxxxxxxxxxxxxxx" required>
                                 </div>
                             </div>
@@ -436,13 +422,13 @@
                             <div class="mb-4 form-check">
                                 <input type="checkbox" class="form-check-input" name="remember" id="remember">
                                 <label class="form-check-label" for="remember">
-                                    <i class="fas fa-bookmark"></i> تذكرني
+                                    تذكرني
                                 </label>
                             </div>
 
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
+                                    تسجيل الدخول
                                 </button>
                             </div>
                         </form>
@@ -451,22 +437,20 @@
 
                         <div class="text-center mb-4">
                             <p class="mb-3" style="font-size: 15px;">
-                                <i class="fas fa-user-plus me-2" style="color: #667eea;"></i>ما عندك حساب؟
+                                ما عندك حساب؟
                             </p>
                             <a href="{{ route('register') }}" class="btn btn-outline-primary w-100">
-                                <i class="fas fa-user-plus me-2"></i>تعال نبتدي معك
+                                تعال نبتدي معك
                             </a>
                         </div>
 
                         <div class="text-center mb-3">
                             <a href="{{ route('password.request') }}" class="text-link">
-                                <i class="fas fa-key me-1"></i>
                                 نسيت كلمة السر؟
                             </a>
                         </div>
 
                         <p class="text-muted small text-center" style="font-size: 13px; margin: 0;">
-                            <i class="fas fa-info-circle me-1"></i>
                             أستمرارك معنا، يعني أنت موافق على <a href="{{ route('terms') }}" class="text-link">شروط الاستخدام</a>
                         </p>
                     </div>
@@ -474,7 +458,7 @@
 
                 <div class="text-center mt-4">
                     <a href="{{ route('home') }}" class="back-link">
-                        <i class="fas fa-arrow-right"></i>العودة للرئيسية
+                        العودة للرئيسية
                     </a>
                 </div>
             </div>

@@ -8,11 +8,12 @@
     
     <!-- Favicon -->
     @php
-        $faviconSetting = \App\Models\Setting::get('site_favicon');
+        $faviconSetting = \App\Models\Setting::get('favicon') ?: \App\Models\Setting::get('site_favicon');
         $faviconUrlSetting = \App\Models\Setting::get('favicon_url');
+        $fallbackFaviconUrl = asset('images/logo/logo.png');
         $faviconUrl = $faviconSetting
-            ? Storage::url($faviconSetting)
-            : ($faviconUrlSetting ?: asset('images/logo/logo.png'));
+            ? (filter_var($faviconSetting, FILTER_VALIDATE_URL) ? $faviconSetting : url(Storage::url($faviconSetting)))
+            : ($faviconUrlSetting ? (filter_var($faviconUrlSetting, FILTER_VALIDATE_URL) ? $faviconUrlSetting : url($faviconUrlSetting)) : $fallbackFaviconUrl);
         $faviconPath = parse_url($faviconUrl, PHP_URL_PATH);
         $faviconExt = strtolower(pathinfo($faviconPath ?? $faviconUrl, PATHINFO_EXTENSION));
         $faviconType = $faviconExt === 'ico' ? 'image/x-icon' : 'image/png';

@@ -249,6 +249,84 @@
                 <i class="fas fa-question-circle me-2"></i>اعرض جميع الأسئلة الشائعة
             </a>
         </div>
+        <div class="row justify-content-center mt-4" data-aos="fade-up" data-aos-delay="150">
+            <div class="col-lg-10">
+                <div class="accordion" id="contactFaqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#contactFaq1">
+                                وش هو Your Events؟
+                            </button>
+                        </h2>
+                        <div id="contactFaq1" class="accordion-collapse collapse show" data-bs-parent="#contactFaqAccordion">
+                            <div class="accordion-body">
+                                منصة سعودية تجمع كل خدمات تجهيز الفعاليات في مكان واحد… بدون تشتت وأسعار مناسبة.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#contactFaq2">
+                                تنظمون الفعاليات؟
+                            </button>
+                        </h2>
+                        <div id="contactFaq2" class="accordion-collapse collapse" data-bs-parent="#contactFaqAccordion">
+                            <div class="accordion-body">
+                                لا، إحنا نجهز كل شيء… التنظيم عليك.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#contactFaq3">
+                                الخدمات متوفرة وين؟
+                            </button>
+                        </h2>
+                        <div id="contactFaq3" class="accordion-collapse collapse" data-bs-parent="#contactFaqAccordion">
+                            <div class="accordion-body">
+                                حالياً في الرياض فقط.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#contactFaq4">
+                                كيف أطلب خدمة من Your Events؟
+                            </button>
+                        </h2>
+                        <div id="contactFaq4" class="accordion-collapse collapse" data-bs-parent="#contactFaqAccordion">
+                            <div class="accordion-body">
+                                اختار الخدمة، اضغط “اطلب الآن”، واستلم عرض سعر فوري على ايميلك.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#contactFaq5">
+                                أقدر أشوف السعر قبل الدفع؟
+                            </button>
+                        </h2>
+                        <div id="contactFaq5" class="accordion-collapse collapse" data-bs-parent="#contactFaqAccordion">
+                            <div class="accordion-body">
+                                أكيد، عندنا ميزة عرض السعر الفوري والتلقائي عشان تعرف التكلفة قبل ما تدفع.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#contactFaq6">
+                                كيف أدفع بعد الموافقة على السعر؟
+                            </button>
+                        </h2>
+                        <div id="contactFaq6" class="accordion-collapse collapse" data-bs-parent="#contactFaqAccordion">
+                            <div class="accordion-body">
+                                تقدر تدفع مباشرة عبر المنصة بأمان بعد موافقتك على السعر.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 

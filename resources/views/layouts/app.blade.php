@@ -81,14 +81,19 @@
     <script type="application/ld+json">@json(array_filter($orgSchema))</script>
     <script type="application/ld+json">@json(array_filter($websiteSchema))</script>
 
-    <!-- Favicon -->
     @php
-        $favicon = \App\Models\Setting::get('favicon');
+        $faviconSetting = \App\Models\Setting::get('favicon') ?: \App\Models\Setting::get('site_favicon');
+        $faviconUrlSetting = \App\Models\Setting::get('favicon_url');
+        $fallbackFaviconUrl = asset('images/logo/logo.png');
+        $faviconUrl = $faviconSetting
+            ? (filter_var($faviconSetting, FILTER_VALIDATE_URL) ? $faviconSetting : url(Storage::url($faviconSetting)))
+            : ($faviconUrlSetting ? (filter_var($faviconUrlSetting, FILTER_VALIDATE_URL) ? $faviconUrlSetting : url($faviconUrlSetting)) : $fallbackFaviconUrl);
+        $faviconPath = parse_url($faviconUrl, PHP_URL_PATH);
+        $faviconExt = strtolower(pathinfo($faviconPath ?? $faviconUrl, PATHINFO_EXTENSION));
+        $faviconType = $faviconExt === 'ico' ? 'image/x-icon' : ($faviconExt === 'svg' ? 'image/svg+xml' : 'image/png');
     @endphp
-    @if($favicon)
-        <link rel="icon" type="image/png" href="{{ Storage::url($favicon) }}">
-        <link rel="shortcut icon" type="image/png" href="{{ Storage::url($favicon) }}">
-    @endif
+    <link rel="icon" type="{{ $faviconType }}" href="{{ $faviconUrl }}">
+    <link rel="shortcut icon" type="{{ $faviconType }}" href="{{ $faviconUrl }}">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1910,6 +1915,8 @@
         
         .navbar-toggler-icon {
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2845, 188, 174, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
         }
         
         /* Hide navbar-collapse on mobile - use drawer instead */

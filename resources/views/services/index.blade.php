@@ -276,7 +276,7 @@
 
 /* حاوية مربعة على الموبايل والصورة تملأها بالكامل */
 @media (max-width: 768px) {
-    .service-card .service-image-wrapper { width: 100%; aspect-ratio: 1 / 1; }
+    .service-card .service-image-wrapper { width: 100%; }
     .service-card .service-image { width: 100%; height: 100%; object-fit: cover; }
 }
 </style>
@@ -524,6 +524,47 @@
 
 .add-to-cart-btn.success {
     background: linear-gradient(135deg, #2dbcae 0%, #4dd2c2 100%) !important;
+}
+
+@media (max-width: 768px) {
+    .service-card .card-body {
+        padding: 0.75rem !important;
+    }
+
+    .service-card .card-body .card-title {
+        font-size: 0.95rem;
+        line-height: 1.25;
+        margin-bottom: 0.35rem !important;
+    }
+
+    .service-card .card-body > .mb-3 {
+        margin-bottom: 0.4rem !important;
+    }
+
+    .service-card .card-body .h5.text-primary {
+        font-size: 1rem;
+    }
+
+    .service-card .card-body small.text-muted {
+        font-size: 0.75rem;
+    }
+
+    .service-card .card-body .mt-auto {
+        margin-top: 0 !important;
+    }
+
+    .service-card .add-to-cart-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .service-card .add-to-cart-btn i.me-2 {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
 }
 
 /* List View (Optional) */

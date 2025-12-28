@@ -492,6 +492,7 @@
         text-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
         letter-spacing: -0.5px;
         transition: all 0.3s ease;
+        white-space: nowrap;
     }
 
     .category-card-wrapper:hover .category-title {
@@ -585,6 +586,7 @@
         box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
         transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         min-height: 150px;
+        height: 150px;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -605,6 +607,13 @@
         font-weight: 800;
         margin-bottom: 4px;
         text-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        overflow: hidden;
+        line-height: 1.2;
+        min-height: calc(1.2em * 2);
     }
 
     .category-mobile-wrapper .services-count {
@@ -624,6 +633,22 @@
         height: 54px;
         object-fit: contain;
         opacity: 0.95;
+        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
+    }
+
+    .category-mobile-wrapper.has-image .category-mobile-icon img {
+        width: 48px !important;
+        height: 48px !important;
+    }
+
+    .category-mobile-wrapper.has-image .category-mobile-icon i {
+        font-size: 2.2rem !important;
+    }
+
+    .category-mobile-icon i {
+        font-size: 2.5rem;
+        color: #ffffff;
+        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
     }
 
     .category-mobile-icon.sm img {
@@ -1160,11 +1185,11 @@
                                 @if($category->icon_png)
                                     <img src="{{ asset('storage/' . $category->icon_png) }}" 
                                          alt="{{ $category->name }}" 
-                                         style="width: 60px; height: 60px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));">
+                                         loading="lazy">
                                 @elseif($category->icon)
-                                    <i class="{{ $category->icon }}" style="font-size: 2.5rem; color: white;"></i>
+                                    <i class="{{ $category->icon }}"></i>
                                 @else
-                                    <i class="fas fa-star" style="font-size: 2.5rem; color: white;"></i>
+                                    <i class="fas fa-star"></i>
                                 @endif
                             </div>
 
@@ -1711,6 +1736,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     .category-mobile-wrapper {
         min-height: 130px;
+        height: 130px;
     }
 }
 </style>
