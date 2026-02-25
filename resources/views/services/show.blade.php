@@ -479,14 +479,19 @@
                             @endif
                             {{-- إزالة العنوان الفرعي داخل الخدمات المشابهة لتقليل الازدحام --}}
                             <div class="mt-auto">
-                                @if($s->isVariable())
-                                    <a href="{{ route('services.show', $s->id) }}" class="btn btn-sm btn-primary rounded-pill px-3 w-100">{{ __('common.select_options') }}</a>
+                                @php $unavailable = $s->suppliers->count() === 0; @endphp
+                                @if($unavailable)
+                                    <button class="btn btn-sm btn-secondary rounded-pill px-3 w-100" disabled>{{ __('common.unavailable') }}</button>
                                 @else
-                                    <form action="{{ route('cart.add', $s) }}" method="POST">
-                                        @csrf
-                                        <input type="hidden" name="quantity" value="1">
-                                        <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 w-100">{{ __('buttons.add_to_cart') }}</button>
-                                    </form>
+                                    @if($s->isVariable())
+                                        <a href="{{ route('services.show', $s->id) }}" class="btn btn-sm btn-primary rounded-pill px-3 w-100">{{ __('common.select_options') }}</a>
+                                    @else
+                                        <form action="{{ route('cart.add', $s) }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="quantity" value="1">
+                                            <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 w-100">{{ __('common.add_to_cart') }}</button>
+                                        </form>
+                                    @endif
                                 @endif
                             </div>
                         </div>

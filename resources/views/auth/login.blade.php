@@ -14,8 +14,10 @@
 
     /* Fix Navbar on Login Page to match Home Page search box contrast */
     .navbar {
-        background: linear-gradient(135deg, #1f1449 0%, #2d1a5e 100%);
-        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        background: linear-gradient(135deg, rgba(31, 20, 74, 0.95) 0%, rgba(45, 26, 94, 0.95) 50%, rgba(114, 105, 176, 0.95) 100%) !important;
+        box-shadow: 0 12px 40px rgba(31, 20, 74, 0.6);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
     }
     
     /* Animated Wave Background */
