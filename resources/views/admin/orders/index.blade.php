@@ -3,7 +3,7 @@
 @section('title', 'إدارة الطلبات')
 
 @section('content')
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4" id="adminOrdersAutoRefresh">
     <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -100,7 +100,7 @@
                                 <span class="badge bg-info">{{ $order->quantity }}</span>
                             </td>
                             <td>
-                                <span class="text-success fw-bold">{{ number_format($order->price, 2) }} ريال</span>
+                                <span class="text-success fw-bold">{{ number_format($order->price, 2) }} {{ __('common.currency') }}</span>
                             </td>
                             <td>
                                 @if($order->customer_notes)
@@ -187,4 +187,32 @@
         font-size: 12px;
     }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var container = document.getElementById('adminOrdersAutoRefresh');
+    if (!container) return;
+
+    function refreshOrders() {
+        if (document.visibilityState !== 'visible') return;
+
+        fetch(window.location.href, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            cache: 'no-store'
+        })
+        .then(response => response.text())
+        .then(html => {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var newContainer = doc.getElementById('adminOrdersAutoRefresh');
+            if (newContainer) {
+                container.innerHTML = newContainer.innerHTML;
+            }
+        })
+        .catch(() => {});
+    }
+
+    setInterval(refreshOrders, 5000); // كل 5 ثواني
+});
+</script>
 @endsection

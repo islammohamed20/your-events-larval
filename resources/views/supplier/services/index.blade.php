@@ -1,7 +1,7 @@
 @extends('supplier.layouts.app')
 
-@section('title', 'خدماتي')
-@section('page-title', 'خدماتي')
+@section('title', __('common.my_services'))
+@section('page-title', __('common.my_services'))
 
 @section('content')
 <!-- Filters -->
@@ -9,9 +9,9 @@
     <div class="p-3">
         <form method="GET" class="row g-3 align-items-end">
             <div class="col-md-4">
-                <label class="form-label">الفئة</label>
+                <label class="form-label">{{ __('common.category') }}</label>
                 <select name="category" class="form-select">
-                    <option value="">جميع الفئات</option>
+                    <option value="">{{ __('common.all_categories') }}</option>
                     @foreach($categories as $category)
                         <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
                             {{ $category->name }}
@@ -20,19 +20,19 @@
                 </select>
             </div>
             <div class="col-md-4">
-                <label class="form-label">الحالة</label>
+                <label class="form-label">{{ __('common.status') }}</label>
                 <select name="status" class="form-select">
-                    <option value="">الكل</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
-                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>غير نشط</option>
+                    <option value="">{{ __('common.all') }}</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>{{ __('common.active') }}</option>
+                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>{{ __('common.inactive') }}</option>
                 </select>
             </div>
             <div class="col-md-4">
                 <button type="submit" class="btn btn-supplier-primary">
-                    <i class="fas fa-filter me-1"></i> تصفية
+                    <i class="fas fa-filter me-1"></i> {{ __('common.filter') }}
                 </button>
                 <a href="{{ route('supplier.services.index') }}" class="btn btn-light">
-                    <i class="fas fa-undo me-1"></i> إعادة تعيين
+                    <i class="fas fa-undo me-1"></i> {{ __('common.reset') }}
                 </a>
             </div>
         </form>
@@ -52,9 +52,9 @@
                 <!-- Status Badge -->
                 <div class="position-absolute top-0 end-0 m-2">
                     @if($service->is_active)
-                        <span class="badge bg-success"><i class="fas fa-check me-1"></i>نشط</span>
+                        <span class="badge bg-success"><i class="fas fa-check me-1"></i>{{ __('common.active') }}</span>
                     @else
-                        <span class="badge bg-secondary"><i class="fas fa-pause me-1"></i>غير نشط</span>
+                        <span class="badge bg-secondary"><i class="fas fa-pause me-1"></i>{{ __('common.inactive') }}</span>
                     @endif
                 </div>
             </div>
@@ -63,7 +63,7 @@
             <div class="p-3">
                 <div class="mb-2">
                     <span class="badge" style="background: rgba(102, 126, 234, 0.1); color: #667eea;">
-                        {{ $service->category->name ?? 'غير مصنف' }}
+                        {{ $service->category->name ?? __('common.uncategorized') }}
                     </span>
                 </div>
                 <h5 class="fw-bold mb-2">{{ $service->name }}</h5>
@@ -72,7 +72,7 @@
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <div>
                         <span class="fw-bold" style="color: #1f144a; font-size: 1.2rem;">
-                            {{ number_format($service->base_price, 0) }} ر.س
+                            {{ number_format($service->base_price, 0) }} {{ __('common.currency') }}
                         </span>
                     </div>
                 </div>
@@ -80,7 +80,7 @@
                 <!-- Actions -->
                 <div class="d-flex gap-2">
                     <a href="{{ route('supplier.services.show', $service->id) }}" class="btn btn-sm btn-outline-primary flex-grow-1">
-                        <i class="fas fa-eye me-1"></i> التفاصيل
+                        <i class="fas fa-eye me-1"></i> {{ __('common.details') }}
                     </a>
                     <form action="{{ route('supplier.services.toggle', $service->id) }}" method="POST" class="d-inline">
                         @csrf
@@ -102,8 +102,8 @@
         <div class="content-card">
             <div class="text-center py-5">
                 <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
-                <h4 class="text-muted">لا توجد خدمات</h4>
-                <p class="text-muted">لم يتم تسجيل أي خدمات لك بعد</p>
+                <h4 class="text-muted">{{ __('common.no_services') }}</h4>
+                <p class="text-muted">{{ __('common.no_services_hint') }}</p>
             </div>
         </div>
     </div>

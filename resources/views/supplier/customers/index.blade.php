@@ -40,7 +40,7 @@
                         </div>
                         <div class="col-4">
                             <div class="fw-bold text-success">{{ number_format($customer->total_spent, 0) }}</div>
-                            <small class="text-muted">ر.س</small>
+                            <small class="text-muted">{{ __('common.currency') }}</small>
                         </div>
                         <div class="col-4">
                             <div class="fw-bold text-info">{{ \Carbon\Carbon::parse($customer->last_booking)->diffForHumans() }}</div>

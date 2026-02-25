@@ -33,7 +33,7 @@
                                     <div class="col-12">
                                         <div class="alert alert-info">
                                             <h5 class="alert-heading">الباقة المختارة:</h5>
-                                            <strong>{{ $selectedPackage->name }}</strong> - {{ number_format($selectedPackage->price) }} ر.س
+                                            <strong>{{ $selectedPackage->name }}</strong> - {{ number_format($selectedPackage->price) }} {{ __('common.currency') }}
                                             <input type="hidden" name="package_id" value="{{ $selectedPackage->id }}">
                                         </div>
                                     </div>
@@ -52,7 +52,7 @@
                                             <option value="">-- اختر الباقة --</option>
                                             @foreach($packages as $package)
                                                 <option value="{{ $package->id }}" {{ old('package_id') == $package->id ? 'selected' : '' }}>
-                                                    {{ $package->name }} - {{ number_format($package->price) }} ر.س
+                                                    {{ $package->name }} - {{ number_format($package->price) }} {{ __('common.currency') }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -110,9 +110,31 @@
                                            value="{{ old('guests_count', 50) }}" min="1" required>
                                 </div>
                                 <div class="col-12 mb-3">
-                                    <label for="event_location" class="form-label">مكان المناسبة *</label>
-                                    <input type="text" class="form-control" name="event_location" id="event_location" 
-                                           value="{{ old('event_location') }}" placeholder="الرياض، المملكة العربية السعودية" required>
+                                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                        <label for="event_location" class="form-label mb-0">مكان المناسبة *</label>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" id="eventUseMyLocation">
+                                            <i class="fas fa-location-arrow me-1"></i>استخدم موقعي
+                                        </button>
+                                    </div>
+                                    <input type="hidden" name="event_location" id="event_location" value="{{ old('event_location') }}">
+                                    <input type="hidden" name="event_lat" value="{{ old('event_lat') }}">
+                                    <input type="hidden" name="event_lng" value="{{ old('event_lng') }}">
+                                    <div id="eventLocationMap" class="border rounded mt-2"></div>
+                                    <div id="eventLocationDisplay" class="small text-muted mt-2">
+                                        {{ old('event_location', 'لم يتم اختيار موقع بعد') }}
+                                    </div>
+                                    <div id="eventLocationError" class="text-danger small mt-2 d-none">
+                                        يرجى تحديد موقع المناسبة من الخريطة
+                                    </div>
+                                    @error('event_location')
+                                        <div class="text-danger small mt-2">{{ $message }}</div>
+                                    @enderror
+                                    @error('event_lat')
+                                        <div class="text-danger small mt-2">{{ $message }}</div>
+                                    @enderror
+                                    @error('event_lng')
+                                        <div class="text-danger small mt-2">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label for="special_requests" class="form-label">طلبات خاصة (اختياري)</label>
@@ -163,10 +185,33 @@
 </section>
 @endsection
 
+<style>
+#eventLocationMap {
+    height: 320px;
+    min-height: 320px;
+    width: 100%;
+}
+
+.leaflet-container img {
+    max-width: none !important;
+    max-height: none !important;
+}
+
+.leaflet-container .leaflet-tile {
+    max-width: none !important;
+    max-height: none !important;
+    width: 256px !important;
+    height: 256px !important;
+}
+</style>
+
+@push('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+@endpush
+
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Prevent selecting both package and service
     const packageSelect = document.getElementById('package_id');
     const serviceSelect = document.getElementById('service_id');
     
@@ -184,17 +229,151 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Form validation
     const form = document.querySelector('form');
-    form.addEventListener('submit', function(e) {
-        const packageId = document.querySelector('[name="package_id"]')?.value;
-        const serviceId = document.querySelector('[name="service_id"]')?.value;
-        
-        if (!packageId && !serviceId) {
-            e.preventDefault();
-            alert('يرجى اختيار باقة أو خدمة واحدة على الأقل');
-        }
-    });
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const packageId = document.querySelector('[name="package_id"]')?.value;
+            const serviceId = document.querySelector('[name="service_id"]')?.value;
+            
+            if (!packageId && !serviceId) {
+                e.preventDefault();
+                alert('يرجى اختيار باقة أو خدمة واحدة على الأقل');
+            }
+        });
+    }
 });
 </script>
 @endsection
+
+@push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const locationInput = document.querySelector('input[name="event_location"]');
+    const locationDisplay = document.getElementById('eventLocationDisplay');
+    const latInput = document.querySelector('input[name="event_lat"]');
+    const lngInput = document.querySelector('input[name="event_lng"]');
+    const useMyLocationBtn = document.getElementById('eventUseMyLocation');
+    const mapEl = document.getElementById('eventLocationMap');
+    const errorEl = document.getElementById('eventLocationError');
+
+    if (!mapEl || typeof L === 'undefined') {
+        if (useMyLocationBtn) useMyLocationBtn.style.display = 'none';
+        return;
+    }
+
+    const defaultCenter = [24.7136, 46.6753];
+    const initialLat = parseFloat(latInput?.value || '');
+    const initialLng = parseFloat(lngInput?.value || '');
+    const hasInitial = Number.isFinite(initialLat) && Number.isFinite(initialLng);
+
+    const map = L.map(mapEl).setView(hasInitial ? [initialLat, initialLng] : defaultCenter, hasInitial ? 14 : 11);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+    }).addTo(map);
+
+    setTimeout(function() {
+        map.invalidateSize();
+    }, 50);
+
+    window.addEventListener('load', function() {
+        map.invalidateSize();
+    });
+
+    window.addEventListener('resize', function() {
+        map.invalidateSize();
+    });
+
+    let marker = null;
+
+    function setLocation(lat, lng, shouldPan) {
+        if (errorEl) {
+            errorEl.classList.add('d-none');
+        }
+        if (marker) {
+            marker.setLatLng([lat, lng]);
+        } else {
+            marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+            marker.on('dragend', function(e) {
+                const ll = e.target.getLatLng();
+                setLocation(ll.lat, ll.lng, false);
+            });
+        }
+
+        if (latInput) latInput.value = lat.toFixed(7);
+        if (lngInput) lngInput.value = lng.toFixed(7);
+
+        if (shouldPan) {
+            map.setView([lat, lng], Math.max(map.getZoom(), 14));
+        }
+
+        const fallbackLocation = lat.toFixed(5) + ', ' + lng.toFixed(5);
+        if (locationInput) {
+            locationInput.value = fallbackLocation;
+        }
+        if (locationDisplay) {
+            locationDisplay.textContent = fallbackLocation;
+        }
+
+        const url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=ar&lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lng);
+        fetch(url, { headers: { 'Accept': 'application/json' } })
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                const name = data && data.display_name ? String(data.display_name) : '';
+                if (name && locationInput) {
+                    locationInput.value = name;
+                }
+                if (name && locationDisplay) {
+                    locationDisplay.textContent = name;
+                }
+            })
+            .catch(() => {});
+    }
+
+    map.on('click', function(e) {
+        setLocation(e.latlng.lat, e.latlng.lng, false);
+    });
+
+    if (hasInitial) {
+        setLocation(initialLat, initialLng, true);
+    }
+
+    if (useMyLocationBtn && navigator.geolocation) {
+        useMyLocationBtn.addEventListener('click', function() {
+            useMyLocationBtn.disabled = true;
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    useMyLocationBtn.disabled = false;
+                    setLocation(pos.coords.latitude, pos.coords.longitude, true);
+                },
+                function() {
+                    useMyLocationBtn.disabled = false;
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+            );
+        });
+    } else if (useMyLocationBtn) {
+        useMyLocationBtn.style.display = 'none';
+    }
+
+    const form = mapEl.closest('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const latValue = parseFloat(latInput?.value || '');
+            const lngValue = parseFloat(lngInput?.value || '');
+            const hasLocation = Number.isFinite(latValue) && Number.isFinite(lngValue);
+
+            if (!hasLocation) {
+                e.preventDefault();
+                if (errorEl) {
+                    errorEl.classList.remove('d-none');
+                }
+                mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    }
+});
+</script>
+@endpush

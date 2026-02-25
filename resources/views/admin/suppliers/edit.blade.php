@@ -125,18 +125,6 @@
                 </div>
 
                 <div class="col-12">
-                    <label class="form-label">الفئات التي يقدمها المورد</label>
-                    <select name="services_offered[]" class="form-select" multiple>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" @selected(collect(old('services_offered', $supplier->services_offered ?? []))->contains($category->id))>
-                                {{ $category->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <small class="text-muted">اختر فئة أو أكثر، تُستخدم للتحقق عند إضافة خدمات للمورد.</small>
-                </div>
-
-                <div class="col-12">
                     <label class="form-label">روابط التواصل الاجتماعي</label>
                     @php($social = is_array($supplier->social_media) ? $supplier->social_media : [])
                     <div class="row g-2">
@@ -165,4 +153,3 @@
     </form>
 </div>
 @endsection
-

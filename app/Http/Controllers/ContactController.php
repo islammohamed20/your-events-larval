@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ContactMessage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ContactController extends Controller
@@ -19,15 +19,12 @@ class ContactController extends Controller
         ]);
 
         try {
-            DB::table('contact_messages')->insert([
+            ContactMessage::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'phone' => $validated['phone'] ?? null,
                 'subject' => $validated['subject'],
                 'message' => $validated['message'],
-                'status' => 'new',
-                'created_at' => now(),
-                'updated_at' => now(),
             ]);
         } catch (\Throwable $e) {
             Log::error('Failed to save contact message', [

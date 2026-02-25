@@ -20,12 +20,12 @@ class SecurityHeaders
         // Content Security Policy
         $response->headers->set('Content-Security-Policy',
             "default-src 'self'; ".
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://cdn.tiny.cloud; ".
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com https://cdn.tiny.cloud https://www.google.com https://www.gstatic.com; ".
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.bunny.net; ".
             "font-src 'self' https://fonts.gstatic.com https://fonts.bunny.net https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; ".
             "img-src 'self' data: https: blob:; ".
             "media-src 'self'; ".
-            "connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.tiny.cloud; ".
+            "connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.tiny.cloud https://www.google.com; ".
             "frame-src 'self' https://www.google.com https://maps.google.com https://www.youtube.com; ".
             "child-src 'self' https://www.google.com https://maps.google.com https://www.youtube.com; ".
             "object-src 'none'; ".

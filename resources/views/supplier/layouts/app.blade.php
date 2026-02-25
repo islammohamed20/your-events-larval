@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ app()->getLocale() }}" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'لوحة تحكم المورد') - Your Events</title>
+    <title>@yield('title', __('common.supplier_dashboard_title')) - Your Events</title>
     
     @php
         $faviconSetting = \App\Models\Setting::get('favicon') ?: \App\Models\Setting::get('site_favicon');
@@ -47,6 +47,8 @@
         body {
             background: #f4f6f9;
             min-height: 100vh;
+            direction: rtl;
+            text-align: right;
         }
         
         /* Sidebar */
@@ -415,32 +417,32 @@
         </div>
         
         <div class="supplier-info">
-            <div class="name">{{ Auth::guard('supplier')->user()->name ?? 'المورد' }}</div>
+            <div class="name">{{ Auth::guard('supplier')->user()->name ?? __('common.supplier') }}</div>
             <div class="type">
                 @if(Auth::guard('supplier')->user()->supplier_type === 'company')
-                    <i class="fas fa-building me-1"></i> منشأة
+                    <i class="fas fa-building me-1"></i> {{ __('common.company') }}
                 @else
-                    <i class="fas fa-user me-1"></i> فرد
+                    <i class="fas fa-user me-1"></i> {{ __('common.individual') }}
                 @endif
             </div>
         </div>
         
         <nav class="sidebar-nav">
-            <div class="nav-section">القائمة الرئيسية</div>
+            <div class="nav-section">{{ __('common.main_menu') }}</div>
             
             <a href="{{ route('supplier.dashboard') }}" class="nav-link {{ request()->routeIs('supplier.dashboard') ? 'active' : '' }}">
                 <i class="fas fa-home"></i>
-                <span>لوحة التحكم</span>
+                <span>{{ __('common.dashboard') }}</span>
             </a>
             
             <a href="{{ route('supplier.services.index') }}" class="nav-link {{ request()->routeIs('supplier.services*') ? 'active' : '' }}">
                 <i class="fas fa-concierge-bell"></i>
-                <span>خدماتي</span>
+                <span>{{ __('common.my_services') }}</span>
             </a>
             
             <a href="{{ route('supplier.bookings.index') }}" class="nav-link {{ request()->routeIs('supplier.bookings*') ? 'active' : '' }}">
                 <i class="fas fa-calendar-check"></i>
-                <span>الحجوزات</span>
+                <span>{{ __('common.bookings') }}</span>
                 @php
                     $pendingCount = Auth::guard('supplier')->user()->services()
                         ->join('bookings', 'services.id', '=', 'bookings.service_id')
@@ -456,7 +458,7 @@
 
             <a href="{{ route('supplier.quotes.index') }}" class="nav-link {{ request()->routeIs('supplier.quotes*') ? 'active' : '' }}">
                 <i class="fas fa-file-invoice-dollar"></i>
-                <span>عروض الأسعار</span>
+                <span>{{ __('common.quotes') }}</span>
                 @php
                     try {
                         $serviceIds = Auth::guard('supplier')->user()->services()->pluck('services.id');
@@ -472,30 +474,30 @@
                 @endif
             </a>
             
-            <div class="nav-section">الإحصائيات</div>
+            <div class="nav-section">{{ __('common.statistics') }}</div>
             
             <a href="{{ route('supplier.reports.index') }}" class="nav-link {{ request()->routeIs('supplier.reports*') ? 'active' : '' }}">
                 <i class="fas fa-chart-bar"></i>
-                <span>التقارير</span>
+                <span>{{ __('common.reports') }}</span>
             </a>
             
-            <div class="nav-section">الإعدادات</div>
+            <div class="nav-section">{{ __('common.settings') }}</div>
             
             <a href="{{ route('supplier.profile.index') }}" class="nav-link {{ request()->routeIs('supplier.profile*') ? 'active' : '' }}">
                 <i class="fas fa-user-cog"></i>
-                <span>الملف الشخصي</span>
+                <span>{{ __('common.profile') }}</span>
             </a>
             
             <a href="{{ route('home') }}" class="nav-link" target="_blank">
                 <i class="fas fa-globe"></i>
-                <span>زيارة الموقع</span>
+                <span>{{ __('common.visit_site') }}</span>
             </a>
             
             <form action="{{ route('supplier.logout') }}" method="POST" class="mt-3">
                 @csrf
                 <button type="submit" class="nav-link w-100 text-start border-0 bg-transparent" style="color: #ff6b6b;">
                     <i class="fas fa-sign-out-alt"></i>
-                    <span>تسجيل الخروج</span>
+                    <span>{{ __('common.logout') }}</span>
                 </button>
             </form>
         </nav>
@@ -509,7 +511,7 @@
                 <button class="sidebar-toggle header-btn d-lg-none" id="sidebarToggle">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h1 class="header-title">@yield('page-title', 'لوحة التحكم')</h1>
+                <h1 class="header-title">@yield('page-title', __('common.dashboard'))</h1>
             </div>
             
             <div class="header-actions">
@@ -532,25 +534,25 @@
                 @endphp
 
                 <div class="dropdown notifications-dropdown">
-                    <button class="header-btn" title="الإشعارات" data-bs-toggle="dropdown">
+                    <button class="header-btn" title="{{ __('common.notifications') }}" data-bs-toggle="dropdown">
                         <i class="fas fa-bell"></i>
                         @if(($notificationCountHeader ?? 0) > 0)
                             <span class="badge bg-danger">{{ $notificationCountHeader }}</span>
                         @endif
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li class="dropdown-header">إشعاراتك</li>
+                        <li class="dropdown-header">{{ __('common.your_notifications') }}</li>
                         <li>
                             <a class="dropdown-item" href="{{ route('supplier.bookings.index', ['status' => 'pending']) }}">
                                 <i class="fas fa-calendar-check me-2"></i>
-                                حجوزات بانتظارك
+                                {{ __('common.pending_bookings') }}
                                 <span class="badge bg-danger ms-2">{{ $pendingBookingsCountHeader }}</span>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" href="{{ route('supplier.quotes.index', ['status' => 'pending']) }}">
                                 <i class="fas fa-file-invoice-dollar me-2"></i>
-                                عروض أسعار قيد الانتظار
+                                {{ __('common.pending_quotes') }}
                                 <span class="badge bg-warning text-dark ms-2">{{ $pendingQuotesCountHeader }}</span>
                             </a>
                         </li>
@@ -558,7 +560,7 @@
                         <li>
                             <a class="dropdown-item" href="{{ route('supplier.quotes.index') }}">
                                 <i class="fas fa-list me-2"></i>
-                                عرض كل العروض
+                                {{ __('common.view_all_quotes') }}
                             </a>
                         </li>
                     </ul>
@@ -567,19 +569,19 @@
                 <div class="dropdown user-dropdown">
                     <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         <div class="user-avatar">
-                            {{ mb_substr(Auth::guard('supplier')->user()->name ?? 'م', 0, 1) }}
+                            {{ mb_substr(Auth::guard('supplier')->user()->name ?? __('common.supplier_initial'), 0, 1) }}
                         </div>
-                        <span class="d-none d-md-inline">{{ Auth::guard('supplier')->user()->name ?? 'المورد' }}</span>
+                        <span class="d-none d-md-inline">{{ Auth::guard('supplier')->user()->name ?? __('common.supplier') }}</span>
                         <i class="fas fa-chevron-down ms-1" style="font-size: 0.7rem;"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="{{ route('supplier.profile.index') }}"><i class="fas fa-user me-2"></i>الملف الشخصي</a></li>
+                        <li><a class="dropdown-item" href="{{ route('supplier.profile.index') }}"><i class="fas fa-user me-2"></i>{{ __('common.profile') }}</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <form action="{{ route('supplier.logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="dropdown-item text-danger">
-                                    <i class="fas fa-sign-out-alt me-2"></i>تسجيل الخروج
+                                    <i class="fas fa-sign-out-alt me-2"></i>{{ __('common.logout') }}
                                 </button>
                             </form>
                         </li>

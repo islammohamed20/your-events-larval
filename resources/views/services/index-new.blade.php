@@ -74,25 +74,25 @@
                                 <div class="form-check mb-2">
                                     <input class="form-check-input price-filter" type="checkbox" value="0-500" id="price1">
                                     <label class="form-check-label" for="price1">
-                                        أقل من 500 ريال
+                                        أقل من 500 {{ __('common.currency') }}
                                     </label>
                                 </div>
                                 <div class="form-check mb-2">
                                     <input class="form-check-input price-filter" type="checkbox" value="500-1000" id="price2">
                                     <label class="form-check-label" for="price2">
-                                        500 - 1000 ريال
+                                        500 - 1000 {{ __('common.currency') }}
                                     </label>
                                 </div>
                                 <div class="form-check mb-2">
                                     <input class="form-check-input price-filter" type="checkbox" value="1000-2000" id="price3">
                                     <label class="form-check-label" for="price3">
-                                        1000 - 2000 ريال
+                                        1000 - 2000 {{ __('common.currency') }}
                                     </label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input price-filter" type="checkbox" value="2000+" id="price4">
                                     <label class="form-check-label" for="price4">
-                                        أكثر من 2000 ريال
+                                        أكثر من 2000 {{ __('common.currency') }}
                                     </label>
                                 </div>
                             </div>
@@ -173,7 +173,7 @@
                                                style="font-size: 1.2rem; pointer-events: none;"></i>
                                         </button>
                                     @else
-                                        <a href="{{ route('login') }}?redirect={{ urlencode(url()->full()) }}"
+                                        <a href="{{ route('login') }}?redirect={{ urlencode(request()->fullUrl()) }}"
                                            class="btn btn-link wishlist-login-btn position-absolute top-0 end-0 m-2"
                                            style="z-index: 100; background: rgba(255,255,255,0.95); border-radius: 50%; width: 40px; height: 40px; padding: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.2); pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; text-decoration: none;">
                                             <i class="fas fa-heart text-muted" style="font-size: 1.2rem; pointer-events: none;"></i>
@@ -196,10 +196,18 @@
                                         </a>
                                     </h5>
                                     
+                                    @if(isset($service->suppliers_count) && $service->suppliers_count === 0)
+                                        <div class="mb-2">
+                                            <span class="badge bg-danger">
+                                                غير متوفرة حالياً
+                                            </span>
+                                        </div>
+                                    @endif
+                                    
                                     <!-- Service Price -->
                                     @if($service->price)
                                         <div class="mb-3">
-                                            <span class="h5 text-primary mb-0">{{ number_format($service->price) }} ريال</span>
+                                            <span class="h5 text-primary mb-0">{{ number_format($service->price) }} {{ __('common.currency') }}</span>
                                             @if($service->duration)
                                                 <small class="text-muted d-block">{{ $service->duration }}</small>
                                             @endif
@@ -213,21 +221,30 @@
                                     
                                     <!-- Actions -->
                                     <div class="mt-auto">
-                                        @if($service->isVariable())
-                                            <a href="{{ route('services.show', $service->id) }}" 
-                                               class="btn btn-primary w-100">
-                                                <i class="fas fa-sliders-h me-2"></i>
-                                                اختر الخيارات
-                                            </a>
-                                        @else
-                                            <button type="button" 
-                                                    class="btn btn-primary w-100 add-to-cart-btn" 
-                                                    data-service-id="{{ $service->id }}"
-                                                    data-service-name="{{ $service->name }}"
-                                                    data-service-price="{{ $service->price }}">
-                                                <i class="fas fa-cart-plus me-2"></i>
-                                                اضف إلي السلة
+                                        @php $unavailable = isset($service->suppliers_count) && $service->suppliers_count === 0; @endphp
+                                        @if($unavailable)
+                                            <button type="button"
+                                                    class="btn btn-secondary w-100"
+                                                    disabled>
+                                                غير متوفرة حالياً
                                             </button>
+                                        @else
+                                            @if($service->isVariable())
+                                                <a href="{{ route('services.show', $service->id) }}" 
+                                                   class="btn btn-primary w-100">
+                                                    <i class="fas fa-sliders-h me-2"></i>
+                                                    اختر الخيارات
+                                                </a>
+                                            @else
+                                                <button type="button" 
+                                                        class="btn btn-primary w-100 add-to-cart-btn" 
+                                                        data-service-id="{{ $service->id }}"
+                                                        data-service-name="{{ $service->name }}"
+                                                        data-service-price="{{ $service->price }}">
+                                                    <i class="fas fa-cart-plus me-2"></i>
+                                                    {{ __('common.add_to_cart') }}
+                                                </button>
+                                            @endif
                                         @endif
                                     </div>
                                 </div>
@@ -288,19 +305,19 @@
             <h6 class="fw-bold mb-3">السعر</h6>
             <div class="form-check mb-2">
                 <input class="form-check-input price-filter-mobile" type="checkbox" value="0-500" id="priceM1">
-                <label class="form-check-label" for="priceM1">أقل من 500 ريال</label>
+                <label class="form-check-label" for="priceM1">أقل من 500 {{ __('common.currency') }}</label>
             </div>
             <div class="form-check mb-2">
                 <input class="form-check-input price-filter-mobile" type="checkbox" value="500-1000" id="priceM2">
-                <label class="form-check-label" for="priceM2">500 - 1000 ريال</label>
+                <label class="form-check-label" for="priceM2">500 - 1000 {{ __('common.currency') }}</label>
             </div>
             <div class="form-check mb-2">
                 <input class="form-check-input price-filter-mobile" type="checkbox" value="1000-2000" id="priceM3">
-                <label class="form-check-label" for="priceM3">1000 - 2000 ريال</label>
+                <label class="form-check-label" for="priceM3">1000 - 2000 {{ __('common.currency') }}</label>
             </div>
             <div class="form-check">
                 <input class="form-check-input price-filter-mobile" type="checkbox" value="2000+" id="priceM4">
-                <label class="form-check-label" for="priceM4">أكثر من 2000 ريال</label>
+                <label class="form-check-label" for="priceM4">أكثر من 2000 {{ __('common.currency') }}</label>
             </div>
         </div>
 

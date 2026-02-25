@@ -24,6 +24,8 @@ class Booking extends Model
         'client_phone',
         'event_date',
         'event_location',
+        'event_lat',
+        'event_lng',
         'guests_count',
         'special_requests',
         'total_amount',
@@ -40,6 +42,8 @@ class Booking extends Model
 
     protected $casts = [
         'event_date' => 'date',
+        'event_lat' => 'float',
+        'event_lng' => 'float',
         'total_amount' => 'decimal:2',
         'expires_at' => 'datetime',
         'accepted_at' => 'datetime',

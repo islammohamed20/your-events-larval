@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Admin\ServiceVariationController as AdminServiceVariationController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\BiometricController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ContactController;
@@ -125,12 +126,17 @@ Route::get('/sitemap.xml', function () {
     return response($xml, 200)->header('Content-Type', 'application/xml');
 })->name('sitemap');
 
+Route::post('/tap/webhook', [QuoteController::class, 'tapWebhook'])->name('tap.webhook');
+Route::get('/quotes/{quote}/tap/callback', [QuoteController::class, 'tapCallback'])->name('tap.callback');
+
 // Language Switch Route
 Route::get('/lang/{locale}', function ($locale) {
     $supported = ['ar', 'en'];
     if (! in_array($locale, $supported)) {
         return redirect()->back();
     }
+
+    session(['app_locale' => $locale]);
 
     // إعادة التوجيه مع حفظ اللغة في cookie
     $response = redirect()->back();
@@ -141,7 +147,7 @@ Route::get('/lang/{locale}', function ($locale) {
         60 * 24 * 365, // سنة واحدة
         '/',
         null,
-        true,
+        request()->isSecure(),
         false // بدون تشفير
     ));
 })->name('lang.switch');
@@ -227,6 +233,15 @@ Route::get('/register', [AuthController::class, 'showRegister'])->name('register
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Biometric / Passkey Routes
+Route::prefix('biometric')->name('biometric.')->group(function () {
+    Route::post('/auth-options',          [BiometricController::class, 'authOptions'])->name('auth.options');
+    Route::post('/authenticate',          [BiometricController::class, 'authenticate'])->name('authenticate');
+    Route::post('/registration-options',  [BiometricController::class, 'registrationOptions'])->name('register.options');
+    Route::post('/register',              [BiometricController::class, 'register'])->name('register');
+    Route::delete('/passkey/{id}',        [BiometricController::class, 'deletePasskey'])->name('delete');
+});
+
 // Password Reset Routes with OTP
 use App\Http\Controllers\Auth\PasswordResetController;
 
@@ -289,6 +304,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/quotes/checkout', [QuoteController::class, 'checkout'])->name('quotes.checkout');
     Route::get('/quotes/{quote}/download', [QuoteController::class, 'downloadPdf'])->name('quotes.download');
     Route::patch('/quotes/{quote}/notes', [QuoteController::class, 'updateNotes'])->name('quotes.update-notes');
+    // New combined booking + payment path
+    Route::get('/quotes/{quote}/complete-booking-payment', [QuoteController::class, 'showCompleteBookingPayment'])->name('quotes.complete-booking');
+    Route::post('/quotes/{quote}/complete-booking-payment', [QuoteController::class, 'processCompleteBookingPayment'])->name('quotes.complete-booking.store');
+
+    // Backward compatibility: old paths redirect to the new combined page
+    Route::get('/quotes/{quote}/complete-booking', [QuoteController::class, 'showCompleteBooking'])->name('quotes.complete-booking.legacy');
+    Route::post('/quotes/{quote}/complete-booking', [QuoteController::class, 'storeCompleteBooking'])->name('quotes.complete-booking.store.legacy');
+
+    // Backward compatibility: old payment routes now redirect to the combined flow
     Route::get('/quotes/{quote}/payment', [QuoteController::class, 'showPayment'])->name('quotes.payment');
     Route::post('/quotes/{quote}/payment', [QuoteController::class, 'processPayment'])->name('quotes.process-payment');
 
@@ -313,6 +337,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Ensure {service} route-model binding only matches numeric IDs
     Route::pattern('service', '[0-9]+');
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+
+    // Admin Notifications (Real-time Popup)
+    Route::get('notifications/count', [\App\Http\Controllers\Admin\NotificationController::class, 'count'])->name('notifications.count');
+    Route::get('notifications/recent', [\App\Http\Controllers\Admin\NotificationController::class, 'recent'])->name('notifications.recent');
+    Route::get('notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/{id}/read', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('notifications/read-all', [\App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::delete('notifications/{id}', [\App\Http\Controllers\Admin\NotificationController::class, 'destroy'])->name('notifications.destroy');
 
     // Categories Management
     Route::resource('categories', \App\Http\Controllers\Admin\CategoryController::class);
@@ -475,6 +507,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::delete('customers/{customer}', [CustomerManagementController::class, 'destroy'])->name('customers.destroy');
     Route::get('customers/{customer}/quotes', [CustomerManagementController::class, 'quotes'])->name('customers.quotes');
     Route::get('customers/{customer}/payments', [CustomerManagementController::class, 'payments'])->name('customers.payments');
+    Route::post('customers/{customer}/reset-password', [CustomerManagementController::class, 'sendPasswordResetOtp'])->name('customers.reset-password');
     Route::get('customers/export/all', [CustomerManagementController::class, 'exportCustomers'])->name('customers.export');
     Route::get('customers/{customer}/export', [CustomerManagementController::class, 'exportCustomerDetail'])->name('customers.export-detail');
     Route::get('customers/search', [CustomerManagementController::class, 'search'])->name('customers.search');

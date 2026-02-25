@@ -3,7 +3,7 @@
 @section('title', 'سجل الطلبات')
 
 @section('content')
-<div class="container-fluid py-5">
+<div class="container-fluid py-5" id="adminServiceRequestsAutoRefresh">
     <!-- Page Header -->
     <div class="row mb-4">
         <div class="col-12">
@@ -94,7 +94,7 @@
                                 <span class="badge bg-light text-dark">{{ $request->quantity }}</span>
                             </td>
                             <td class="text-center py-2">
-                                <strong class="text-success">{{ number_format($request->price, 2) }} ر.س</strong>
+                                <strong class="text-success">{{ number_format($request->price, 2) }} {{ __('common.currency') }}</strong>
                             </td>
                             <td class="py-2">
                                 <small class="text-muted d-block text-truncate">{{ $request->customer_notes }}</small>
@@ -143,3 +143,33 @@
     @endif
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var container = document.getElementById('adminServiceRequestsAutoRefresh');
+    if (!container) return;
+
+    function refreshServiceRequests() {
+        if (document.visibilityState !== 'visible') return;
+
+        fetch(window.location.href, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            cache: 'no-store'
+        })
+        .then(response => response.text())
+        .then(html => {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var newContainer = doc.getElementById('adminServiceRequestsAutoRefresh');
+            if (newContainer) {
+                container.innerHTML = newContainer.innerHTML;
+            }
+        })
+        .catch(() => {});
+    }
+
+    setInterval(refreshServiceRequests, 5000); // كل 5 ثواني
+});
+</script>
+@endpush

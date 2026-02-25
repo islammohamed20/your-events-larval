@@ -187,13 +187,13 @@ class Service extends Model
             $min = $this->min_price;
             $max = $this->max_price;
             if ($min == $max) {
-                return number_format($min, 2).' ر.س';
+                return number_format($min, 2).' '.__('common.currency');
             }
 
-            return number_format($min, 2).' - '.number_format($max, 2).' ر.س';
+            return number_format($min, 2).' - '.number_format($max, 2).' '.__('common.currency');
         }
 
-        return number_format($this->price ?? 0, 2).' ر.س';
+        return number_format($this->price ?? 0, 2).' '.__('common.currency');
     }
 
     /**

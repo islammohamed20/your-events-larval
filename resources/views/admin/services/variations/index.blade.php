@@ -45,7 +45,7 @@
                                             @endphp
                                             {{ implode('، ', $labels) }}
                                         </td>
-                                        <td>{{ number_format($variation->price, 2) }} ر.س</td>
+                                        <td>{{ number_format($variation->price, 2) }} {{ __('common.currency') }}</td>
                                         <td>
                                             @if($variation->is_active)
                                                 <span class="badge bg-success">نشط</span>

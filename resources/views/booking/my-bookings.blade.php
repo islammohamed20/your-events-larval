@@ -131,7 +131,7 @@
                                                 <i class="fas fa-money-bill me-2 text-primary"></i>
                                                 <strong>المبلغ الإجمالي:</strong>
                                             </span>
-                                            <span class="h5 text-primary mb-0">{{ number_format($booking->total_amount, 2) }} ريال</span>
+                                            <span class="h5 text-primary mb-0">{{ number_format($booking->total_amount, 2) }} {{ __('common.currency') }}</span>
                                         </div>
                                         <small class="text-muted">
                                             <i class="fas fa-clock me-1"></i>

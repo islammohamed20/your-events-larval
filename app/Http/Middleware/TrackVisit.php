@@ -13,28 +13,73 @@ class TrackVisit
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Skip admin assets and AJAX-heavy endpoints if needed
-        if ($request->is('admin/*') && ! $request->is('admin')) {
+        // Skip admin pages completely 
+        if ($request->is('admin/*')) {
+            return $next($request);
+        }
+
+        // Skip API calls, assets, and AJAX requests
+        if ($request->is('api/*') || 
+            $request->is('storage/*') ||
+            $request->is('images/*') ||
+            $request->is('css/*') ||
+            $request->is('js/*') ||
+            $request->ajax() ||
+            $request->expectsJson()) {
             return $next($request);
         }
 
         try {
             $ip = $request->ip();
-            $country = self::guessCountryFromIp($ip);
+            
+            // Skip obvious bots and crawlers
+            $userAgent = strtolower($request->userAgent() ?? '');
+            if ($this->isBot($userAgent)) {
+                return $next($request);
+            }
 
-            Visit::create([
-                'user_id' => optional($request->user())->id,
-                'ip_address' => $ip,
-                'country' => $country,
-                'path' => $request->path(),
-                'referer' => $request->headers->get('referer'),
-                'user_agent' => (string) $request->userAgent(),
-            ]);
+            // Check if we already tracked this IP today (more realistic)
+            $existingVisitToday = Visit::where('ip_address', $ip)
+                                     ->whereDate('created_at', today())
+                                     ->exists();
+            
+            if (!$existingVisitToday) {
+                $country = self::guessCountryFromIp($ip);
+
+                Visit::create([
+                    'user_id' => optional($request->user())->id,
+                    'ip_address' => $ip,
+                    'country' => $country,
+                    'path' => $request->path(),
+                    'referer' => $request->headers->get('referer'),
+                    'user_agent' => (string) $request->userAgent(),
+                ]);
+            }
         } catch (\Throwable $e) {
             // Do not block the request on tracking errors
         }
 
         return $next($request);
+    }
+
+    /**
+     * Check if the user agent is a bot or crawler
+     */
+    private function isBot(string $userAgent): bool
+    {
+        $bots = [
+            'googlebot', 'bingbot', 'slurp', 'yahoobot', 'facebookbot',
+            'twitterbot', 'whatsapp', 'telegram', 'crawler', 'spider',
+            'robot', 'bot', 'scraper', 'curl', 'wget', 'python'
+        ];
+        
+        foreach ($bots as $bot) {
+            if (str_contains($userAgent, $bot)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     private static function guessCountryFromIp(?string $ip): ?string

@@ -43,7 +43,7 @@
                                     </div>
                                     <div class="col-md-4 mb-3 mb-md-0">
                                         <h5 class="mb-1">{{ $item->service->name }}</h5>
-                                        <p class="text-muted small mb-0">{{ $item->price }} ريال</p>
+                                        <p class="text-muted small mb-0">{{ number_format((float) $item->price, 2) }} {{ __('common.currency') }}</p>
                                     </div>
                                     <div class="col-md-3 mb-3 mb-md-0">
                                         <div class="input-group" style="max-width: 150px;">
@@ -58,7 +58,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-2 text-center mb-3 mb-md-0">
-                                        <strong class="item-subtotal">{{ number_format($item->subtotal, 2) }} ريال</strong>
+                                        <strong class="item-subtotal">{{ number_format($item->subtotal, 2) }} {{ __('common.currency') }}</strong>
                                     </div>
                                     <div class="col-md-1 text-center">
                                         <button class="btn btn-sm btn-outline-danger remove-item" data-id="{{ $item->id }}">
@@ -157,16 +157,16 @@
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between mb-3">
                         <span>المجموع الفرعي:</span>
-                        <strong id="cart-subtotal">{{ number_format($total, 2) }} ريال</strong>
+                        <strong id="cart-subtotal">{{ number_format($total, 2) }} {{ __('common.currency') }}</strong>
                     </div>
                     <div class="d-flex justify-content-between mb-3">
                         <span>الضريبة (15%):</span>
-                        <strong id="cart-tax">{{ number_format($tax, 2) }} ريال</strong>
+                        <strong id="cart-tax">{{ number_format($tax, 2) }} {{ __('common.currency') }}</strong>
                     </div>
                     <hr>
                     <div class="d-flex justify-content-between mb-4">
                         <h5>الإجمالي:</h5>
-                        <h5 class="text-primary" id="cart-total">{{ number_format($grandTotal, 2) }} ريال</h5>
+                        <h5 class="text-primary" id="cart-total">{{ number_format($grandTotal, 2) }} {{ __('common.currency') }}</h5>
                     </div>
                     
                     @auth

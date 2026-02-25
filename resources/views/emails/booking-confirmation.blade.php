@@ -8,7 +8,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             direction: rtl;
-            text-align: right;
+            text-align: center;
             background-color: #f4f4f4;
             margin: 0;
             padding: 20px;
@@ -34,6 +34,7 @@
         }
         .content {
             padding: 30px 20px;
+            text-align: center;
         }
         .booking-details {
             background-color: #f8f9fa;
@@ -41,20 +42,25 @@
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
+            text-align: center;
         }
         .detail-row {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
+            gap: 12px;
             margin-bottom: 10px;
             padding-bottom: 10px;
             border-bottom: 1px solid #eee;
+            flex-wrap: wrap;
         }
         .detail-label {
             font-weight: bold;
             color: #666;
+            text-align: center;
         }
         .detail-value {
             color: #333;
+            text-align: center;
         }
         .status-badge {
             background-color: #ffc107;
@@ -69,6 +75,7 @@
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
+            text-align: center;
         }
         .footer {
             background-color: #2c3e50;
@@ -87,6 +94,15 @@
             font-weight: bold;
             margin: 10px 0;
             box-shadow: 0 4px 15px rgba(91, 33, 182, 0.3);
+        }
+        ol {
+            list-style-position: inside;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+        }
+        li {
+            text-align: center;
         }
     </style>
 </head>
@@ -155,7 +171,7 @@
                 @if($booking->total_amount > 0)
                 <div class="detail-row">
                     <span class="detail-label">التكلفة المقدرة:</span>
-                    <span class="detail-value">{{ number_format($booking->total_amount) }} ر.س</span>
+                    <span class="detail-value">{{ number_format($booking->total_amount) }} {{ __('common.currency') }}</span>
                 </div>
                 @endif
                 
@@ -179,7 +195,7 @@
                 <li>بعد التأكيد، سنبدأ في التحضير لمناسبتك</li>
             </ol>
 
-            <div class="contact-info" style="direction: rtl; text-align: right;">
+            <div class="contact-info" style="direction: rtl; text-align: center;">
                 <h4 style="color: #1976d2; margin-top: 0;">معلومات الاتصال:</h4>
                 <p><strong>البريد الإلكتروني:</strong> hello@yourevents.sa</p>
                 <p><strong>الهاتف:</strong> <span dir="ltr" style="unicode-bidi: bidi-override; direction: ltr;">+966 50 515 9616</span></p>
@@ -193,13 +209,13 @@
 
             <p>شكراً لاختيارك Your Events لتنظيم مناسبتك. نتطلع لجعل مناسبتك لا تُنسى!</p>
 
-            <p style="text-align: right;">مع أطيب التحيات،<br>
+            <p style="text-align: center;">مع أطيب التحيات،<br>
             <strong>فريق Your Events</strong></p>
             <p style="text-align: center; font-size: 12px; color: #666; margin-top: 15px;">لا وسطاء، لا انتظار، ولا مكالمات ما تخلص. كل شي واضح، وسلس، وسريع</p>
         </div>
 
         <!-- Footer -->
-        <div class="footer" style="direction: rtl; text-align: right;">
+        <div class="footer" style="direction: rtl; text-align: center;">
             <p>&copy; {{ date('Y') }} Your Events. جميع الحقوق محفوظة.</p>
             <p style="text-align: center;">الرياض، المملكة العربية السعودية</p>
             <p style="text-align: center; font-size: 12px; margin-top: 10px;">hello@yourevents.sa | <span dir="ltr" style="unicode-bidi: bidi-override; direction: ltr;">+966 50 515 9616</span></p>

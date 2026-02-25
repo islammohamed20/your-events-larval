@@ -3,7 +3,7 @@
 @section('title', 'إدارة العملاء')
 
 @section('content')
-<div class="container-fluid py-4">
+<div class="container-fluid py-4" id="adminCustomersAutoRefresh">
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -85,7 +85,7 @@
                                     <div class="d-flex justify-content-between">
                                         <div>
                                             <h6 class="card-title">إجمالي الإيرادات</h6>
-                                            <h3>{{ number_format($stats['total_revenue'], 2) }} ر.س</h3>
+                                            <h3>{{ number_format($stats['total_revenue'], 2) }} {{ __('common.currency') }}</h3>
                                         </div>
                                         <div class="align-self-center">
                                             <i class="fas fa-money-bill-wave fa-2x"></i>
@@ -140,7 +140,7 @@
                                         <span class="badge bg-success">{{ $customer->bookings_count }}</span>
                                     </td>
                                     <td>
-                                        {{ number_format($customer->bookings_sum_total_amount ?? 0, 2) }} ر.س
+                                        {{ number_format($customer->bookings_sum_total_amount ?? 0, 2) }} {{ __('common.currency') }}
                                     </td>
                                     <td>{{ $customer->created_at->format('Y-m-d') }}</td>
                                     <td>
@@ -175,3 +175,33 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var container = document.getElementById('adminCustomersAutoRefresh');
+    if (!container) return;
+
+    function refreshCustomers() {
+        if (document.visibilityState !== 'visible') return;
+
+        fetch(window.location.href, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            cache: 'no-store'
+        })
+        .then(response => response.text())
+        .then(html => {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var newContainer = doc.getElementById('adminCustomersAutoRefresh');
+            if (newContainer) {
+                container.innerHTML = newContainer.innerHTML;
+            }
+        })
+        .catch(() => {});
+    }
+
+    setInterval(refreshCustomers, 15000); // كل 15 ثانية
+});
+</script>
+@endpush

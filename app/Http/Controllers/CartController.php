@@ -29,6 +29,17 @@ class CartController extends Controller
     public function add(Request $request, Service $service)
     {
         try {
+            if ($service->suppliers()->count() === 0) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'هذه الخدمة غير متوفرة حالياً ولا يمكن إضافتها إلى السلة.',
+                    ], 422);
+                }
+
+                return redirect()->back()->with('error', 'هذه الخدمة غير متوفرة حالياً ولا يمكن إضافتها إلى السلة.');
+            }
+
             $validated = $request->validate([
                 'quantity' => 'nullable|integer|min:1|max:100',
                 'customer_notes' => 'nullable|string|max:1000',

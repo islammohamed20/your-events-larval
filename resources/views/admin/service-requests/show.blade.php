@@ -58,7 +58,7 @@
                         </div>
                         <div class="col-md-6">
                             <p class="text-muted mb-1">السعر</p>
-                            <h5 class="fw-bold">{{ number_format($serviceRequest->price, 2) }} ر.س</h5>
+                            <h5 class="fw-bold">{{ number_format($serviceRequest->price, 2) }} {{ __('common.currency') }}</h5>
                         </div>
                     </div>
 

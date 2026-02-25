@@ -103,6 +103,11 @@
                                 <i class="fas fa-star me-2"></i>المميزات والحقول
                             </button>
                         </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="suppliers-tab" data-bs-toggle="tab" data-bs-target="#suppliers" type="button" role="tab">
+                                <i class="fas fa-handshake me-2"></i>الموردين
+                            </button>
+                        </li>
                     </ul>
 
                     <!-- Tabs Content -->
@@ -406,7 +411,7 @@
                                             <p class="text-muted small">مناسب للخدمات التي لها سعر واحد ثابت لا يتغير</p>
                                             
                                             <div id="simple_price_section" style="display: none;">
-                                                <label for="price" class="form-label">السعر (ريال) <span class="text-danger">*</span></label>
+                                                <label for="price" class="form-label">السعر ({{ __('common.currency') }}) <span class="text-danger">*</span></label>
                                                 <input type="number" 
                                                        class="form-control @error('price') is-invalid @enderror" 
                                                        id="price" 
@@ -612,6 +617,60 @@
                                     <i class="fas fa-plus me-1"></i>إضافة حقل
                                 </button>
                                 <div class="form-text">حقول إضافية يمكن للعميل تخصيصها عند الحجز</div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="suppliers" role="tabpanel">
+                            <div class="mb-4">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-handshake me-2"></i>الموردون المرتبطون بهذه الخدمة
+                                </h5>
+                                @php $suppliers = $service->suppliers; @endphp
+                                @if($suppliers && $suppliers->count() > 0)
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th>المورد</th>
+                                                    <th>البريد الإلكتروني</th>
+                                                    <th>الهاتف</th>
+                                                    <th>حالة المورد</th>
+                                                    <th>توفر الخدمة للمورد</th>
+                                                    <th>إدارة</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($suppliers as $supplier)
+                                                    <tr>
+                                                        <td>{{ $supplier->name }}</td>
+                                                        <td>{{ $supplier->email }}</td>
+                                                        <td>{{ $supplier->primary_phone }}</td>
+                                                        <td>{!! $supplier->status_badge !!}</td>
+                                                        <td>
+                                                            @if($supplier->pivot && $supplier->pivot->is_available)
+                                                                <span class="badge bg-success">متاحة</span>
+                                                            @else
+                                                                <span class="badge bg-secondary">غير متاحة</span>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            <a href="{{ route('admin.suppliers.show', $supplier) }}" class="btn btn-sm btn-outline-info">
+                                                                <i class="fas fa-eye"></i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <p class="text-muted mb-0">لا يوجد موردون مرتبطون بهذه الخدمة حالياً.</p>
+                                @endif
+                                <div class="mt-3">
+                                    <a href="{{ route('admin.suppliers.index') }}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-external-link-alt me-1"></i>إدارة الموردين
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>

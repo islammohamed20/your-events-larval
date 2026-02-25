@@ -231,7 +231,7 @@
                                     <small class="text-muted">{{ Str::limit($service->description, 50) }}</small>
                                 </td>
                                 <td>
-                                    <span class="badge bg-info fs-6">{{ number_format($service->price) }} ريال</span>
+                                    <span class="badge bg-info fs-6">{{ number_format($service->price) }} {{ __('common.currency') }}</span>
                                 </td>
                                 <td>
                                     <span class="badge bg-secondary">{{ $service->type ?? 'عام' }}</span>

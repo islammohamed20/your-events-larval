@@ -139,10 +139,10 @@
                                                 @endforeach
                                             @endif
                                         </td>
-                                        <td><strong>{{ number_format($variation->price, 2) }} ر.س</strong></td>
+                                        <td><strong>{{ number_format($variation->price, 2) }} {{ __('common.currency') }}</strong></td>
                                         <td>
                                             @if($variation->sale_price)
-                                                <span class="text-danger">{{ number_format($variation->sale_price, 2) }} ر.س</span>
+                                                <span class="text-danger">{{ number_format($variation->sale_price, 2) }} {{ __('common.currency') }}</span>
                                             @else
                                                 —
                                             @endif

@@ -110,7 +110,7 @@
                     </tr>
                     <tr>
                         <td>الإجمالي:</td>
-                        <td><strong>{{ number_format($quote->total, 2) }} ر.س</strong></td>
+                        <td><strong>{{ number_format($quote->total, 2) }} {{ __('common.currency') }}</strong></td>
                     </tr>
                 </table>
             </div>

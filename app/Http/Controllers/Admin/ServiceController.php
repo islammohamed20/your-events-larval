@@ -160,6 +160,8 @@ class ServiceController extends Controller
 
     public function edit(Service $service)
     {
+        $service->load('suppliers');
+
         return view('admin.services.edit', [
             'service' => $service,
             'attributes' => Attribute::active()->get(),

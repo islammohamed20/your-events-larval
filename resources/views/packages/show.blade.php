@@ -154,7 +154,7 @@
                     <div class="card-body text-center">
                         <h5 class="card-title mb-3">{{ $package->name }}</h5>
                         <div class="price-tag mb-4" style="font-size: 2rem; display: inline-block;">
-                            {{ number_format($package->price) }} ر.س
+                            {{ number_format($package->price) }} {{ __('common.currency') }}
                         </div>
                         <p class="text-muted mb-4">
                             احجز هذه الباقة الآن واحصل على خدمة مميزة لمناسبتك.

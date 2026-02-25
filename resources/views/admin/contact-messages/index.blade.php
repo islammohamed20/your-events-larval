@@ -5,7 +5,7 @@
 @section('page-description', 'عرض وإدارة الرسائل الواردة من صفحة اتصل بنا')
 
 @section('content')
-<div class="container-fluid">
+<div class="container-fluid" id="adminContactMessagesAutoRefresh">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h4 mb-0"><i class="fas fa-envelope me-2"></i>رسائل التواصل</h1>
         <form method="GET" class="d-flex gap-2">
@@ -103,4 +103,34 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var container = document.getElementById('adminContactMessagesAutoRefresh');
+    if (!container) return;
+
+    function refreshMessages() {
+        if (document.visibilityState !== 'visible') return;
+
+        fetch(window.location.href, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            cache: 'no-store'
+        })
+        .then(response => response.text())
+        .then(html => {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var newContainer = doc.getElementById('adminContactMessagesAutoRefresh');
+            if (newContainer) {
+                container.innerHTML = newContainer.innerHTML;
+            }
+        })
+        .catch(() => {});
+    }
+
+    setInterval(refreshMessages, 10000); // كل 10 ثواني
+});
+</script>
+@endpush
 

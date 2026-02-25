@@ -182,7 +182,7 @@
                                             </td>
                                             <td>{{ $booking->event_date }}</td>
                                             <td>
-                                                <span class="fw-bold text-success">{{ number_format($booking->total_amount) }} ريال</span>
+                                                <span class="fw-bold text-success">{{ number_format($booking->total_amount) }} {{ __('common.currency') }}</span>
                                             </td>
                                             <td>
                                                 @switch($booking->status)

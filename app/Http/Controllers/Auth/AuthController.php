@@ -7,6 +7,7 @@ use App\Models\OtpVerification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
@@ -18,9 +19,18 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required',
         ]);
+
+        // ─── reCAPTCHA v3 ───────────────────────────────────────────────────
+        if (config('services.recaptcha.enabled') && config('services.recaptcha.secret_key')) {
+            $token = $request->input('recaptcha_token');
+            if (! $token || ! $this->verifyRecaptcha($token)) {
+                return back()->withErrors(['email' => 'فشل التحقق من reCAPTCHA. أعد المحاولة.'])->withInput();
+            }
+        }
+        // ─────────────────────────────────────────────────────────────────────
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             /** @var \App\Models\User $user */
@@ -28,27 +38,25 @@ class AuthController extends Controller
 
             // تخطي OTP للمسؤولين (Admins)
             if ($user->is_admin || $user->role === 'admin') {
-                // تحديث وقت آخر تسجيل دخول
                 try {
                     $user->last_login_at = now();
                     $user->save();
-                } catch (\Throwable $e) {
-                    // تجاهل أي أخطاء تتعلق بعمود غير موجود أو مشاكل قاعدة البيانات
-                }
+                } catch (\Throwable $e) {}
+
                 $request->session()->regenerate();
+
                 try {
                     DB::table(config('session.table', 'sessions'))
                         ->where('user_id', $user->getAuthIdentifier())
                         ->where('id', '!=', $request->session()->getId())
                         ->delete();
-                } catch (\Throwable $e) {
-                }
+                } catch (\Throwable $e) {}
 
                 return redirect()->intended(route('admin.dashboard'))
                     ->with('success', 'مرحباً بك '.$user->name);
             }
 
-            // OTP للعملاء فقط: بعد التحقق، سنحوّل حسابات الموردين إلى لوحة الموردين تلقائياً
+            // OTP للعملاء
             try {
                 \App\Models\OtpVerification::generate($user->email, 'login');
 
@@ -74,6 +82,33 @@ class AuthController extends Controller
         return back()->withErrors([
             'email' => 'البيانات المدخلة غير صحيحة.',
         ])->onlyInput('email');
+    }
+
+    // ─── reCAPTCHA helper ────────────────────────────────────────────────────
+    private function verifyRecaptcha(string $token): bool
+    {
+        try {
+            $response = Http::timeout(5)->asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+                'secret'   => config('services.recaptcha.secret_key'),
+                'response' => $token,
+                'remoteip' => request()->ip(),
+            ]);
+
+            $data  = $response->json();
+            $score = $data['score'] ?? 0;
+
+            \Illuminate\Support\Facades\Log::info('reCAPTCHA result', [
+                'success' => $data['success'] ?? false,
+                'score'   => $score,
+                'action'  => $data['action'] ?? '',
+            ]);
+
+            return ($data['success'] ?? false)
+                && $score >= config('services.recaptcha.threshold', 0.3);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('reCAPTCHA check failed, allowing: ' . $e->getMessage());
+            return true; // في حالة فشل الاتصال، نسمح بالمرور
+        }
     }
 
     public function showRegister()

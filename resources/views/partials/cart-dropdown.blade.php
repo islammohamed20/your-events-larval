@@ -28,7 +28,7 @@
                 @endif
             </div>
             <div class="item-price">
-                <strong>{{ number_format($item->subtotal) }} ر.س</strong>
+                <strong>{{ number_format($item->subtotal) }} {{ __('common.currency') }}</strong>
             </div>
         </div>
         @endforeach
@@ -37,7 +37,7 @@
     <div class="cart-dropdown-footer">
         <div class="cart-total mb-3">
             <span>المجموع:</span>
-            <strong class="text-primary">{{ number_format($cartTotal) }} ر.س</strong>
+            <strong class="text-primary">{{ number_format($cartTotal) }} {{ __('common.currency') }}</strong>
         </div>
         <div class="text-center">
             <a href="{{ route('cart.index') }}" class="btn btn-primary btn-sm">

@@ -268,7 +268,7 @@
                 
                 <div class="detail-row">
                     <span class="detail-label">المبلغ الإجمالي:</span>
-                    <span class="detail-value">{{ number_format($booking->total_amount, 2) }} ر.س</span>
+                    <span class="detail-value">{{ number_format($booking->total_amount, 2) }} {{ __('common.currency') }}</span>
                 </div>
                 
                 <div class="detail-row">
@@ -287,7 +287,7 @@
                             <span style="color: #6b7280;"> (الكمية: {{ $item->quantity }})</span>
                             @endif
                             <br>
-                            <span style="color: #9ca3af; font-size: 14px;">{{ number_format($item->price, 2) }} ر.س</span>
+                            <span style="color: #9ca3af; font-size: 14px;">{{ number_format($item->price, 2) }} {{ __('common.currency') }}</span>
                         </div>
                         @endforeach
                     </div>

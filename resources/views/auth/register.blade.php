@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'إنشاء حساب جديد')
+@section('title', __('auth.register_title'))
 
 @section('content')
 <style>
@@ -412,28 +412,20 @@
 </style>
 
 <section class="auth-section py-5">
-    <!-- Floating Icons -->
-    <div class="floating-icon">🎂</div>
-    <div class="floating-icon">🎁</div>
-    <div class="floating-icon">🎊</div>
-    <div class="floating-icon">🎯</div>
-    <div class="floating-icon">🎨</div>
-    <div class="floating-icon">🎉</div>
-    
     <div class="container auth-container">
         <div class="row justify-content-center">
             <div class="col-lg-6 col-md-8">
                 <div class="card auth-card" data-aos="fade-up">
                     <div class="auth-header">
-                        <h1>✨ إنشاء حساب جديد</h1>
-                        <p>بخطوات سريعة وسهلة لتبدأ رحلتك معنا</p>
+                        <h1>{{ __('auth.create_account') }}</h1>
+                        <p>{{ __('auth.register_message') }}</p>
                     </div>
                     
                     <div class="card-body p-5">
                         <div class="step-indicator">
-                            <span class="step-badge active">1️⃣</span>
-                            <span class="step-badge">2️⃣</span>
-                            <span class="step-badge">3️⃣</span>
+                            <span class="step-badge active">1</span>
+                            <span class="step-badge">2</span>
+                            <span class="step-badge">3</span>
                         </div>
 
                         @if($errors->any())
@@ -450,70 +442,55 @@
                             @csrf
                             
                             <div class="mb-4">
-                                <label for="name" class="form-label">👤 اسمك الكامل</label>
+                                <label for="name" class="form-label">{{ __('auth.full_name') }}</label>
                                 <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-id-card"></i>
-                                    </span>
                                     <input type="text" class="form-control" name="name" id="name" 
-                                           value="{{ old('name') }}" placeholder="محمد سعد احمد" required autofocus>
+                                           value="{{ old('name') }}" placeholder="{{ __('auth.full_name_placeholder') }}" required autofocus>
                                 </div>
                             </div>
 
                             <div class="mb-4">
                                 <label for="company_name" class="form-label">
-                                    🏢 اسم الجهة
+                                    {{ __('auth.company_name') }}
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-building"></i>
-                                    </span>
                                     <input type="text" class="form-control @error('company_name') is-invalid @enderror" 
                                            name="company_name" id="company_name" 
                                            value="{{ old('company_name') }}" 
-                                           placeholder="مكان عملك أو شركتك"
+                                           placeholder="{{ __('auth.company_name_placeholder') }}"
                                            required>
                                 </div>
                                 @error('company_name')
-                                    <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <div class="mb-4">
                                 <label for="tax_number" class="form-label">
-                                    📄 الرقم الضريبي <span class="text-muted" style="font-size: 12px;">(اختياري)</span>
+                                    {{ __('auth.tax_number') }} <span class="text-muted" style="font-size: 12px;">{{ __('auth.tax_number_optional') }}</span>
                                 </label>
                                 <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-receipt"></i>
-                                    </span>
                                     <input type="text" class="form-control @error('tax_number') is-invalid @enderror" 
                                            name="tax_number" id="tax_number" 
                                            value="{{ old('tax_number') }}"
                                            placeholder="311019444900003">
                                 </div>
                                 @error('tax_number')
-                                    <div class="text-danger small mt-1"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <div class="mb-4">
-                                <label for="email" class="form-label">📧 البريد الإلكتروني</label>
+                                <label for="email" class="form-label">{{ __('auth.email') }}</label>
                                 <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-at"></i>
-                                    </span>
                                     <input type="email" class="form-control" name="email" id="email" 
                                            value="{{ old('email') }}" placeholder="hello@yourevents.sa" required>
                                 </div>
                             </div>
 
                             <div class="mb-4">
-                                <label for="phone" class="form-label">📱 رقم الجوال</label>
+                                <label for="phone" class="form-label">{{ __('auth.phone') }}</label>
                                 <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-mobile-alt"></i>
-                                    </span>
                                     <input type="tel" class="form-control" name="phone" id="phone" 
                                            value="{{ old('phone') }}" placeholder="05XXXXXXXX" required>
                                 </div>
@@ -521,21 +498,15 @@
 
                             <div class="row">
                                 <div class="col-md-6 mb-4">
-                                    <label for="password" class="form-label">🔐 كلمة المرور</label>
+                                    <label for="password" class="form-label">{{ __('auth.password') }}</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">
-                                            <i class="fas fa-key"></i>
-                                        </span>
                                         <input type="password" class="form-control" name="password" id="password" placeholder="••••••••" required>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6 mb-4">
-                                    <label for="password_confirmation" class="form-label">✅ تأكيد المرور</label>
+                                    <label for="password_confirmation" class="form-label">{{ __('auth.confirm_password') }}</label>
                                     <div class="input-group">
-                                        <span class="input-group-text">
-                                            <i class="fas fa-lock"></i>
-                                        </span>
                                         <input type="password" class="form-control" name="password_confirmation" id="password_confirmation" placeholder="••••••••" required>
                                     </div>
                                 </div>
@@ -545,25 +516,25 @@
                                 <input type="checkbox" class="form-check-input" id="terms" required>
                                 <label class="form-check-label" for="terms" style="font-size: 14px;">
                                     
-                                    أوافق على <a href="{{ route('terms') }}" target="_blank" class="text-link">الشروط والأحكام</a> و <a href="{{ route('privacy') }}" target="_blank" class="text-link">سياسة الخصوصية</a>
+                                    {{ __('auth.i_agree_to') }} <a href="{{ route('terms') }}" target="_blank" class="text-link">{{ __('auth.terms_and_conditions') }}</a> {{ __('auth.and') }} <a href="{{ route('privacy') }}" target="_blank" class="text-link">{{ __('auth.privacy_policy') }}</a>
                                 </label>
                             </div>
 
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-user-plus me-2"></i>إنشاء الحساب الآن
+                                    {{ __('auth.register_button') }}
                                 </button>
                             </div>
                         </form>
 
-                        <div class="divider"><span>أو</span></div>
+                        <div class="divider"><span>{{ __('auth.or') }}</span></div>
 
                         <div class="text-center mb-3">
                             <p class="mb-3" style="font-size: 15px;">
-                                <i class="fas fa-sign-in-alt me-2" style="color: #F5576C;"></i>لديك حساب بالفعل؟
+                                {{ __('auth.have_account') }}
                             </p>
                             <a href="{{ route('login') }}" class="btn btn-outline-primary w-100">
-                                <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
+                                {{ __('auth.login_here') }}
                             </a>
                         </div>
                     </div>
@@ -571,7 +542,7 @@
 
                 <div class="text-center mt-4">
                     <a href="{{ route('home') }}" class="back-link" style="color: #1f1449;">
-                        <i class="fas fa-arrow-right"></i>العودة للرئيسية
+                        {{ __('auth.back_home') }}
                     </a>
                 </div>
             </div>

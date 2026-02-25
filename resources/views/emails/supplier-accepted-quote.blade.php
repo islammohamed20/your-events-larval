@@ -112,7 +112,7 @@
                     </tr>
                     <tr>
                         <td>الإجمالي:</td>
-                        <td><strong>{{ number_format($quote->total, 2) }} ر.س</strong></td>
+                        <td><strong>{{ number_format($quote->total, 2) }} {{ __('common.currency') }}</strong></td>
                     </tr>
                     <tr>
                         <td>تاريخ القبول:</td>
@@ -153,10 +153,11 @@
             @endif
 
             <p><strong>الخطوة التالية:</strong></p>
-            <p>يرجى التواصل مع المورد مباشرة لتأكيد التفاصيل النهائية وترتيب الخدمات المطلوبة.</p>
+            <p>يرجى استكمال بيانات الحجز والدفع لإتمام العملية.</p>
             
-            <div style="text-align: center;">
-                <a href="{{ url('/quotes/' . $quote->id) }}" class="button">عرض تفاصيل العرض</a>
+            <div style="text-align: center; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+                <a href="{{ url('/quotes/' . $quote->id) }}" class="button" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">عرض تفاصيل العرض</a>
+                <a href="{{ url('/quotes/' . $quote->id . '/payment') }}" class="button" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">استكمال بيانات الحجز والدفع</a>
             </div>
             
             <p style="margin-top: 30px; color: #666; font-size: 14px;">

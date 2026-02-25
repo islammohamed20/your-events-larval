@@ -8,6 +8,7 @@ use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class SupplierAuthController extends Controller
@@ -30,9 +31,18 @@ class SupplierAuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required|string|min:6',
         ]);
+
+        // ─── reCAPTCHA v3 ───────────────────────────────────────────────────
+        if (config('services.recaptcha.enabled') && config('services.recaptcha.secret_key')) {
+            $token = $request->input('recaptcha_token');
+            if (! $token || ! $this->verifyRecaptcha($token)) {
+                return back()->withInput()->with('error', 'فشل التحقق من reCAPTCHA. أعد المحاولة.');
+            }
+        }
+        // ─────────────────────────────────────────────────────────────────────
 
         $supplier = Supplier::where('email', $request->email)->first();
 
@@ -201,5 +211,29 @@ class SupplierAuthController extends Controller
         session()->forget(['supplier_reset_email', 'supplier_reset_verified']);
 
         return redirect()->route('supplier.login')->with('success', 'تم تغيير كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول.');
+    }
+
+    // ─── reCAPTCHA helper ────────────────────────────────────────────────────
+    private function verifyRecaptcha(string $token): bool
+    {
+        try {
+            $response = Http::timeout(5)->asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+                'secret'   => config('services.recaptcha.secret_key'),
+                'response' => $token,
+                'remoteip' => request()->ip(),
+            ]);
+            $data  = $response->json();
+            $score = $data['score'] ?? 0;
+
+            \Illuminate\Support\Facades\Log::info('reCAPTCHA supplier result', [
+                'success' => $data['success'] ?? false,
+                'score'   => $score,
+            ]);
+
+            return ($data['success'] ?? false)
+                && $score >= config('services.recaptcha.threshold', 0.3);
+        } catch (\Throwable $e) {
+            return true;
+        }
     }
 }

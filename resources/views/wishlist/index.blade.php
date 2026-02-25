@@ -81,7 +81,7 @@
                                             
                                             <div class="mb-3">
                                                 <span class="h5 text-primary">
-                                                    {{ number_format($wishlist->service->price) }} ر.س
+                                                    {{ number_format($wishlist->service->price) }} {{ __('common.currency') }}
                                                 </span>
                                             </div>
 

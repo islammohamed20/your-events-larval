@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <title>@yield('title', 'Your Events - حوّل مناسبتك العادية إلى لحظة استثنائية')</title>
-
     @php
         $siteName = \App\Models\Setting::get('site_name', 'Your Events');
-        $siteDescription = \App\Models\Setting::get('site_description', 'حوّل مناسبتك العادية إلى لحظة استثنائية');
+        $siteDescription = \App\Models\Setting::get('site_description', __('common.site_slogan'));
         $metaKeywords = \App\Models\Setting::get('meta_keywords');
         $ogImage = \App\Models\Setting::get('og_image');
         $logo = \App\Models\Setting::get('logo');
@@ -23,6 +21,8 @@
             : $logoUrl;
         $canonical = url()->current();
     @endphp
+
+    <title>@yield('title', $siteName . ' - ' . __('common.site_slogan'))</title>
     <meta name="description" content="{{ $siteDescription }}">
     <meta name="robots" content="@yield('robotsMeta', 'index,follow')">
     @if($metaKeywords)
@@ -287,6 +287,86 @@
             background-repeat: no-repeat;
             opacity: 1;
             background-attachment: fixed;
+        }
+        
+        /* LTR (English) - Center alignment for content */
+        [dir="ltr"] .hero-overlay,
+        [dir="ltr"] .cta-overlay {
+            text-align: center;
+            direction: ltr;
+        }
+        
+        /* LTR general text alignment */
+        [dir="ltr"] .footer-links {
+            text-align: center !important;
+        }
+        
+        [dir="ltr"] .hero-section h1,
+        [dir="ltr"] .hero-section h2,
+        [dir="ltr"] .hero-section p,
+        [dir="ltr"] .hero-contact h1,
+        [dir="ltr"] .hero-contact p {
+            text-align: center;
+        }
+        
+        [dir="ltr"] section h2,
+        [dir="ltr"] section .section-title {
+            text-align: center;
+        }
+        
+        /* LTR - Footer text alignment */
+        [dir="ltr"] .footer p,
+        [dir="ltr"] .footer .list-unstyled,
+        [dir="ltr"] .footer h6 {
+            text-align: left;
+        }
+        
+        [dir="ltr"] .footer .col-md-6.text-md-start p {
+            text-align: left;
+        }
+        
+        /* RTL - Footer text alignment */
+        [dir="rtl"] .footer p,
+        [dir="rtl"] .footer .list-unstyled,
+        [dir="rtl"] .footer h6 {
+            text-align: right;
+        }
+        
+        /* Service Card Title - Always Center */
+        .service-card .card-title,
+        .card .card-title {
+            text-align: center !important;
+        }
+        
+        .service-card .card-title a,
+        .card .card-title a {
+            display: block;
+            text-align: center !important;
+        }
+        
+        /* Service Card Description - Centered */
+        .service-card .card-body p,
+        .card .card-body > p {
+            text-align: center;
+        }
+        
+        /* Service Card Price - Centered */
+        .service-card .card-body .mb-3,
+        .service-card .card-body .h5 {
+            text-align: center;
+        }
+        
+        /* Category Card Title - Always Center */
+        .category-title,
+        .category-modern-card .category-title {
+            text-align: center !important;
+        }
+        
+        /* Section Headers - Always Center */
+        .section-heading,
+        .section-subheading,
+        .section-description {
+            text-align: center !important;
         }
         
         .hero-bg-section {
@@ -1620,14 +1700,17 @@
                 right: -100%;
                 width: 85%;
                 max-width: 400px;
-                height: 100vh;
+                height: 100%;
+                height: 100dvh; /* Dynamic viewport height for mobile browsers */
                 background: linear-gradient(135deg, rgba(31, 20, 74, 0.98) 0%, rgba(45, 26, 94, 0.98) 100%);
                 backdrop-filter: blur(15px);
                 -webkit-backdrop-filter: blur(15px);
                 z-index: 9999;
                 transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                 overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
                 box-shadow: -5px 0 20px rgba(0, 0, 0, 0.3);
+                padding-bottom: 40px; /* Space for bottom content */
             }
             
             .site-drawer.show {
@@ -1717,6 +1800,7 @@
             
             .drawer-content {
                 padding: 20px;
+                padding-bottom: 40px; /* Extra space for auth buttons at bottom */
             }
             
             /* Mobile Search Wrapper */
@@ -1898,6 +1982,11 @@
             margin-right: auto !important;
         }
         
+        html[dir="rtl"] .navbar-brand {
+            margin-right: 0 !important;
+            margin-left: auto !important;
+        }
+        
         .navbar-brand img {
             height: 40px;
         }
@@ -1907,6 +1996,11 @@
             padding: 4px 8px;
             background: transparent !important;
             margin-left: auto !important;
+        }
+        
+        html[dir="rtl"] .navbar-toggler {
+            margin-left: 0 !important;
+            margin-right: auto !important;
         }
         
         .navbar-toggler:focus {
@@ -2166,6 +2260,30 @@
                 font-size: 1.2rem;
             }
         }
+        
+        @media (max-width: 768px) {
+            .newsletter-form {
+                flex-wrap: nowrap;
+            }
+            
+            .newsletter-form .newsletter-input {
+                flex: 1 1 auto;
+                min-width: 0;
+                height: 36px !important;
+                font-size: 0.875rem;
+                padding: 0.375rem 0.75rem;
+            }
+            
+            .newsletter-form .newsletter-btn {
+                flex: 0 0 auto;
+                width: auto;
+                height: 36px !important;
+                padding: 0.25rem 0.6rem !important;
+                min-width: 40px;
+                font-size: 0.875rem;
+            }
+        }
+
     </style>
     <style>
         /* منع تمرير الصفحة عند فتح الدروار */
@@ -2218,14 +2336,14 @@
                     @if(\App\Models\Package::count() > 0)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('packages.*') ? 'active' : '' }}" href="{{ route('packages.index') }}">
-                            <i ></i>الباقات
+                            <i ></i>{{ __('common.packages') }}
                         </a>
                     </li>
                     @endif
                     @if(\App\Models\Gallery::count() > 0)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('gallery.*') ? 'active' : '' }}" href="{{ route('gallery.index') }}">
-                            <i class="fas fa-images me-1"></i>المعرض
+                            <i class="fas fa-images me-1"></i>{{ __('common.gallery') }}
                         </a>
                     </li>
                     @endif
@@ -2238,7 +2356,7 @@
                     <!-- Browse Sections - Mobile Only -->
                     <li class="nav-item d-lg-none browse-sections-mobile">
                         <div class="nav-section-header">
-                            <i class="fas fa-folder me-2"></i>تصفح الأقسام
+                            <i class="fas fa-folder me-2"></i>{{ __('common.browse_categories') }}
                         </div>
                         <div class="nav-categories">
                             @php
@@ -2259,7 +2377,7 @@
                 <ul class="navbar-nav navbar-right-section">
                     <!-- Search Form -->
                     <li class="nav-item search-nav-item">
-                        <form action="{{ route('search') }}" method="GET" class="search-form" id="searchForm">
+                        <form action="{{ route('search') }}" method="GET" class="search-form" id="searchForm" data-autocomplete-url="{{ route('search.autocomplete') }}" data-no-results-text="{{ __('common.no_results') }}" data-service-text="{{ __('common.service') }}" data-package-text="{{ __('common.package') }}" data-default-image="{{ asset('images/service-default.svg') }}">
                             <div class="search-input-wrapper">
                                 <input type="text" 
                                        name="q" 
@@ -2318,16 +2436,16 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end enhanced-dropdown animated-white-bg" style="text-align: center; min-width: 200px;">
                                 <li><a class="dropdown-item" href="{{ route('profile.show') }}" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                    <i class="fas fa-user-circle"></i><span>الملف الشخصي</span>
+                                    <i class="fas fa-user-circle"></i><span>{{ __('common.profile') }}</span>
                                 </a></li>
                                 <li><a class="dropdown-item" href="{{ route('booking.my-bookings') }}" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                    <i class="fas fa-calendar-check"></i><span>حجوزاتي</span>
+                                    <i class="fas fa-calendar-check"></i><span>{{ __('common.my_bookings') }}</span>
                                 </a></li>
                                 <li><a class="dropdown-item" href="{{ route('quotes.index') }}" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                    <i class="fas fa-file-invoice-dollar"></i><span>عروض الأسعار</span>
+                                    <i class="fas fa-file-invoice-dollar"></i><span>{{ __('common.quotes') }}</span>
                                 </a></li>
                                 <li><a class="dropdown-item" href="{{ route('wishlist.index') }}" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                                    <i class="fas fa-heart"></i><span>المنتجات المفضلة</span>
+                                    <i class="fas fa-heart"></i><span>{{ __('common.wishlist') }}</span>
                                 </a></li>
                                 @if(Auth::user()->is_admin)
                                     <li><hr class="dropdown-divider"></li>
@@ -2340,7 +2458,7 @@
                                     <form method="POST" action="{{ route('logout') }}" class="d-inline w-100">
                                         @csrf
                                         <button type="submit" class="dropdown-item" style="text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;">
-                                            <i class="fas fa-sign-out-alt"></i><span>تسجيل الخروج</span>
+                                            <i class="fas fa-sign-out-alt"></i><span>{{ __('common.logout') }}</span>
                                         </button>
                                     </form>
                                 </li>
@@ -2349,7 +2467,7 @@
                     @else
                         <li class="nav-item">
                             <a class="nav-link login-link" href="{{ route('login') }}">
-                                <i class="fas fa-sign-in-alt me-1"></i>تسجيل الدخول
+                                <i class="fas fa-sign-in-alt me-1"></i>{{ __('common.login') }}
                             </a>
                         </li>
                         
@@ -2393,7 +2511,7 @@
                         <h5 class="mb-0 text-white"></h5>
                     </div>
                     <p class="text-white mb-3">
-                        منصّة سعودية جمّعنا فيها كل خدمات تجهيز الفعاليات في مكان واحد.
+                        {{ __('common.footer_description') }}
                     </p>
                     <div class="d-flex gap-3">
                         @php
@@ -2465,8 +2583,8 @@
                                 <li class="mb-2"><a href="{{ route('gallery.index') }}" class="text-white text-decoration-none">{{ __('common.quick_links_gallery') }}</a></li>
                                 @endif
                                 <li class="mb-2"><a href="{{ route('contact') }}" class="text-white text-decoration-none">{{ __('common.quick_links_contact') }}</a></li>
-                                <li class="mb-2"><a href="{{ route('suppliers.register') }}" class="text-white text-decoration-none">سجل كمورد</a></li>
-                                <li class="mb-2"><a href="{{ route('supplier.login') }}" class="text-white text-decoration-none">تسجيل دخول الموردين</a></li>
+                                <li class="mb-2"><a href="{{ route('suppliers.register') }}" class="text-white text-decoration-none">{{ __('common.register_as_supplier') }}</a></li>
+                                <li class="mb-2"><a href="{{ route('supplier.login') }}" class="text-white text-decoration-none">{{ __('common.supplier_login') }}</a></li>
                                 <li class="mb-2">
                                     <a href="{{ route('terms') }}" class="text-white text-decoration-none">
                                         {{ __('common.quick_links_terms') }}
@@ -2502,9 +2620,9 @@
                 <div class="col-lg-3 mb-4">
                     <h6 class="mb-3 text-white">{{ __('common.newsletter') }}</h6>
                     <p class="text-white mb-3">{{ __('common.newsletter_desc') }}</p>
-                    <form class="d-flex">
-                        <input type="email" class="form-control me-2" placeholder="{{ __('common.email_placeholder') }}">
-                        <button class="btn btn-primary" type="submit">
+                    <form class="d-flex align-items-center gap-2 newsletter-form">
+                        <input type="email" class="form-control newsletter-input" placeholder="{{ __('common.email_placeholder') }}" style="flex: 1; min-width: 0; height: 38px;">
+                        <button class="btn btn-primary newsletter-btn" type="submit" style="height: 38px; padding: 0.375rem 0.75rem; flex-shrink: 0;">
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </form>
@@ -2543,11 +2661,11 @@
                     <!-- Links on same level -->
                     <div class="footer-links text-end">
                         <a href="{{ route('terms') }}" class="text-white text-decoration-none me-3 footer-link">
-                            الشروط و الأحكام
+                            {{ __('common.terms_and_conditions') }}
                         </a>
                         <span class="text-white mx-1">-</span>
                         <a href="{{ route('privacy') }}" class="text-white text-decoration-none footer-link" target="_blank">
-                            سياسة الخصوصية
+                            {{ __('common.privacy_policy') }}
                         </a>
                     </div>
                 </div>
@@ -2598,13 +2716,14 @@
             <!-- Mobile Search Form -->
             <div class="mobile-search-wrapper">
                 <form action="{{ route('search') }}" method="GET" class="mobile-search-form">
-                    <div class="input-group">
+                    <div class="d-flex gap-2 align-items-center">
                         <input type="text" 
                                name="q" 
                                class="form-control" 
-                               placeholder="ابحث عن خدمة أو باقة..."
+                               placeholder="{{ __('common.search_placeholder') }}"
+                               style="flex: 1;"
                                required>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary rounded-circle" style="width: 42px; height: 42px; padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                             <i class="fas fa-search"></i>
                         </button>
                     </div>
@@ -2626,14 +2745,14 @@
                 @if(\App\Models\Package::count() > 0)
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('packages.*') ? 'active' : '' }}" href="{{ route('packages.index') }}">
-                        الباقات
+                        {{ __('common.packages') }}
                     </a>
                 </li>
                 @endif
                 @if(\App\Models\Gallery::count() > 0)
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('gallery.*') ? 'active' : '' }}" href="{{ route('gallery.index') }}">
-                        <i class="fas fa-images"></i>المعرض
+                        <i class="fas fa-images"></i>{{ __('common.gallery') }}
                     </a>
                 </li>
                 @endif
@@ -2712,19 +2831,23 @@
                             </button>
                         </form>
                     </li>
-                @else
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('login') }}">
-                            <i class="fas fa-sign-in-alt"></i>{{ __('common.login') }}
+                    <li class="nav-item mt-3">
+                        <a href="{{ route('booking.create') }}" class="btn btn-primary w-100" style="border-radius: 12px;">
+                            <i class="fas fa-calendar-plus me-2"></i>{{ __('common.start_event') }}
                         </a>
                     </li>
+                @else
+                    <li class="nav-item mt-3">
+                        <div class="d-flex gap-2">
+                            <a href="{{ route('login') }}" class="btn btn-outline-primary flex-fill" style="border-radius: 12px;">
+                                <i class="fas fa-sign-in-alt me-1"></i>{{ __('common.login') }}
+                            </a>
+                            <a href="{{ route('booking.create') }}" class="btn btn-primary flex-fill" style="border-radius: 12px;">
+                                <i class="fas fa-calendar-plus me-1"></i>{{ __('common.start_event') }}
+                            </a>
+                        </div>
+                    </li>
                 @endauth
-                
-                <li class="nav-item mt-3">
-                    <a href="{{ route('booking.create') }}" class="btn btn-primary w-100" style="border-radius: 12px;">
-                        <i class="fas fa-calendar-plus me-2"></i>{{ __('common.start_event') }}
-                    </a>
-                </li>
             </ul>
         </div>
     </div>
@@ -3031,6 +3154,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('searchInput');
             const searchAutocomplete = document.getElementById('searchAutocomplete');
+            const searchForm = document.getElementById('searchForm');
             let searchTimeout;
             
             if (searchInput && searchAutocomplete) {
@@ -3045,11 +3169,16 @@
                     }
                     
                     searchTimeout = setTimeout(function() {
-                        fetch(`{{ route('search.autocomplete') }}?q=${encodeURIComponent(query)}`)
+                        const baseUrl = searchForm ? searchForm.dataset.autocompleteUrl : '';
+                        if (!baseUrl) {
+                            return;
+                        }
+                        fetch(`${baseUrl}?q=${encodeURIComponent(query)}`)
                             .then(response => response.json())
                             .then(data => {
                                 if (data.length === 0) {
-                                    searchAutocomplete.innerHTML = '<div class="autocomplete-empty"><i class="fas fa-search-minus mb-2"></i><p>لا توجد نتائج</p></div>';
+                                    const noResultsText = searchForm ? (searchForm.dataset.noResultsText || '') : '';
+                                    searchAutocomplete.innerHTML = `<div class="autocomplete-empty"><i class="fas fa-search-minus mb-2"></i><p>${noResultsText}</p></div>`;
                                     searchAutocomplete.classList.add('show');
                                     return;
                                 }
@@ -3057,8 +3186,11 @@
                                 let html = '';
                                 data.forEach(item => {
                                     const badgeClass = item.type === 'service' ? 'bg-primary' : 'bg-success';
-                                    const badgeText = item.type === 'service' ? 'خدمة' : 'باقة';
-                                    const imageUrl = item.image || '{{ asset("images/service-default.svg") }}';
+                                    const serviceText = searchForm ? (searchForm.dataset.serviceText || '') : '';
+                                    const packageText = searchForm ? (searchForm.dataset.packageText || '') : '';
+                                    const defaultImageUrl = searchForm ? (searchForm.dataset.defaultImage || '') : '';
+                                    const badgeText = item.type === 'service' ? serviceText : packageText;
+                                    const imageUrl = item.image || defaultImageUrl;
                                     
                                     html += `
                                         <a href="${item.url}" class="autocomplete-item">

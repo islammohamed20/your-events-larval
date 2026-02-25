@@ -170,7 +170,7 @@
             <p class="greeting">عزيزي {{ $quote->user->name }},</p>
 
             <p class="message">
-                نشكرك على إتمام عملية الدفع! تم استلام مبلغ <strong>{{ number_format($quote->total, 2) }} ر.س</strong> بنجاح.
+                نشكرك على إتمام عملية الدفع! تم استلام مبلغ <strong>{{ number_format($quote->total, 2) }} {{ __('common.currency') }}</strong> بنجاح.
             </p>
 
             <div class="success-box">
@@ -189,12 +189,12 @@
                 
                 <div class="detail-row">
                     <span class="detail-label">المبلغ المدفوع:</span>
-                    <span class="detail-value">{{ number_format($quote->total, 2) }} ر.س</span>
+                    <span class="detail-value">{{ number_format($quote->total, 2) }} {{ __('common.currency') }}</span>
                 </div>
                 
                 <div class="detail-row">
                     <span class="detail-label">تاريخ الدفع:</span>
-                    <span class="detail-value">{{ $quote->payment_date->format('Y-m-d H:i') }}</span>
+                    <span class="detail-value">{{ $quote->payment_date ? $quote->payment_date->format('Y-m-d H:i') : now()->format('Y-m-d H:i') }}</span>
                 </div>
                 
                 @if($quote->payment_method)

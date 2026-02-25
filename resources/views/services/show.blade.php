@@ -55,24 +55,29 @@
                 @endif
                 
                 <div data-aos="fade-up">
-                    <!-- اسم الخدمة ونوعها -->
                     <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
                         <h1 class="mb-0">{{ $service->name }}</h1>
-                        @if($service->type)
-                        <span class="badge bg-primary fs-6 px-3 py-2">
-                            <i ></i>{{ $service->type }}
-                        </span>
-                        @endif
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            @if($service->type)
+                            <span class="badge bg-primary fs-6 px-3 py-2">
+                                <i ></i>{{ $service->type }}
+                            </span>
+                            @endif
+                            @if($service->suppliers && $service->suppliers->count() === 0)
+                            <span class="badge bg-danger fs-6 px-3 py-2">
+                                غير متوفرة حالياً
+                            </span>
+                            @endif
+                        </div>
                     </div>
                     
-                    <!-- معلومات الخدمة -->
                     <div class="row mb-4">
                         @if($service->duration)
                         <div class="col-md-6 mb-3">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-clock text-primary me-2"></i>
                                 <div>
-                                    <small class="text-muted d-block">المدة</small>
+                                    <small class="text-muted d-block">{{ __('common.duration') }}</small>
                                     <strong>{{ $service->duration }}</strong>
                                 </div>
                             </div>
@@ -80,90 +85,136 @@
                         @endif
                     </div>
                     
-                    <!-- الوصف -->
-                    @if($service->description || $service->marketing_description)
-                    <div class="mb-4">
-                        <h5 class="mb-3">
-                            <i class="fas fa-align-left text-primary me-2"></i>&nbsp;الوصف
-                        </h5>
-                        <div class="text-muted" style="line-height: 1.8;">
-                            {!! nl2br(e($service->description ?: $service->marketing_description)) !!}
-                        </div>
-                    </div>
-                    @endif
+                    <ul class="nav nav-tabs mb-4" id="serviceTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#service-details" type="button" role="tab">
+                                التفاصيل
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="suppliers-tab" data-bs-toggle="tab" data-bs-target="#service-suppliers" type="button" role="tab">
+                                الموردون
+                            </button>
+                        </li>
+                    </ul>
                     
-                    <!-- وش نوفر؟ / اهم المميزات؟ حسب الفئة -->
-                    @if($service->what_we_offer)
-                    <div class="mb-4">
-                        <h5 class="mb-3">
-                            <i class="fas fa-gift text-primary me-2"></i>
-                            @php
-                                $isGiftsCategory = optional($service->category)->name === 'الهدايا';
-                            @endphp
-                            {{ $isGiftsCategory ? 'اهم المميزات؟' : 'وش نوفر؟' }}
-                        </h5>
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body">
-                                @php 
-                                    $offerLines = array_values(array_filter(preg_split("/\r\n|\r|\n/", (string)$service->what_we_offer), function($l){ return trim($l) !== ''; }));
-                                @endphp
-                                @if(count($offerLines) > 0)
-                                    <ul class="list-unstyled m-0" style="line-height: 1.9;">
-                                        @foreach($offerLines as $line)
-                                            <li class="mb-2 d-flex align-items-start">
-                                                <span class="text-success me-2" aria-hidden="true">✔</span>
-                                                <span>{{ $line }}</span>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                @else
-                                    <div class="text-muted" style="line-height: 1.8;">{!! nl2br(e($service->what_we_offer)) !!}</div>
-                                @endif
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="service-details" role="tabpanel" aria-labelledby="details-tab">
+                            @if($service->description || $service->marketing_description)
+                            <div class="mb-4">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-align-left text-primary me-2"></i>&nbsp;{{ __('common.description') }}
+                                </h5>
+                                <div class="text-muted" style="line-height: 1.8;">
+                                    {!! nl2br(e($service->description ?: $service->marketing_description)) !!}
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    @endif
-                    
-                    <!-- ليش تختار Your Events؟ -->
-                    @if($service->why_choose_us)
-                    <div class="mb-4">
-                        <h5 class="mb-3">
-                            <i class="fas fa-star text-primary me-2"></i>ليش تختار Your Events؟
-                        </h5>
-                        <div class="card border-0 shadow-sm bg-light">
-                            <div class="card-body">
-                                @php 
-                                    $whyLines = array_values(array_filter(preg_split("/\r\n|\r|\n/", (string)$service->why_choose_us), function($l){ return trim($l) !== ''; }));
-                                @endphp
-                                @if(count($whyLines) > 0)
-                                    <ul class="list-unstyled m-0" style="line-height: 1.9;">
-                                        @foreach($whyLines as $line)
-                                            <li class="mb-2 d-flex align-items-start">
-                                                <span class="text-primary me-2" aria-hidden="true">★</span>
-                                                <span>{{ $line }}</span>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                @else
-                                    <div class="text-muted" style="line-height: 1.8;">{!! nl2br(e($service->why_choose_us)) !!}</div>
-                                @endif
+                            @endif
+                            
+                            @if($service->what_we_offer)
+                            <div class="mb-4">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-gift text-primary me-2"></i>
+                                    @php
+                                        $isGiftsCategory = optional($service->category)->name === 'الهدايا';
+                                    @endphp
+                                    {{ $isGiftsCategory ? __('common.top_features_question') : __('common.what_we_offer_question') }}
+                                </h5>
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-body">
+                                        @php 
+                                            $offerLines = array_values(array_filter(preg_split("/\r\n|\r|\n/", (string)$service->what_we_offer), function($l){ return trim($l) !== ''; }));
+                                        @endphp
+                                        @if(count($offerLines) > 0)
+                                            <ul class="list-unstyled m-0" style="line-height: 1.9;">
+                                                @foreach($offerLines as $line)
+                                                    <li class="mb-2 d-flex align-items-start">
+                                                        <span class="text-success me-2" aria-hidden="true">✔</span>
+                                                        <span>{{ $line }}</span>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        @else
+                                            <div class="text-muted" style="line-height: 1.8;">{!! nl2br(e($service->what_we_offer)) !!}</div>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
+                            @endif
+                            
+                            @if($service->why_choose_us)
+                            <div class="mb-4">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-star text-primary me-2"></i>{{ __('common.why_choose_your_events') }}
+                                </h5>
+                                <div class="card border-0 shadow-sm bg-light">
+                                    <div class="card-body">
+                                        @php 
+                                            $whyLines = array_values(array_filter(preg_split("/\r\n|\r|\n/", (string)$service->why_choose_us), function($l){ return trim($l) !== ''; }));
+                                        @endphp
+                                        @if(count($whyLines) > 0)
+                                            <ul class="list-unstyled m-0" style="line-height: 1.9;">
+                                                @foreach($whyLines as $line)
+                                                    <li class="mb-2 d-flex align-items-start">
+                                                        <span class="text-primary me-2" aria-hidden="true">★</span>
+                                                        <span>{{ $line }}</span>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        @else
+                                            <div class="text-muted" style="line-height: 1.8;">{!! nl2br(e($service->why_choose_us)) !!}</div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+                            
+                            @if($service->features && count($service->features) > 0)
+                            <div class="mb-4">
+                                <h5>{{ __('common.service_features') }}</h5>
+                                <ul class="list-unstyled">
+                                    @foreach($service->features as $feature)
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>{{ $feature }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                            @endif
+                        </div>
+                        
+                        <div class="tab-pane fade" id="service-suppliers" role="tabpanel" aria-labelledby="suppliers-tab">
+                            @php $suppliers = $service->suppliers; @endphp
+                            @if($suppliers && $suppliers->count() > 0)
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>المورد</th>
+                                                <th>الحالة</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($suppliers as $supplier)
+                                            <tr>
+                                                <td>{{ $supplier->name }}</td>
+                                                <td>
+                                                    @if($supplier->pivot && $supplier->pivot->is_available)
+                                                        <span class="badge bg-success">متاحة</span>
+                                                    @else
+                                                        <span class="badge bg-secondary">غير متاحة</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <p class="text-muted mb-0">لا يوجد موردون مرتبطون بهذه الخدمة حالياً.</p>
+                            @endif
                         </div>
                     </div>
-                    @endif
-                    
-                    @if($service->features && count($service->features) > 0)
-                    <div class="mb-4">
-                        <h5>مميزات الخدمة</h5>
-                        <ul class="list-unstyled">
-                            @foreach($service->features as $feature)
-                                <li class="mb-2">
-                                    <i class="fas fa-check text-success me-2"></i>{{ $feature }}
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    @endif
                 </div>
             </div>
             
@@ -178,51 +229,58 @@
                                 @if($service->isVariable())
                                     {{ $service->price_range }}
                                 @elseif($service->price)
-                                    {{ number_format((float) $service->price) }} ريال
+                                    {{ number_format((float) $service->price) }} {{ __('common.currency') }}
                                 @else
                                     —
                                 @endif
                             </div>
                             @if($service->duration)
-                                <small class="text-muted">لمدة {{ $service->duration }}</small>
+                                <small class="text-muted">{{ __('common.for_duration', ['duration' => $service->duration]) }}</small>
                             @endif
                         </div>
                         @endif
                         
                         <p class="text-muted mb-2 text-center">
-                            جاهز تبدأ؟<br>
-                            اطلب الخدمة، وفريق Your Events ينسّق الباقي.
+                            {{ __('common.ready_to_start') }}<br>
+                            {{ __('common.ready_to_start_hint') }}
                         </p>
                         
+                        @php $unavailable = $service->suppliers && $service->suppliers->count() === 0; @endphp
+                        
+                        @if($unavailable)
+                        <div class="alert alert-warning text-center mb-3">
+                            هذه الخدمة غير متوفرة حالياً ولا يمكن إضافتها إلى السلة أو الحجز المباشر.
+                        </div>
+                        @else
                         <!-- Add to Cart Form -->
                         <div class="card border-primary mb-3" id="add-to-cart-card">
                             <div class="card-body">
-                                <h6 class="card-title"><i class="fas fa-shopping-cart me-2"></i>إضافة إلى السلة</h6>
+                                <h6 class="card-title"><i class="fas fa-shopping-cart me-2"></i>{{ __('common.add_to_cart') }}</h6>
                                 <form id="add-to-cart-form" 
                                           data-has-variations="{{ $service->isVariable() ? '1' : ($service->attributes->count() > 0 ? '1' : '0') }}"
                                           data-attr-count="{{ $service->attributes->count() }}"
                                           data-variation-url="{{ route('services.get-variation', $service) }}"
                                           data-add-url="{{ route('cart.add', $service) }}"
-                                          data-price-fallback="{{ $service->isVariable() ? $service->price_range : ( ($service->price ? number_format((float) $service->price) . ' ريال' : '—') ) }}">
+                                          data-price-fallback="{{ $service->isVariable() ? $service->price_range : ( ($service->price ? number_format((float) $service->price) . ' ' . __('common.currency') : '—') ) }}">
                                     @csrf
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">الكمية</label>
+                                            <label class="form-label">{{ __('common.quantity') }}</label>
                                             <input type="number" name="quantity" class="form-control" 
                                                    value="1" min="1" max="100" required>
                                         </div>
                                         <div class="col-12 mb-3">
-                                            <label class="form-label">ملاحظات خاصة (اختياري)</label>
+                                            <label class="form-label">{{ __('common.special_notes_optional') }}</label>
                                             <textarea name="customer_notes" class="form-control" rows="3" 
-                                                      placeholder="أضف أي ملاحظات أو متطلبات خاصة للخدمة..."></textarea>
-                                            <small class="text-muted">مثال: الموقع، الوقت المفضل، متطلبات خاصة</small>
+                                                      placeholder="{{ __('common.special_notes_placeholder') }}"></textarea>
+                                            <small class="text-muted">{{ __('common.special_notes_example') }}</small>
                                         </div>
                                     </div>
 
                                     @if($service->isVariable() || $service->attributes->count() > 0)
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">
-                                            <i class="fas fa-sliders-h me-2"></i>خصص خيارات الخدمة
+                                            <i class="fas fa-sliders-h me-2"></i>{{ __('common.customize_service_options') }}
                                         </label>
                                         <div class="border rounded p-3">
                                             @foreach($service->attributes as $attribute)
@@ -233,7 +291,7 @@
                                                     {{-- احترم نوع الحقل: select -> قائمة منسدلة، غير ذلك -> راديو --}}
                                                     @if($attribute->type === 'select')
                                                         <select class="form-select variation-select" name="variation[{{ $attribute->id }}]" id="attr-select-{{ $attribute->id }}">
-                                                            <option value="">اختر {{ $attribute->name }}</option>
+                                                            <option value="">{{ __('common.select_attribute', ['attribute' => $attribute->name]) }}</option>
                                                             @foreach($values as $val)
                                                                 <option value="{{ $val->id }}">{{ $val->value }}</option>
                                                             @endforeach
@@ -254,14 +312,14 @@
                                                 @endif
                                             @endforeach
                                         </div>
-                                        <div class="small text-muted">يتم تحديد السعر تلقائياً حسب التركيبة المختارة.</div>
+                                        <div class="small text-muted">{{ __('common.price_auto_update_hint') }}</div>
                                     </div>
                                     @endif
                                     
                                     <!-- الحقول المخصصة -->
                                     @if(is_array($service->custom_fields) && count($service->custom_fields) > 0)
                                     <div class="mb-3">
-                                        <label class="form-label">اختياراتك (اختياري)</label>
+                                        <label class="form-label">{{ __('common.your_selections_optional') }}</label>
                                         <div class="border rounded p-3">
                                             @foreach($service->custom_fields as $field)
                                                 @php
@@ -306,19 +364,20 @@
                                         <div class="col-12 col-md-6">
                                             <button type="submit" class="btn btn-primary w-100 mb-2 d-flex align-items-center justify-content-center gap-2 text-center">
                                                 <i class="fas fa-cart-plus"></i>
-                                                <span>اضف إلي السلة</span>
+                                                <span>{{ __('common.add_to_cart') }}</span>
                                             </button>
                                         </div>
                                         <div class="col-12 col-md-6">
                                             <a href="{{ route('booking.create', ['service_id' => $service->id]) }}" 
                                                class="btn btn-success btn-lg w-100 mb-2">
-                                                <i class="fas fa-calendar-check me-2"></i>حجز مباشر
+                                                <i class="fas fa-calendar-check me-2"></i>{{ __('common.direct_booking') }}
                                             </a>
                                         </div>
                                     </div>
                                 </form>
                             </div>
                         </div>
+                        @endif
                         
                         <div class="row g-2">
                             <div class="col-12 col-md-6">
@@ -328,7 +387,7 @@
                                         data-service-id="{{ $service->id }}">
                                     <i class="fas fa-heart me-2 {{ auth()->user()->hasInWishlist($service->id) ? '' : 'text-muted' }}"></i>
                                     <span class="wishlist-text">
-                                        {{ auth()->user()->hasInWishlist($service->id) ? 'إزالة من المفضلة' : 'أضف للمفضلة' }}
+                                        {{ auth()->user()->hasInWishlist($service->id) ? __('common.remove_from_wishlist') : __('common.add_to_wishlist') }}
                                     </span>
                                 </button>
                                 @endauth
@@ -338,7 +397,7 @@
                         <div class="row g-2">
                             <div class="col-12">
                                 <a href="{{ route('contact') }}" class="btn btn-outline-primary w-100">
-                                    <i class="fas fa-phone me-2"></i>&nbsp;اتصل بنا
+                                    <i class="fas fa-phone me-2"></i>&nbsp;{{ __('buttons.contact_us') }}
                                 </a>
                             </div>
                         </div>
@@ -346,7 +405,7 @@
                         <div class="row g-2">
                             <div class="col-12">
                                 <a href="{{ route('login') }}" class="btn btn-outline-danger w-100 mb-3">
-                                    <i class="far fa-heart me-2"></i>&nbsp;سجل دخولك لإضافة للمفضلة
+                                    <i class="far fa-heart me-2"></i>&nbsp;{{ __('common.login_to_add_wishlist') }}
                                 </a>
                             </div>
                         </div>
@@ -356,7 +415,7 @@
                 
                 <div class="card mt-4" data-aos="fade-left" data-aos-delay="100">
                     <div class="card-body">
-                        <h6 class="card-title">معلومات الاتصال</h6>
+                        <h6 class="card-title">{{ __('contact.contact_info') }}</h6>
                         <ul class="list-unstyled mb-0">
                             <li class="mb-2">
                                 <i class="fas fa-phone text-primary me-2"></i>
@@ -372,7 +431,7 @@
                             </li>
                             <li>
                                 <i class="fas fa-clock text-primary me-2"></i>
-                                {{ setting('working_hours', 'السبت - الخميس: 9:00 ص - 6:00 م') }}
+                                {{ setting('working_hours', __('common.working_hours_default')) }}
                             </li>
                         </ul>
                     </div>
@@ -382,7 +441,7 @@
         
         <div class="text-center mt-5" data-aos="fade-up">
             <a href="{{ route('services.index') }}" class="btn btn-outline-primary">
-                <i class="fas fa-arrow-right me-2"></i>&nbsp;العودة إلى الخدمات
+                <i class="fas fa-arrow-right me-2"></i>&nbsp;{{ __('common.back_to_services') }}
             </a>
         </div>
     </div>
@@ -393,10 +452,10 @@
     <div class="container">
         <div class="d-flex align-items-center justify-content-between mb-4">
             <h3 class="mb-0">
-                <i class="fas fa-sparkles me-2"></i>خدمات مشابهة
+                <i class="fas fa-sparkles me-2"></i>{{ __('common.similar_services') }}
             </h3>
             <a href="{{ route('services.index', ['category' => $service->category_id]) }}" class="btn btn-outline-primary">
-                المزيد من نفس الفئة
+                {{ __('common.more_from_same_category') }}
             </a>
         </div>
 
@@ -421,12 +480,12 @@
                             {{-- إزالة العنوان الفرعي داخل الخدمات المشابهة لتقليل الازدحام --}}
                             <div class="mt-auto">
                                 @if($s->isVariable())
-                                    <a href="{{ route('services.show', $s->id) }}" class="btn btn-sm btn-primary rounded-pill px-3 w-100">تحديد أحد الخيارات</a>
+                                    <a href="{{ route('services.show', $s->id) }}" class="btn btn-sm btn-primary rounded-pill px-3 w-100">{{ __('common.select_options') }}</a>
                                 @else
                                     <form action="{{ route('cart.add', $s) }}" method="POST">
                                         @csrf
                                         <input type="hidden" name="quantity" value="1">
-                                        <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 w-100">اضف للسلة</button>
+                                        <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3 w-100">{{ __('buttons.add_to_cart') }}</button>
                                     </form>
                                 @endif
                             </div>
@@ -617,10 +676,13 @@
 </style>
 
 @push('scripts')
+<div id="service-script-data" style="display: none;" data-currency="{{ __('common.currency') }}"></div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('add-to-cart-form');
     const priceBox = document.getElementById('service-price-display');
+    const serviceScriptData = document.getElementById('service-script-data');
+    const currencyText = serviceScriptData ? (serviceScriptData.dataset.currency || '') : '';
 
     // Wishlist Toggle
     const wishlistBtns = document.querySelectorAll('.wishlist-toggle-btn');
@@ -722,7 +784,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(r => r.json())
             .then(data => {
                 if (data && data.success){
-                    priceBox.textContent = `${Number(data.price).toLocaleString()} ريال`;
+                    priceBox.textContent = `${Number(data.price).toLocaleString()} ${currencyText}`;
                     let hid = document.getElementById('selected_variation_id');
                     if (!hid){
                         hid = document.createElement('input');
@@ -772,13 +834,22 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(form.dataset.addUrl, {
             method: 'POST',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: formData
         })
-        .then(response => response.json())
+        .then(async response => {
+            const data = await response.json().catch(() => null);
+            if (!response.ok) {
+                const message = (data && (data.message || data.error)) ? (data.message || data.error) : 'حدث خطأ. حاول مرة أخرى.';
+                throw new Error(message);
+            }
+            return data;
+        })
         .then(data => {
-            if (data.success) {
+            if (data && data.success) {
                 // تحديث السلة بالكامل (العداد والقائمة المنسدلة)
                 if (typeof window.updateCartDropdown === 'function') {
                     window.updateCartDropdown();
@@ -801,12 +872,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 showAlert(data.message, 'success');
                 form.reset();
             } else {
-                showAlert('حدث خطأ. حاول مرة أخرى.', 'danger');
+                showAlert((data && data.message) ? data.message : 'حدث خطأ. حاول مرة أخرى.', 'danger');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showAlert('حدث خطأ. حاول مرة أخرى.', 'danger');
+            showAlert(error?.message || 'حدث خطأ. حاول مرة أخرى.', 'danger');
         })
         .finally(() => {
             submitBtn.disabled = false;

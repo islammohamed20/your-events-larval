@@ -52,7 +52,7 @@
                             @else
                                 <div>
                                     <strong>السعر:</strong>
-                                    <span class="ms-2">{{ number_format($service->price ?? 0, 2) }} ر.س</span>
+                                    <span class="ms-2">{{ number_format($service->price ?? 0, 2) }} {{ __('common.currency') }}</span>
                                 </div>
                             @endif
                         </div>
@@ -89,8 +89,8 @@
                             @foreach($service->variations as $variation)
                             <tr>
                                 <td>{{ $variation->sku ?: '-' }}</td>
-                                <td>{{ number_format($variation->price ?? 0, 2) }} ر.س</td>
-                                <td>{{ $variation->sale_price ? number_format($variation->sale_price, 2) . ' ر.س' : '-' }}</td>
+                                <td>{{ number_format($variation->price ?? 0, 2) }} {{ __('common.currency') }}</td>
+                                <td>{{ $variation->sale_price ? number_format($variation->sale_price, 2) . ' ' . __('common.currency') : '-' }}</td>
                                 <td>{{ $variation->stock ?? '-' }}</td>
                                 <td>
                                     @if($variation->is_active)

@@ -10,16 +10,16 @@ class PaymentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Payment::with(['user', 'quote', 'booking'])->orderByDesc('created_at');
+        $query = Payment::with(['user', 'booking.quote'])->orderByDesc('created_at');
 
         if ($request->has('status') && $request->status !== '') {
             $query->where('status', $request->status);
         }
         if ($request->has('method') && $request->method !== '') {
-            $query->where('method', $request->method);
+            $query->where('payment_method', $request->method);
         }
         if ($request->has('provider') && $request->provider !== '') {
-            $query->where('provider', $request->provider);
+            $query->where('gateway', $request->provider);
         }
 
         $payments = $query->paginate(20)->withQueryString();
@@ -29,7 +29,7 @@ class PaymentController extends Controller
 
     public function show(Payment $payment)
     {
-        $payment->load(['user', 'quote', 'booking']);
+        $payment->load(['user', 'booking.quote']);
 
         return view('admin.payments.show', compact('payment'));
     }

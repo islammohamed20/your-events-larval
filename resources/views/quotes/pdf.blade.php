@@ -307,8 +307,8 @@
                     <th style="width: 6%;">#</th>
                     <th style="width: 46%;">الخدمة</th>
                     <th style="width: 12%; text-align: center;">الكمية</th>
-                    <th style="width: 18%; text-align: right;">السعر (ريال)</th>
-                    <th style="width: 18%; text-align: right;">المجموع (ريال)</th>
+                    <th style="width: 18%; text-align: right;">السعر ({{ __('common.currency') }})</th>
+                    <th style="width: 18%; text-align: right;">المجموع ({{ __('common.currency') }})</th>
                 </tr>
             </thead>
             <tbody>
@@ -401,21 +401,21 @@
             <table class="summary-table" style="margin-top: 0;">
                 <tr>
                     <td class="summary-label">المجموع الفرعي:</td>
-                    <td class="summary-value">{{ number_format($quote->subtotal, 2) }} ريال</td>
+                    <td class="summary-value">{{ number_format($quote->subtotal, 2) }} {{ __('common.currency') }}</td>
                 </tr>
                 <tr>
                     <td class="summary-label">الضريبة (15%):</td>
-                    <td class="summary-value">{{ number_format($quote->tax, 2) }} ريال</td>
+                    <td class="summary-value">{{ number_format($quote->tax, 2) }} {{ __('common.currency') }}</td>
                 </tr>
                 @if($quote->discount > 0)
                 <tr class="text-success">
                     <td class="summary-label">الخصم:</td>
-                    <td class="summary-value">-{{ number_format($quote->discount, 2) }} ريال</td>
+                    <td class="summary-value">-{{ number_format($quote->discount, 2) }} {{ __('common.currency') }}</td>
                 </tr>
                 @endif
                 <tr class="total-row">
                     <td class="summary-label">الإجمالي:</td>
-                    <td class="summary-value">{{ number_format($quote->total, 2) }} ريال</td>
+                    <td class="summary-value">{{ number_format($quote->total, 2) }} {{ __('common.currency') }}</td>
                 </tr>
             </table>
             
@@ -477,7 +477,7 @@
         <!-- Footer -->
         <div class="footer">
             <div class="footer-info">
-                <strong>Your Events</strong> - حوّل مناسبتك العادية إلى لحظة استثنائية
+                <strong>Your Events</strong> - {{ __('common.site_slogan') }}
             </div>
             <div class="footer-info">
                 البريد الإلكتروني: hello@yourevents.sa | الهاتف: +966 50 515 9616

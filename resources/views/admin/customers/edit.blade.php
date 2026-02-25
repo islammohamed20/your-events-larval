@@ -298,6 +298,9 @@
                                     <button type="button" class="btn btn-warning w-100" onclick="resetPassword()">
                                         <i class="fas fa-key"></i> إعادة تعيين كلمة المرور
                                     </button>
+                                    <form id="resetPasswordForm" action="{{ route('admin.customers.reset-password', $customer->id) }}" method="POST" class="d-none">
+                                        @csrf
+                                    </form>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <button type="button" class="btn btn-info w-100" onclick="sendWelcomeEmail()">
@@ -365,8 +368,11 @@
 
 <script>
 function resetPassword() {
-    if (confirm('هل تريد إعادة تعيين كلمة مرور هذا العميل؟ سيتم إرسال بريد إلكتروني بكلمة المرور الجديدة.')) {
-        alert('سيتم تنفيذ هذه الميزة قريباً');
+    if (confirm('هل تريد إرسال رمز إعادة تعيين كلمة المرور إلى بريد هذا العميل؟')) {
+        const form = document.getElementById('resetPasswordForm');
+        if (form) {
+            form.submit();
+        }
     }
 }
 

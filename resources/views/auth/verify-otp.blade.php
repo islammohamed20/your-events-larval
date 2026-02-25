@@ -285,15 +285,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     input.style.backgroundColor = '#d4edda';
                 });
                 
-                // Show success message and redirect
                 otpError.textContent = '';
                 otpError.className = 'text-success text-center mt-3 fw-bold';
-                otpError.textContent = '✓ ' + data.message + ' - جاري التحويل...';
-                
-                // Redirect after 1 second
-                setTimeout(() => {
-                    window.location.href = data.redirect;
-                }, 1000);
+                otpError.textContent = '✓ ' + data.message;
+
+                // هل نعرض modal البصمة؟
+                if (data.biometric_prompt && window.PublicKeyCredential) {
+                    PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(available => {
+                        if (available) {
+                            window._biometricRedirect = data.redirect;
+                            const modal = new bootstrap.Modal(document.getElementById('biometricRegisterModal'));
+                            modal.show();
+                        } else {
+                            setTimeout(() => { window.location.href = data.redirect; }, 1000);
+                        }
+                    });
+                } else {
+                    setTimeout(() => { window.location.href = data.redirect; }, 1000);
+                }
             } else {
                 otpError.textContent = data.message;
                 otpInputs.forEach(input => input.classList.add('error'));
@@ -367,5 +376,148 @@ document.addEventListener('DOMContentLoaded', function() {
     // Focus first input on load
     otpInputs[0].focus();
 });
+</script>
+
+{{-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{-- Modal: تسجيل البصمة                                                    --}}
+{{-- ═══════════════════════════════════════════════════════════════════════ --}}
+<div class="modal fade" id="biometricRegisterModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:20px; overflow:hidden;">
+            <div class="modal-body text-center p-5">
+                <div style="font-size:4rem; margin-bottom:1rem;">🔐</div>
+                <h4 class="fw-bold mb-2">تسجيل بصمة الدخول</h4>
+                <p class="text-muted mb-4">
+                    هل تريد تفعيل الدخول بالبصمة أو Face ID في المرات القادمة؟<br>
+                    <small>سيكون أسرع وأكثر أماناً من كلمة المرور</small>
+                </p>
+                <div id="biometricRegisterMsg" class="mb-3 small" style="display:none;"></div>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-lg fw-bold text-white" id="registerBiometricBtn"
+                            onclick="registerBiometric()"
+                            style="background:linear-gradient(135deg,#1f1449,#ef4870); border-radius:12px; padding:14px;">
+                        <i class="fas fa-fingerprint me-2"></i>نعم، فعّل البصمة
+                    </button>
+                    <button type="button" class="btn btn-lg btn-outline-secondary fw-bold" onclick="skipBiometric()"
+                            style="border-radius:12px; padding:14px;">
+                        تخطي الآن
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function registerBiometric() {
+    const btn = document.getElementById('registerBiometricBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جارٍ التسجيل...';
+
+    try {
+        // احصل على خيارات التسجيل
+        const optRes = await fetch('{{ route("biometric.register.options") }}', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json'},
+            body: JSON.stringify({})
+        });
+
+        if (!optRes.ok) {
+            const err = await optRes.json();
+            showBioRegMsg(err.error || 'خطأ في الحصول على خيارات التسجيل', 'danger');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-fingerprint me-2"></i>نعم، فعّل البصمة';
+            return;
+        }
+
+        const options = await optRes.json();
+
+        // تحويل base64 → ArrayBuffer
+        const challenge = base64ToAB(options.challenge);
+        const userId    = base64ToAB(options.user.id);
+
+        const credential = await navigator.credentials.create({
+            publicKey: {
+                challenge,
+                rp: options.rp,
+                user: { id: userId, name: options.user.name, displayName: options.user.displayName },
+                pubKeyCredParams: options.pubKeyCredParams,
+                authenticatorSelection: options.authenticatorSelection,
+                timeout: options.timeout,
+                attestation: options.attestation,
+            }
+        });
+
+        // أرسل النتيجة للحفظ
+        const saveRes = await fetch('{{ route("biometric.register") }}', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json'},
+            body: JSON.stringify({
+                id: credential.id,
+                rawId: abToBase64(credential.rawId),
+                response: {
+                    clientDataJSON: abToBase64(credential.response.clientDataJSON),
+                    attestationObject: abToBase64(credential.response.attestationObject),
+                },
+                type: credential.type,
+                device_name: navigator.platform || 'الجهاز',
+            })
+        });
+
+        const result = await saveRes.json();
+        if (result.success) {
+            // حفظ علامة في localStorage
+            const userType = '{{ session("biometric_register_user_type", "user") }}';
+            if (userType === 'supplier') {
+                localStorage.setItem('ye_supplier_biometric_registered', '1');
+            } else {
+                localStorage.setItem('ye_biometric_registered', '1');
+            }
+            showBioRegMsg('✅ تم تسجيل البصمة بنجاح!', 'success');
+            setTimeout(() => { window.location.href = window._biometricRedirect; }, 1000);
+        } else {
+            showBioRegMsg(result.error || 'فشل الحفظ', 'danger');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-fingerprint me-2"></i>نعم، فعّل البصمة';
+        }
+    } catch (err) {
+        if (err.name === 'NotAllowedError') {
+            showBioRegMsg('تم إلغاء التسجيل', 'warning');
+        } else {
+            showBioRegMsg('خطأ: ' + err.message, 'danger');
+        }
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-fingerprint me-2"></i>نعم، فعّل البصمة';
+    }
+}
+
+function skipBiometric() {
+    // تسجيل أن المستخدم رفض (نتجنب إزعاجه بشكل متكرر)
+    localStorage.setItem('ye_biometric_skipped', Date.now());
+    window.location.href = window._biometricRedirect;
+}
+
+function showBioRegMsg(msg, type) {
+    const el = document.getElementById('biometricRegisterMsg');
+    el.className = 'mb-3 small text-' + type;
+    el.textContent = msg;
+    el.style.display = 'block';
+}
+
+function base64ToAB(base64) {
+    const b64 = base64.replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(b64);
+    const buf = new ArrayBuffer(raw.length);
+    const view = new Uint8Array(buf);
+    for (let i = 0; i < raw.length; i++) view[i] = raw.charCodeAt(i);
+    return buf;
+}
+
+function abToBase64(buf) {
+    const bytes = new Uint8Array(buf);
+    let str = '';
+    for (let i = 0; i < bytes.byteLength; i++) str += String.fromCharCode(bytes[i]);
+    return btoa(str);
+}
 </script>
 @endsection

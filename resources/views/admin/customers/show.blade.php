@@ -101,7 +101,7 @@
                     <hr>
                     <div class="text-center">
                         <h4 class="text-warning">
-                            {{ number_format($customer->bookings->where('status', 'confirmed')->sum('total_amount'), 2) }} ر.س
+                            {{ number_format($customer->bookings->where('status', 'confirmed')->sum('total_amount'), 2) }} {{ __('common.currency') }}
                         </h4>
                         <p class="mb-0">إجمالي المدفوعات</p>
                     </div>
@@ -142,10 +142,10 @@
                                             {{ $quote->status }}
                                         </span>
                                     </td>
-                                    <td>{{ number_format($quote->subtotal, 2) }} ر.س</td>
-                                    <td>{{ number_format($quote->tax, 2) }} ر.س</td>
-                                    <td>{{ number_format($quote->discount, 2) }} ر.س</td>
-                                    <td><strong>{{ number_format($quote->total, 2) }} ر.س</strong></td>
+                                    <td>{{ number_format($quote->subtotal, 2) }} {{ __('common.currency') }}</td>
+                                    <td>{{ number_format($quote->tax, 2) }} {{ __('common.currency') }}</td>
+                                    <td>{{ number_format($quote->discount, 2) }} {{ __('common.currency') }}</td>
+                                    <td><strong>{{ number_format($quote->total, 2) }} {{ __('common.currency') }}</strong></td>
                                     <td>{{ $quote->created_at->format('Y-m-d') }}</td>
                                     <td>
                                         <a href="{{ route('quotes.show', $quote->id) }}" 
@@ -228,7 +228,7 @@
                                     <td>{{ $booking->booking_reference }}</td>
                                     <td>{{ $booking->client_name }}</td>
                                     <td>{{ $booking->event_date ? $booking->event_date->format('Y-m-d') : 'غير محدد' }}</td>
-                                    <td><strong>{{ number_format($booking->total_amount, 2) }} ر.س</strong></td>
+                                    <td><strong>{{ number_format($booking->total_amount, 2) }} {{ __('common.currency') }}</strong></td>
                                     <td>
                                         <span class="badge bg-success">{{ $booking->status }}</span>
                                     </td>

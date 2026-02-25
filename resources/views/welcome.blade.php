@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'الصفحة الرئيسية - Your Events')
+@section('title', __('common.quick_links_home') . ' - Your Events')
 
 @push('styles')
 <style>
@@ -921,18 +921,26 @@
                 <div class="container">
                     <div class="row align-items-center min-vh-75">
                         <div class="col-lg-8 mx-auto text-center" data-aos="fade-up">
-                            <h1 class="hero-slide-title arabic-text mb-3">{{ $slide->title }}</h1>
+                            <h1 class="hero-slide-title arabic-text mb-3" style="color: #fff !important; text-align: center !important;">{{ $slide->title }}</h1>
                             @if($slide->subtitle)
-                            <h2 class="hero-slide-subtitle arabic-text mb-4">{{ $slide->subtitle }}</h2>
+                            <h2 class="hero-slide-subtitle arabic-text mb-4" style="text-align: center !important;">{{ $slide->subtitle }}</h2>
                             @endif
                             @if($slide->description)
-                            <p class="hero-slide-description arabic-text mb-4">{{ $slide->description }}</p>
+                            <p class="hero-slide-description arabic-text mb-4" style="color: rgba(255,255,255,0.95) !important; text-align: center !important;">{{ $slide->description }}</p>
                             @endif
                             @if($slide->button_text && $slide->button_link)
                             <a href="{{ $slide->button_link }}" 
                                class="btn btn-{{ $slide->button_style === 'primary' ? 'cta' : ($slide->button_style === 'accent' ? 'accent' : 'outline-light') }} btn-lg arabic-text">
-                                {{ str_replace('استكشف جميع الأقسام', 'استكشف جميع الخدمات', $slide->button_text) }}
-                                <i class="fas fa-arrow-left ms-2"></i>
+                                @php
+                                    $slideButtonText = $slide->button_text;
+                                    if (app()->getLocale() === 'en' && in_array(trim((string) $slideButtonText), ['استكشف جميع الأقسام', 'استكشف جميع الخدمات'], true)) {
+                                        $slideButtonText = __('common.explore_all_categories');
+                                    } else {
+                                        $slideButtonText = str_replace('استكشف جميع الأقسام', 'استكشف جميع الخدمات', (string) $slideButtonText);
+                                    }
+                                @endphp
+                                {{ $slideButtonText }}
+                                <i class="fas fa-arrow-{{ app()->getLocale() === 'ar' ? 'left' : 'right' }} ms-2"></i>
                             </a>
                             @endif
                         </div>
@@ -968,10 +976,10 @@
     <div class="container">
         <div class="row align-items-center min-vh-50">
             <div class="col-lg-8 mx-auto text-center">
-                <h1 class="arabic-text mb-3">حوّل فعاليتك إلى لحظة استثنائية</h1>
-                <p class="arabic-text mb-4">ابدأ التنظيم الآن واختر من خدماتنا وباقاتنا المتنوعة</p>
+                <h1 class="arabic-text mb-3">{{ __('common.home_hero_fallback_title') }}</h1>
+                <p class="arabic-text mb-4">{{ __('common.home_hero_fallback_subtitle') }}</p>
                 <a href="{{ route('services.index') }}" class="btn btn-cta btn-lg arabic-text">
-                    استكشف جميع الخدمات
+                    {{ __('common.explore_all_categories') }}
                     <i class="fas fa-arrow-left ms-2"></i>
                 </a>
             </div>
@@ -994,28 +1002,26 @@
             <div class="col-lg-10 col-xl-9">
                 <div class="card border-0 about-card" data-aos="fade-up">
                     <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <span class="arabic-text section-tag-pill teal">
-                                وش سالفة Your Events
-                            </span>
+                        <div class="d-flex align-items-center justify-content-center mb-3">
+                            <span class="arabic-text section-tag-pill teal">{{ __('common.home_about_tag') }}</span>
                         </div>
                         <h2 class="arabic-text section-heading">
-                            سالفتنا بدت من فكرة بسيطة…
+                            {{ __('common.home_about_title') }}
                         </h2>
                         <p class="arabic-text section-body-text lead mb-3">
-                            ليه تجهيز الفعاليات يكون متعب، والخيارات متفرّقة، والتجربة معقدة؟
+                            {{ __('common.home_about_lead') }}
                         </p>
                         <p class="arabic-text section-body-text">
-                            من هنا، طلعت Your Events — منصّة سعودية جمّعنا فيها كل خدمات تجهيز الفعاليات في مكان واحد.
+                            {{ __('common.home_about_p1') }}
                         </p>
                         <p class="arabic-text section-body-text">
-                            تختار، تحدد اللي تحتاجه، وتشوف الأسعار فورًا — تقدر تطلب عرض سعر أو تدفع مباشرة، وكل التفاصيل توصلك على طول في إيميلك.
+                            {{ __('common.home_about_p2') }}
                         </p>
                         <p class="arabic-text section-body-text">
-                            لا وسطاء، لا انتظار، ولا مكالمات ما تخلص. كل شي واضح، وسلس، وسريع.
+                            {{ __('common.home_about_p3') }}
                         </p>
                         <p class="arabic-text section-body-text fw-semibold mb-0 text-dark">
-                            لأننا نؤمن إن فعّاليتك ما تبدأ وقت الحدث… فعّاليتك تبدأ من لحظة الطلب.
+                            {{ __('common.home_about_p4') }}
                         </p>
                     </div>
                 </div>
@@ -1050,18 +1056,34 @@
             <div class="section-tag-pill purple mb-3">
                 <span class="d-inline-flex align-items-center gap-2" style="font-size: 0.9rem;">
                     <img src="{{ asset('images/logo/logo_mail.png') }}" alt="Your Events" style="height: 20px; width: auto;">
-                    <span class="fw-semibold" style="letter-spacing: 1px;">استكشف عالمنا</span>
+                    <span class="fw-semibold" style="letter-spacing: 1px;">{{ __('common.explore_our_world') }}</span>
                 </span>
             </div>
             <h2 class="arabic-text section-heading" style="font-size: 2.8rem;">
-                {{ $categoriesSection->title ?: 'فئات الخدمات' }}
+                @if($categoriesSection->title && $categoriesSection->title !== 'وش نخدمك فيه')
+                    {{ $categoriesSection->title }}
+                @else
+                    {{ __('common.categories_section_title') }}
+                @endif
             </h2>
             <p class="arabic-text section-subheading">
-                {{ $categoriesSection->subtitle ?: 'اختر ما يناسب فعاليتك من تشكيلة متنوعة' }}
+                @if($categoriesSection->subtitle && $categoriesSection->subtitle !== 'الفعالية ما تكتمل بدون تفاصيلها…')
+                    {{ $categoriesSection->subtitle }}
+                @else
+                    {{ __('common.categories_section_subtitle') }}
+                @endif
             </p>
-            @if($categoriesSection->content['description'] ?? null)
+            @php
+                $categoryDescription = $categoriesSection->content['description'] ?? null;
+                $isArabicDescription = $categoryDescription && (mb_strpos($categoryDescription, 'عشان كذا') !== false || mb_strpos($categoryDescription, 'بطريقتها') !== false);
+            @endphp
+            @if($categoryDescription)
             <div class="arabic-text section-description">
-                {!! nl2br(e($categoriesSection->content['description'])) !!}
+                @if($isArabicDescription && app()->getLocale() === 'en')
+                    {!! nl2br(e(__('common.categories_section_description'))) !!}
+                @else
+                    {!! nl2br(e($categoryDescription)) !!}
+                @endif
             </div>
             @endif
         </div>
@@ -1146,14 +1168,14 @@
                         <div class="category-header" style="background-image: linear-gradient(135deg, rgba(45,188,174,0.65) 0%, rgba(30,19,73,0.85) 100%), url('/storage/categories/XJKcHewH2iqtSVqeGhsnhGJZLTE5oDnNbnLCzavP.jpg');">
                             <div class="category-icon-wrapper">
                                 <div class="category-icon-bubble">
-                                    <img src="{{ asset('storage/category-icons/DKEmAe9M674z3c2ccsvnR2lQP1kM8I89oHNv9hoe.png') }}" alt="فعالية" style="width: 42px; height: 42px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));">
+                                    <img src="{{ asset('storage/category-icons/DKEmAe9M674z3c2ccsvnR2lQP1kM8I89oHNv9hoe.png') }}" alt="{{ __('common.event') }}" style="width: 42px; height: 42px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));">
                                 </div>
                             </div>
-                            <h3 class="arabic-text category-title">فكرتك غير؟ نحولها لفعالية</h3>
+                            <h3 class="arabic-text category-title">{{ __('common.home_event_card_title') }}</h3>
                         </div>
                         <div class="category-body">
                             <div class="category-cta">
-                                <span>صممها الان</span>
+                                <span>{{ __('common.design_it_now') }}</span>
                                 <i class="fas fa-arrow-left category-arrow"></i>
                             </div>
                         </div>
@@ -1210,7 +1232,7 @@
                         <div class="category-mobile-icon sm">
                             <i class="fas fa-lightbulb" style="font-size: 2rem; color: white;"></i>
                         </div>
-                        <h3 class="arabic-text category-name">فكرتك غير؟ نحولها لفعالية</h3>
+                        <h3 class="arabic-text category-name">{{ __('common.home_event_card_title') }}</h3>
                     </div>
                 </a>
             </div>
@@ -1219,7 +1241,7 @@
         @if($categories->isEmpty())
             <div class="alert alert-info arabic-text mt-4 text-center" style="border-radius: 16px; border: none; background: rgba(102, 126, 234, 0.08);">
                 <i class="fas fa-info-circle me-2"></i>
-                لا توجد فئات مفعلة حالياً
+                {{ __('common.no_active_categories') }}
             </div>
         @endif
         
@@ -1249,7 +1271,7 @@
         <!-- Header -->
         <div class="text-center mb-4" data-aos="fade-up">
             <span class="arabic-text d-inline-block mb-3" style="background: rgba(45,188,174,0.12); border: 1px solid rgba(45,188,174,0.35); color: var(--secondary-color); padding: 8px 16px; border-radius: 999px; font-weight: 700;">
-                كيف تشتغل Your Events ؟
+                {{ __('common.how_it_works_title') }}
             </span>
             <h2 class="arabic-text fw-bold mb-2" style="color:#1a202c; font-size: clamp(1.6rem, 2.6vw, 2.2rem);">{{ __('common.no_long_explanation') }}</h2>
             <p class="arabic-text mb-0" style="color:#4a5568; font-size: 1.15rem;">{{ __('common.five_steps') }}</p>
@@ -1276,9 +1298,9 @@
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
                             <div style="width:42px; height:42px; border-radius: 12px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #667eea, #764ba2); color:#fff; box-shadow: 0 8px 20px rgba(118, 75, 162, 0.3);">2️⃣</div>
-                            <h5 class="arabic-text mb-0 me-3" style="color:#1a202c; font-weight:800;">تضيف التفاصيل</h5>
+                            <h5 class="arabic-text mb-0 me-3" style="color:#1a202c; font-weight:800;">{{ __('common.how_it_works_step2_title') }}</h5>
                         </div>
-                        <p class="arabic-text mb-0" style="color:#2d3748; line-height:1.9;">كم عدد الأشخاص؟ وين؟ ومتى؟</p>
+                        <p class="arabic-text mb-0" style="color:#2d3748; line-height:1.9;">{{ __('common.how_it_works_step2_desc') }}</p>
                     </div>
                 </div>
             </div>
@@ -1289,9 +1311,9 @@
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
                             <div style="width:42px; height:42px; border-radius: 12px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #667eea, #764ba2); color:#fff; box-shadow: 0 8px 20px rgba(239, 72, 112, 0.3);">3️⃣</div>
-                            <h5 class="arabic-text mb-0 me-3" style="color:#1a202c; font-weight:800;">تختار الطريقة اللي تريحك</h5>
+                            <h5 class="arabic-text mb-0 me-3" style="color:#1a202c; font-weight:800;">{{ __('common.how_it_works_step3_title') }}</h5>
                         </div>
-                        <p class="arabic-text mb-0" style="color:#2d3748; line-height:1.9;">تطلب عرض سعر… أو تدفع مباشرة وتبدأ التنفيذ.</p>
+                        <p class="arabic-text mb-0" style="color:#2d3748; line-height:1.9;">{{ __('common.how_it_works_step3_desc') }}</p>
                     </div>
                 </div>
             </div>
@@ -1302,9 +1324,9 @@
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
                             <div style="width:42px; height:42px; border-radius: 12px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #667eea, #764ba2); color:#fff; box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3);">4️⃣</div>
-                            <h5 class="arabic-text mb-0 me-3" style="color:#1a202c; font-weight:800;">توصلك التفاصيل على طول</h5>
+                            <h5 class="arabic-text mb-0 me-3" style="color:#1a202c; font-weight:800;">{{ __('common.how_it_works_step4_title') }}</h5>
                         </div>
-                        <p class="arabic-text mb-0" style="color:#2d3748; line-height:1.9;">كل شي يوصلك في إيميلك واضح ومرتب.</p>
+                        <p class="arabic-text mb-0" style="color:#2d3748; line-height:1.9;">{{ __('common.how_it_works_step4_desc') }}</p>
                     </div>
                 </div>
             </div>
@@ -1315,9 +1337,9 @@
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center mb-3">
                             <div style="width:42px; height:42px; border-radius: 12px; display:flex; align-items:center; justify-content:center; background: linear-gradient(135deg, #667eea, #764ba2); color:#fff; box-shadow: 0 8px 20px rgba(214, 60, 94, 0.3);">5️⃣</div>
-                            <h5 class="arabic-text mb-0 me-3" style="color:#1a202c; font-weight:800;">ونبدأ نجهّز لك الفعالية</h5>
+                            <h5 class="arabic-text mb-0 me-3" style="color:#1a202c; font-weight:800;">{{ __('common.how_it_works_step5_title') }}</h5>
                         </div>
-                        <p class="arabic-text mb-0" style="color:#2d3748; line-height:1.9;">بسرعة، دقّة، ونتيجة تخلّيك تقول: “ليه ما كانت الفعاليات كذا من زمان؟” 🎉</p>
+                        <p class="arabic-text mb-0" style="color:#2d3748; line-height:1.9;">{{ __('common.how_it_works_step5_desc') }}</p>
                     </div>
                 </div>
             </div>
@@ -1331,7 +1353,7 @@
                         {{ __('common.tagline') }}
                     </p>
                     <p class="arabic-text mb-0" style="color:#2d3748; font-weight:600;">
-                        Your Events تخلّيك تجهّز بثقة.
+                        {{ __('common.prepare_with_confidence') }}
                     </p>
                 </div>
             </div>
@@ -1351,7 +1373,7 @@
         <!-- Section Header -->
         <div class="text-center mb-5" data-aos="fade-up">
             <h2 class="arabic-text mb-3" style="color: #1a202c; font-weight: 800; font-size: 2.5rem;">
-                {{ $categoryServicesSection->title ?: 'خدماتنا المميزة' }}
+                {{ $categoryServicesSection->title ?: __('common.featured_services') }}
             </h2>
             @if($categoryServicesSection->subtitle)
             <p class="text-muted" style="font-size: 1.1rem;">
@@ -1399,7 +1421,7 @@
                     </div>
                     <a href="{{ route('services.index', ['category' => $category->id]) }}" 
                        class="btn btn-outline-primary rounded-pill px-4">
-                        عرض الكل
+                        {{ __('common.view_all') }}
                         <i class="fas fa-arrow-left me-2"></i>
                     </a>
                 </div>
@@ -1439,7 +1461,7 @@
                                                     @if($service->price)
                                                     <div>
                                                         <span class="text-primary fw-bold" style="font-size: 1.1rem;">
-                                                            {{ number_format((float)$service->price, 2) }} ر.س
+                                                            {{ number_format((float)$service->price, 2) }} {{ __('common.currency') }}
                                                         </span>
                                                     </div>
                                                     @endif
@@ -1451,7 +1473,7 @@
                                                                 class="btn btn-sm btn-primary rounded-pill px-3 add-to-cart-btn"
                                                                 data-service-id="{{ $service->id }}"
                                                                 data-service-name="{{ $service->name }}">
-                                                            <i class="fas fa-cart-plus me-1"></i>أضف للسلة
+                                                            <i class="fas fa-cart-plus me-1"></i>{{ __('common.add_to_cart') }}
                                                         </button>
                                                     @endif
                                                 </div>
@@ -1571,6 +1593,7 @@
 }
 </style>
 
+<div id="home-cart-texts" style="display: none;" data-loading="{{ __('common.loading') }}" data-added-to-cart="{{ __('common.added_to_cart') }}" data-error-occurred="{{ __('common.error_occurred') }}" data-add-to-cart-error="{{ __('common.add_to_cart_error') }}"></div>
 <script>
 function scrollCarousel(carouselId, direction) {
     const carousel = document.getElementById(carouselId);
@@ -1583,6 +1606,12 @@ function scrollCarousel(carouselId, direction) {
 
 // Add to cart functionality without page reload
 document.addEventListener('DOMContentLoaded', function() {
+    const cartTextsEl = document.getElementById('home-cart-texts');
+    const loadingText = cartTextsEl ? (cartTextsEl.dataset.loading || '') : '';
+    const addedToCartText = cartTextsEl ? (cartTextsEl.dataset.addedToCart || '') : '';
+    const errorOccurredText = cartTextsEl ? (cartTextsEl.dataset.errorOccurred || '') : '';
+    const addToCartErrorText = cartTextsEl ? (cartTextsEl.dataset.addToCartError || '') : '';
+
     document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
@@ -1591,7 +1620,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const originalHtml = this.innerHTML;
             
             this.disabled = true;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>جاري...';
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + loadingText;
             
             fetch(`/cart/add/${serviceId}`, {
                 method: 'POST',
@@ -1616,7 +1645,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         cartCountEl.textContent = data.cart_count;
                     }
                     
-                    this.innerHTML = '<i class="fas fa-check me-1"></i>تمت الإضافة!';
+                    this.innerHTML = '<i class="fas fa-check me-1"></i>' + addedToCartText;
                     this.classList.remove('btn-primary');
                     this.classList.add('btn-success');
                     
@@ -1627,14 +1656,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         this.disabled = false;
                     }, 2000);
                 } else {
-                    throw new Error(data.message || 'حدث خطأ');
+                    throw new Error(data.message || errorOccurredText);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 this.innerHTML = originalHtml;
                 this.disabled = false;
-                alert('حدث خطأ أثناء الإضافة للسلة. حاول مرة أخرى.');
+                alert(addToCartErrorText);
             });
         });
     });
@@ -1757,8 +1786,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     <div class="container">
         <div class="text-center mb-4">
-            <h2 class="section-title arabic-text" data-aos="fade-up" style="color: var(--primary-color); font-size: 2.5rem; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">{{ $servicesSection->title ?: 'كل اللي تحتاجه لحفلتك، بنوفرك إياه من مكان واحد' }}</h2>
-            <p class="lead arabic-text" style="color: #444444; font-size: 1.2rem; font-weight: 500;">{{ $servicesSection->subtitle ?: 'من تنظيم وتنسيق، لمعايدة وتجهيز وصولاً - دورنا إنك بطريقك' }}</p>
+            <h2 class="section-title arabic-text" data-aos="fade-up" style="color: var(--primary-color); font-size: 2.5rem; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);">{{ $servicesSection->title ?: __('common.home_services_title') }}</h2>
+            <p class="lead arabic-text" style="color: #444444; font-size: 1.2rem; font-weight: 500;">{{ $servicesSection->subtitle ?: __('common.home_services_subtitle') }}</p>
             @if($servicesSection->content['description'] ?? null)
             <div class="arabic-text mt-3" style="color: #555;">
                 {!! nl2br(e($servicesSection->content['description'])) !!}
@@ -1782,9 +1811,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <h5 class="arabic-text" style="color: var(--primary-color); margin: 20px 0 15px; font-weight: 700;">{{ $service->name }}</h5>
                     <p class="arabic-text" style="color: #555555; font-size: 1rem; line-height: 1.6;">{{ Str::limit($service->description, 100) }}</p>
                     <div class="d-flex justify-content-center gap-2 mt-3">
-                        <a href="{{ route('services.show', $service->id) }}" class="btn btn-primary" style="border-radius: 25px; padding: 10px 25px;">عرض التفاصيل</a>
+                        <a href="{{ route('services.show', $service->id) }}" class="btn btn-primary" style="border-radius: 25px; padding: 10px 25px;">{{ __('common.view_details') }}</a>
                         @if($service->price)
-                            <span class="badge bg-success" style="border-radius: 25px; padding: 10px 15px; font-size: 0.9rem;">{{ number_format($service->price) }} ر.س</span>
+                            <span class="badge bg-success" style="border-radius: 25px; padding: 10px 15px; font-size: 0.9rem;">{{ number_format($service->price) }} {{ __('common.currency') }}</span>
                         @endif
                     </div>
                 </div>
@@ -1795,9 +1824,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="service-icon" style="background: linear-gradient(135deg, var(--accent-color), var(--secondary-color)); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
                         <i class="fas fa-users" style="font-size: 2rem; color: white;"></i>
                     </div>
-                    <h5 class="arabic-text" style="color: var(--primary-color); margin: 20px 0 15px; font-weight: 700;">حاضرين لوصل الفرح</h5>
-                    <p class="arabic-text" style="color: #555555; font-size: 1rem; line-height: 1.6;">نساعدك في كل خطوة</p>
-                    <a href="{{ route('booking.create') }}" class="btn btn-secondary" style="margin-top: 15px; border-radius: 25px; padding: 10px 25px;">اطلب الآن</a>
+                    <h5 class="arabic-text" style="color: var(--primary-color); margin: 20px 0 15px; font-weight: 700;">{{ __('common.home_services_empty_title') }}</h5>
+                    <p class="arabic-text" style="color: #555555; font-size: 1rem; line-height: 1.6;">{{ __('common.home_services_empty_desc') }}</p>
+                    <a href="{{ route('booking.create') }}" class="btn btn-secondary" style="margin-top: 15px; border-radius: 25px; padding: 10px 25px;">{{ __('common.request_now') }}</a>
                 </div>
             </div>
             @endforelse
@@ -2237,7 +2266,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <i class="fas fa-sparkles float-icon"></i>
     
     <div class="container">
-        <h2 class="section-title arabic-text" data-aos="fade-up" style="color: var(--primary-color); text-align: center; margin-bottom: 2rem;">{{ $packagesSection->title ?: 'باقاتنا المميزة' }}</h2>
+        <h2 class="section-title arabic-text" data-aos="fade-up" style="color: var(--primary-color); text-align: center; margin-bottom: 2rem;">{{ $packagesSection->title ?: __('common.featured_packages') }}</h2>
         @if($packagesSection->subtitle)
         <p class="text-center arabic-text mb-4" style="color: #666; font-size: 1.15rem;">{{ $packagesSection->subtitle }}</p>
         @endif
@@ -2261,23 +2290,21 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </ul>
                             @endif
                             <div class="d-flex justify-content-between align-items-center mt-auto">
-                                <span class="price-tag">{{ number_format($package->price) }} ر.س</span>
-                                <a href="{{ route('booking.create', ['package_id' => $package->id]) }}" class="btn btn-gold">
-                                    احجز الآن
-                                </a>
+                                <span class="price-tag">{{ number_format($package->price) }} {{ __('common.currency') }}</span>
+                                <a href="{{ route('booking.create', ['package_id' => $package->id]) }}" class="btn btn-gold">{{ __('buttons.book_now') }}</a>
                             </div>
                         </div>
                     </div>
                 </div>
             @empty
                 <div class="col-12 text-center">
-                    <p class="text-muted">لا توجد باقات متاحة حالياً</p>
+                    <p class="text-muted">{{ __('common.no_packages_available') }}</p>
                 </div>
             @endforelse
         </div>
         <div class="text-center mt-3">
             <a href="{{ route('packages.index') }}" class="btn btn-outline-primary btn-lg" style="border: 2px solid var(--accent-color); color: var(--accent-color);">
-                عرض جميع الباقات
+                {{ __('common.view_all_packages') }}
             </a>
         </div>
     </div>
@@ -2291,7 +2318,7 @@ document.addEventListener('DOMContentLoaded', function() {
 @if($gallerySection && $gallerySection->is_active && $gallery->count() > 0)
 <section class="py-4" id="gallery" data-bg-style="{{ $gallerySection->getBackgroundStyle() ?: '' }}">
     <div class="container">
-        <h2 class="section-title arabic-text" data-aos="fade-up" style="color: var(--primary-color); text-align: center; margin-bottom: 2rem;">{{ $gallerySection->title ?: 'معرض أعمالنا' }}</h2>
+        <h2 class="section-title arabic-text" data-aos="fade-up" style="color: var(--primary-color); text-align: center; margin-bottom: 2rem;">{{ $gallerySection->title ?: __('common.gallery_title') }}</h2>
         @if($gallerySection->subtitle)
         <p class="text-center arabic-text mb-4" style="color: #666; font-size: 1.15rem;">{{ $gallerySection->subtitle }}</p>
         @endif
@@ -2316,7 +2343,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         <div class="text-center mt-3">
             <a href="{{ route('gallery.index') }}" class="btn btn-outline-primary btn-lg" style="border: 2px solid var(--secondary-color); color: var(--secondary-color);">
-                عرض المعرض الكامل
+                {{ __('common.view_full_gallery') }}
             </a>
         </div>
     </div>
@@ -2330,7 +2357,7 @@ document.addEventListener('DOMContentLoaded', function() {
 @if($reviewsSection && $reviewsSection->is_active && $reviews->count() > 0)
 <section class="py-4" id="reviews" data-bg-style="{{ $reviewsSection->getBackgroundStyle() ?: 'background: #f8f9fa;' }}">
     <div class="container">
-        <h2 class="section-title arabic-text" data-aos="fade-up" style="color: var(--primary-color); text-align: center; margin-bottom: 2rem;">{{ $reviewsSection->title ?: 'آراء عملائنا' }}</h2>
+        <h2 class="section-title arabic-text" data-aos="fade-up" style="color: var(--primary-color); text-align: center; margin-bottom: 2rem;">{{ $reviewsSection->title ?: __('common.customer_reviews') }}</h2>
         @if($reviewsSection->subtitle)
         <p class="text-center arabic-text mb-4" style="color: #666; font-size: 1.15rem;">{{ $reviewsSection->subtitle }}</p>
         @endif
@@ -2387,8 +2414,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         ">
                             <div style="text-align: center; padding: 40px;">
                                 <i class="fas fa-cubes" style="font-size: 80px; margin-bottom: 20px; opacity: 0.9;"></i>
-                                <h3 class="arabic-text" style="font-size: 1.8rem; font-weight: 800; margin-bottom: 10px;">كل الخدمات في مكان واحد</h3>
-                                <p class="arabic-text" style="font-size: 1rem; opacity: 0.95;">لا تحتاج تدور ولا تنتظر</p>
+                                <h3 class="arabic-text" style="font-size: 1.8rem; font-weight: 800; margin-bottom: 10px;">{{ __('common.home_vr_slide1_title') }}</h3>
+                                <p class="arabic-text" style="font-size: 1rem; opacity: 0.95;">{{ __('common.home_vr_slide1_desc') }}</p>
                             </div>
                         </div>
 
@@ -2407,8 +2434,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         ">
                             <div style="text-align: center; padding: 40px;">
                                 <i class="fas fa-list-check" style="font-size: 80px; margin-bottom: 20px; opacity: 0.9;"></i>
-                                <h3 class="arabic-text" style="font-size: 1.8rem; font-weight: 800; margin-bottom: 10px;">خطوات بسيطة وواضحة</h3>
-                                <p class="arabic-text" style="font-size: 1rem; opacity: 0.95;">اختر الخدمة وطلبها بسهولة</p>
+                                <h3 class="arabic-text" style="font-size: 1.8rem; font-weight: 800; margin-bottom: 10px;">{{ __('common.home_vr_slide2_title') }}</h3>
+                                <p class="arabic-text" style="font-size: 1rem; opacity: 0.95;">{{ __('common.home_vr_slide2_desc') }}</p>
                             </div>
                         </div>
 
@@ -2427,8 +2454,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         ">
                             <div style="text-align: center; padding: 40px;">
                                 <i class="fas fa-tag" style="font-size: 80px; margin-bottom: 20px; opacity: 0.9;"></i>
-                                <h3 class="arabic-text" style="font-size: 1.8rem; font-weight: 800; margin-bottom: 10px;">أسعار واضحة من البداية</h3>
-                                <p class="arabic-text" style="font-size: 1rem; opacity: 0.95;">دفع إلكتروني وسريع وآمن</p>
+                                <h3 class="arabic-text" style="font-size: 1.8rem; font-weight: 800; margin-bottom: 10px;">{{ __('common.home_vr_slide3_title') }}</h3>
+                                <p class="arabic-text" style="font-size: 1rem; opacity: 0.95;">{{ __('common.home_vr_slide3_desc') }}</p>
                             </div>
                         </div>
 
@@ -2447,8 +2474,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         ">
                             <div style="text-align: center; padding: 40px;">
                                 <i class="fas fa-file-invoice" style="font-size: 80px; margin-bottom: 20px; opacity: 0.9;"></i>
-                                <h3 class="arabic-text" style="font-size: 1.8rem; font-weight: 800; margin-bottom: 10px;">فواتير رسميّة</h3>
-                                <p class="arabic-text" style="font-size: 1rem; opacity: 0.95;">تنفيذ مضمون في وقته</p>
+                                <h3 class="arabic-text" style="font-size: 1.8rem; font-weight: 800; margin-bottom: 10px;">{{ __('common.home_vr_slide4_title') }}</h3>
+                                <p class="arabic-text" style="font-size: 1rem; opacity: 0.95;">{{ __('common.home_vr_slide4_desc') }}</p>
                             </div>
                         </div>
 
@@ -2467,8 +2494,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         ">
                             <div style="text-align: center; padding: 40px;">
                                 <i class="fas fa-star" style="font-size: 80px; margin-bottom: 20px; opacity: 0.9;"></i>
-                                <h3 class="arabic-text" style="font-size: 1.8rem; font-weight: 800; margin-bottom: 10px;">موردين مختارين</h3>
-                                <p class="arabic-text" style="font-size: 1rem; opacity: 0.95;">أعلى مستوى من الجودة والاحترافية</p>
+                                <h3 class="arabic-text" style="font-size: 1.8rem; font-weight: 800; margin-bottom: 10px;">{{ __('common.home_vr_slide5_title') }}</h3>
+                                <p class="arabic-text" style="font-size: 1rem; opacity: 0.95;">{{ __('common.home_vr_slide5_desc') }}</p>
                             </div>
                         </div>
                     </div>
@@ -2531,14 +2558,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             <!-- Right: Content -->
             <div class="col-lg-6 col-12" data-aos="fade-left">
-                <div class="vr-content" style="text-align: right; direction: rtl;">
+                <div class="vr-content {{ app()->getLocale() === 'ar' ? 'text-end' : 'text-start' }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
                     <h2 class="arabic-text mb-4" style="
                         color: var(--primary-color);
                         font-size: 2.5rem;
                         font-weight: 900;
                         line-height: 1.2;
                     ">
-                        لأننا نحب نسهّلها عليك…
+                        {{ __('common.home_vr_title') }}
                     </h2>
 
                     <p class="arabic-text mb-3" style="
@@ -2546,7 +2573,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         font-size: 1.15rem;
                         line-height: 1.8;
                     ">
-                        ونخلّي التجهيز تمشّي بالساهل
+                        {{ __('common.home_vr_subtitle') }}
                     </p>
 
                     <!-- Key Features -->
@@ -2567,7 +2594,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 box-shadow: 0 2px 8px rgba(45, 188, 174, 0.2);
                             ">✓</div>
                             <p class="arabic-text mb-0" style="color: #2d3748; font-size: 1.05rem; line-height: 1.7; font-weight: 500;">
-                                كل خدمات تجهيز الفعاليات في مكان واحد، ما تحتاج تدور ولا تنتظر.
+                                {{ __('common.home_vr_feature_1') }}
                             </p>
                         </div>
 
@@ -2587,7 +2614,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
                             ">✓</div>
                             <p class="arabic-text mb-0" style="color: #2d3748; font-size: 1.05rem; line-height: 1.7; font-weight: 500;">
-                                تختار الخدمة، وتطلبها بخطوات بسيطة وواضحة.
+                                {{ __('common.home_vr_feature_2') }}
                             </p>
                         </div>
 
@@ -2606,7 +2633,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 font-size: 1.2rem;
                             ">✓</div>
                             <p class="arabic-text mb-0" style="color: #2d3748; font-size: 1.05rem; line-height: 1.7; font-weight: 500;">
-                                الأسعار واضحة من البداية، والدفع إلكتروني وسريع.
+                                {{ __('common.home_vr_feature_3') }}
                             </p>
                         </div>
 
@@ -2626,7 +2653,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 box-shadow: 0 2px 8px rgba(239, 72, 112, 0.2);
                             ">✓</div>
                             <p class="arabic-text mb-0" style="color: #2d3748; font-size: 1.05rem; line-height: 1.7; font-weight: 500;">
-                                فواتير رسميّة، وتنفيذ مضمون في وقته.
+                                {{ __('common.home_vr_feature_4') }}
                             </p>
                         </div>
 
@@ -2646,7 +2673,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 box-shadow: 0 2px 8px rgba(79, 172, 254, 0.2);
                             ">✓</div>
                             <p class="arabic-text mb-0" style="color: #2d3748; font-size: 1.05rem; line-height: 1.7; font-weight: 500;">
-                                وموردين مختارين بعناية عشان تطلع الفعالية على أعلى مستوى.
+                                {{ __('common.home_vr_feature_5') }}
                             </p>
                         </div>
                     </div>
@@ -2658,7 +2685,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             padding: 14px 32px;
                             font-weight: 700;
                         ">
-                            <i ></i>احجز الآن
+                            <i></i>{{ __('buttons.book_now') }}
                         </a>
                         <a href="{{ route('services.index') }}" class="btn btn-outline-primary" style="
                             border: 2px solid var(--primary-color);
@@ -2669,7 +2696,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             transition: all 0.3s ease;
                             font-weight: 600;
                         ">
-                            <i ></i>استكشف الخدمات
+                            <i></i>{{ __('common.explore_services') }}
                         </a>
                     </div>
                 </div>
@@ -2741,7 +2768,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             <!-- Left Content - Text Section -->
             <div class="col-lg-6 col-12 d-flex align-items-center" data-aos="fade-right">
-                <div class="cta-content-refactored" style="direction: rtl; text-align: right; width: 100%; padding: 0 30px;">
+                <div class="cta-content-refactored {{ app()->getLocale() === 'ar' ? 'text-end' : 'text-start' }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}" style="width: 100%; padding: 0 30px;">
                     
                     <!-- Main Headline -->
                     <h1 style="
@@ -2753,7 +2780,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         text-shadow: 0 3px 15px rgba(0, 0, 0, 0.4);
                         letter-spacing: -0.5px;
                     ">
-                        جاهز تبدأ؟
+                        {{ __('common.home_cta_title') }}
                     </h1>
 
                     <!-- Main Tagline - Yellow/Gold -->
@@ -2765,7 +2792,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         font-weight: 600;
                         
                     ">
-                        خلاص لا تشيل هم ولا تضيع وقتك، كل شي جاهز، وكل خطوة أسهل من اللي قبلها. تختار وتطلب، وتبدأ.. والباقي على Your Events.
+                        {{ __('common.home_cta_tagline') }}
                     </p>
 
                     <!-- Main Marketing Message -->
@@ -2776,7 +2803,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         margin-bottom: 28px;
                         font-weight: 700;
                     ">
-                        فعالياتك تستاهل البداية الصح و Your Events دايم تبدأها معك.
+                        {{ __('common.home_cta_message') }}
                     </p>
 
                     <!-- CTA Buttons -->
@@ -2799,7 +2826,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             cursor: pointer;
                             white-space: nowrap;
                         ">
-                            <i class="fas fa-calendar-check"></i>احجز الآن
+                            <i class="fas fa-calendar-check"></i>{{ __('buttons.book_now') }}
                         </a>
 
                         <!-- Secondary Button - Contact -->
@@ -2820,7 +2847,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             cursor: pointer;
                             white-space: nowrap;
                         ">
-                            <i class="fas fa-phone"></i>تواصل معنا
+                            <i class="fas fa-phone"></i>{{ __('buttons.contact_us') }}
                         </a>
                     </div>
 
@@ -2831,7 +2858,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center" data-aos="fade-left" style="margin-top: 40px;">
                 <div class="phone-image-wrapper" style="position: relative; display: inline-block; width: 100%; max-width: 480px; height: auto;">
                     <img src="{{ asset('images/vr/hand.png') }}" 
-                         alt="تطبيق Your Events على الهاتف الذكي - يد تمسك هاتفًا ذكيًا" 
+                         alt="{{ __('common.home_phone_alt') }}" 
                          class="img-fluid phone-image" 
                          loading="lazy" 
                          decoding="async"

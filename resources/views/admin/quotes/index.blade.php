@@ -80,73 +80,112 @@
     </div>
     @endif
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">قائمة العروض</h5>
-            <div class="text-muted small">
-                يظهر أحدث العروض أولاً
+    <div id="adminQuotesAutoRefresh">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">قائمة العروض</h5>
+                <div class="text-muted small">
+                    يظهر أحدث العروض أولاً
+                </div>
             </div>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>رقم العرض</th>
-                            <th>العميل</th>
-                            <th>الحالة</th>
-                            <th class="text-end">الإجمالي</th>
-                            <th>تاريخ الإنشاء</th>
-                            <th>إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($quotes as $quote)
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <td>{{ $quote->id }}</td>
-                                <td>{{ $quote->quote_number }}</td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <i class="fas fa-user text-primary"></i>
-                                        <div>
-                                            <div class="fw-bold">{{ optional($quote->user)->name ?? '-' }}</div>
-                                            <div class="text-muted small">{{ optional($quote->user)->email ?? '-' }}</div>
+                                <th>#</th>
+                                <th>رقم العرض</th>
+                                <th>العميل</th>
+                                <th>الحالة</th>
+                                <th class="text-end">الإجمالي</th>
+                                <th>تاريخ الإنشاء</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($quotes as $quote)
+                                <tr>
+                                    <td>{{ $quote->id }}</td>
+                                    <td>{{ $quote->quote_number }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="fas fa-user text-primary"></i>
+                                            <div>
+                                                <div class="fw-bold">{{ optional($quote->user)->name ?? '-' }}</div>
+                                                <div class="text-muted small">{{ optional($quote->user)->email ?? '-' }}</div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td>{!! $quote->status_badge !!}</td>
-                                <td class="text-end">{{ number_format($quote->total, 2) }}</td>
-                                <td>{{ optional($quote->created_at)->format('Y-m-d H:i') }}</td>
-                                <td class="d-flex gap-2">
-                                    <a href="{{ route('admin.quotes.show', $quote) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <form action="{{ route('admin.quotes.destroy', $quote) }}" method="POST" onsubmit="return confirm('تأكيد حذف العرض؟')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="text-center text-muted py-4">
-                                    <i class="fas fa-file-invoice fa-2x mb-2"></i>
-                                    <div>لا توجد عروض أسعار</div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                                    </td>
+                                    <td>{!! $quote->status_badge !!}</td>
+                                    <td class="text-end">{{ number_format($quote->total, 2) }}</td>
+                                    <td>{{ optional($quote->created_at)->format('Y-m-d H:i') }}</td>
+                                    <td class="d-flex gap-2">
+                                        <a href="{{ route('admin.quotes.show', $quote) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <form action="{{ route('admin.quotes.destroy', $quote) }}" method="POST" onsubmit="return confirm('تأكيد حذف العرض؟')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        <i class="fas fa-file-invoice fa-2x mb-2"></i>
+                                        <div>لا توجد عروض أسعار</div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-        <div class="card-footer">
-            {{ $quotes->withQueryString()->links() }}
+            <div class="card-footer">
+                {{ $quotes->withQueryString()->links() }}
+            </div>
         </div>
     </div>
 </div>
 @endsection
 
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var container = document.getElementById('adminQuotesAutoRefresh');
+    if (!container) {
+        return;
+    }
+
+    function refreshAdminQuotes() {
+        if (document.visibilityState !== 'visible') {
+            return;
+        }
+
+        fetch(window.location.href, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            cache: 'no-store'
+        })
+            .then(function(response) {
+                return response.text();
+            })
+            .then(function(html) {
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(html, 'text/html');
+                var newContainer = doc.getElementById('adminQuotesAutoRefresh');
+                if (newContainer) {
+                    container.innerHTML = newContainer.innerHTML;
+                }
+            })
+            .catch(function() {});
+    }
+
+    setInterval(refreshAdminQuotes, 5000);
+});
+</script>
+@endpush

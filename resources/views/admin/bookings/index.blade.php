@@ -35,7 +35,7 @@
                 </div>
             @endif
 
-            <div class="card shadow-sm">
+            <div class="card shadow-sm" id="adminBookingsAutoRefresh">
                 <div class="card-body">
                     @if($bookings->count() > 0)
                         <div class="table-responsive">
@@ -46,6 +46,7 @@
                                         <th>العميل</th>
                                         <th>نوع الخدمة</th>
                                         <th>تاريخ المناسبة</th>
+                                        <th>موقع المناسبة</th>
                                         <th>المبلغ</th>
                                         <th>الحالة</th>
                                         <th>تاريخ الحجز</th>
@@ -60,13 +61,7 @@
                                             </td>
                                             <td>
                                                 <div>
-                                                    <strong>{{ $booking->customer_name }}</strong>
-                                                    <br>
-                                                    <small class="text-muted">
-                                                        <i class="fas fa-envelope me-1"></i>{{ $booking->customer_email }}
-                                                        <br>
-                                                        <i class="fas fa-phone me-1"></i>{{ $booking->customer_phone }}
-                                                    </small>
+                                                    <strong>{{ $booking->client_name ?: ($booking->user->name ?? '—') }}</strong>
                                                 </div>
                                             </td>
                                             <td>
@@ -74,14 +69,12 @@
                                                     <span class="badge bg-info">
                                                         <i class="fas fa-box me-1"></i>باقة
                                                     </span>
-                                                    <br>
-                                                    <strong>{{ $booking->package->name }}</strong>
                                                 @elseif($booking->service)
                                                     <span class="badge bg-success">
                                                         <i class="fas fa-cogs me-1"></i>خدمة
                                                     </span>
-                                                    <br>
-                                                    <strong>{{ $booking->service->name }}</strong>
+                                                @else
+                                                    <span class="text-muted">—</span>
                                                 @endif
                                             </td>
                                             <td>
@@ -95,31 +88,20 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                <strong class="text-success">{{ number_format($booking->total_amount) }} ريال</strong>
+                                                <div class="d-flex align-items-center justify-content-between gap-2">
+                                                    <span class="small">{{ $booking->event_location ?: '—' }}</span>
+                                                    @if($booking->event_lat && $booking->event_lng)
+                                                        <a class="text-decoration-none" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps?q={{ $booking->event_lat }},{{ $booking->event_lng }}" title="فتح على الخريطة">
+                                                            <i class="fas fa-map-marker-alt"></i>
+                                                        </a>
+                                                    @endif
+                                                </div>
                                             </td>
                                             <td>
-                                                @switch($booking->status)
-                                                    @case('pending')
-                                                        <span class="badge bg-warning">
-                                                            <i class="fas fa-clock me-1"></i>في الانتظار
-                                                        </span>
-                                                        @break
-                                                    @case('confirmed')
-                                                        <span class="badge bg-success">
-                                                            <i class="fas fa-check me-1"></i>مؤكد
-                                                        </span>
-                                                        @break
-                                                    @case('completed')
-                                                        <span class="badge bg-primary">
-                                                            <i class="fas fa-check-double me-1"></i>مكتمل
-                                                        </span>
-                                                        @break
-                                                    @case('cancelled')
-                                                        <span class="badge bg-danger">
-                                                            <i class="fas fa-times me-1"></i>ملغي
-                                                        </span>
-                                                        @break
-                                                @endswitch
+                                                <strong class="text-success">{{ number_format($booking->total_amount) }} {{ __('common.currency') }}</strong>
+                                            </td>
+                                            <td>
+                                                {!! $booking->status_badge !!}
                                             </td>
                                             <td>
                                                 <small class="text-muted">
@@ -174,7 +156,6 @@
                                                         </form>
                                                     @endif
                                                     
-                                                    <!-- زر الحذف -->
                                                     <form method="POST" action="{{ route('admin.bookings.destroy', $booking) }}" class="d-inline" 
                                                           onsubmit="return confirm('هل أنت متأكد من حذف هذا الحجز؟ هذا الإجراء لا يمكن التراجع عنه.')">
                                                         @csrf
@@ -190,8 +171,7 @@
                                 </tbody>
                             </table>
                         </div>
-
-                        <!-- Pagination -->
+        
                         @if($bookings->hasPages())
                             <div class="d-flex justify-content-center mt-4">
                                 {{ $bookings->links() }}
@@ -212,14 +192,39 @@
 @endsection
 
 @push('scripts')
-@if(request('status') == 'pending' || !request('status'))
 <script>
-    // Auto refresh every 30 seconds for pending bookings
-    setInterval(function() {
-        if (document.visibilityState === 'visible') {
-            location.reload();
+document.addEventListener('DOMContentLoaded', function() {
+    var container = document.getElementById('adminBookingsAutoRefresh');
+    if (!container) {
+        return;
+    }
+
+    function refreshAdminBookings() {
+        if (document.visibilityState !== 'visible') {
+            return;
         }
-    }, 30000);
+
+        fetch(window.location.href, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            cache: 'no-store'
+        })
+            .then(function(response) {
+                return response.text();
+            })
+            .then(function(html) {
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(html, 'text/html');
+                var newContainer = doc.getElementById('adminBookingsAutoRefresh');
+                if (newContainer) {
+                    container.innerHTML = newContainer.innerHTML;
+                }
+            })
+            .catch(function() {});
+    }
+
+    setInterval(refreshAdminBookings, 5000);
+});
 </script>
-@endif
 @endpush

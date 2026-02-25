@@ -186,29 +186,29 @@
                                     <td class="text-center">
                                         <span class="badge bg-secondary">{{ $item->quantity }}</span>
                                     </td>
-                                    <td class="text-end">{{ number_format($item->price, 2) }} ريال</td>
-                                    <td class="text-end"><strong>{{ number_format($item->subtotal, 2) }} ريال</strong></td>
+                                    <td class="text-end">{{ number_format($item->price, 2) }} {{ __('common.currency') }}</td>
+                                    <td class="text-end"><strong>{{ number_format($item->subtotal, 2) }} {{ __('common.currency') }}</strong></td>
                                 </tr>
                                 @endforeach
                             </tbody>
                             <tfoot class="table-light">
                                 <tr>
                                     <td colspan="4" class="text-end"><strong>المجموع الفرعي:</strong></td>
-                                    <td class="text-end"><strong>{{ number_format($quote->subtotal, 2) }} ريال</strong></td>
+                                    <td class="text-end"><strong>{{ number_format($quote->subtotal, 2) }} {{ __('common.currency') }}</strong></td>
                                 </tr>
                                 <tr>
                                     <td colspan="4" class="text-end"><strong>الضريبة (15%):</strong></td>
-                                    <td class="text-end"><strong>{{ number_format($quote->tax, 2) }} ريال</strong></td>
+                                    <td class="text-end"><strong>{{ number_format($quote->tax, 2) }} {{ __('common.currency') }}</strong></td>
                                 </tr>
                                 @if($quote->discount > 0)
                                 <tr class="text-success">
                                     <td colspan="4" class="text-end"><strong>الخصم:</strong></td>
-                                    <td class="text-end"><strong>-{{ number_format($quote->discount, 2) }} ريال</strong></td>
+                                    <td class="text-end"><strong>-{{ number_format($quote->discount, 2) }} {{ __('common.currency') }}</strong></td>
                                 </tr>
                                 @endif
                                 <tr class="table-primary">
                                     <td colspan="4" class="text-end"><h5 class="mb-0">الإجمالي:</h5></td>
-                                    <td class="text-end"><h5 class="mb-0 text-primary">{{ number_format($quote->total, 2) }} ريال</h5></td>
+                                    <td class="text-end"><h5 class="mb-0 text-primary">{{ number_format($quote->total, 2) }} {{ __('common.currency') }}</h5></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -305,7 +305,6 @@
                         <div class="mb-3">
                             <label class="form-label">الحالة <span class="text-danger">*</span></label>
                             <select name="status" class="form-select" required>
-                                <option value="pending" {{ $quote->status == 'pending' ? 'selected' : '' }}>قيد الانتظار</option>
                                 <option value="under_review" {{ $quote->status == 'under_review' ? 'selected' : '' }}>قيد المراجعة</option>
                                 <option value="approved" {{ $quote->status == 'approved' ? 'selected' : '' }}>موافق عليه</option>
                                 <option value="rejected" {{ $quote->status == 'rejected' ? 'selected' : '' }}>مرفوض</option>
@@ -315,7 +314,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">الخصم (ريال)</label>
+                            <label class="form-label">الخصم ({{ __('common.currency') }})</label>
                             <input type="number" name="discount" class="form-control" 
                                    value="{{ $quote->discount }}" min="0" step="0.01"
                                    placeholder="0.00">

@@ -76,6 +76,17 @@
 
                             <div class="row mb-3">
                                 <div class="col-md-6">
+                                    <strong>اسم العميل:</strong>
+                                    <span class="ms-2">{{ $booking->client_name }}</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>رقم الجوال:</strong>
+                                    <span class="ms-2" dir="ltr">{{ $booking->client_phone }}</span>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
                                     <strong>نوع الفعالية:</strong>
                                     <span class="ms-2">{{ $booking->event_type }}</span>
                                 </div>
@@ -141,15 +152,15 @@
                                             <td>{{ $item->service->name ?? $item->service_name }}</td>
                                             <td>{{ Str::limit($item->service->description ?? $item->service_description, 50) }}</td>
                                             <td>{{ $item->quantity }}</td>
-                                            <td>{{ number_format($item->price, 2) }} ريال</td>
-                                            <td>{{ number_format($item->subtotal, 2) }} ريال</td>
+                                            <td>{{ number_format($item->price, 2) }} {{ __('common.currency') }}</td>
+                                            <td>{{ number_format($item->subtotal, 2) }} {{ __('common.currency') }}</td>
                                         </tr>
                                         @endforeach
                                     </tbody>
                                     <tfoot>
                                         <tr class="table-light">
                                             <td colspan="4" class="text-end"><strong>الإجمالي:</strong></td>
-                                            <td><strong>{{ number_format($booking->total_amount, 2) }} ريال</strong></td>
+                                            <td><strong>{{ number_format($booking->total_amount, 2) }} {{ __('common.currency') }}</strong></td>
                                         </tr>
                                     </tfoot>
                                 </table>

@@ -35,14 +35,14 @@
                                 @foreach($quote->items as $item)
                                 <tr>
                                     <td>
-                                        <div class="d-flex align-items-center">
+                                        <div class="d-flex align-items-center gap-3">
                                             @if($item->service)
                                                 <img src="{{ $item->service->thumbnail_url }}" 
                                                      alt="{{ $item->service_name }}" 
-                                                     class="rounded me-3"
+                                                     class="rounded flex-shrink-0"
                                                      style="width: 60px; height: 60px; object-fit: cover;">
                                             @else
-                                                <div class="rounded me-3 d-flex align-items-center justify-content-center bg-light"
+                                                <div class="rounded d-flex align-items-center justify-content-center bg-light flex-shrink-0"
                                                      style="width: 60px; height: 60px;">
                                                     <i class="fas fa-image text-muted"></i>
                                                 </div>
@@ -118,20 +118,20 @@
                                     <td class="text-center align-middle">
                                         <span class="badge bg-secondary">{{ $item->quantity }}</span>
                                     </td>
-                                    <td class="text-center align-middle">ريال {{ number_format($item->price, 2) }}</td>
-                                    <td class="text-end align-middle"><strong>ريال {{ number_format($item->subtotal, 2) }}</strong></td>
+                                    <td class="text-center align-middle">{{ __('common.currency') }} {{ number_format($item->price, 2) }}</td>
+                                    <td class="text-end align-middle"><strong>{{ __('common.currency') }} {{ number_format($item->subtotal, 2) }}</strong></td>
                                 </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
                     
-                    @if($quote->customer_notes)
+                        @if($quote->customer_notes)
                     <div class="alert alert-light border mt-4">
                         <h6><i class="fas fa-sticky-note me-2 text-primary"></i>ملاحظاتك:</h6>
                         <p class="mb-0">{{ $quote->customer_notes }}</p>
                         
-                        @if($quote->status === 'pending')
+                        @if(in_array($quote->status, ['pending', 'under_review']))
                         <button type="button" class="btn btn-sm btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#editNotesModal">
                             <i class="fas fa-edit me-1"></i>تعديل الملاحظات
                         </button>
@@ -160,22 +160,22 @@
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between mb-3">
                         <span>المجموع الفرعي:</span>
-                        <strong>{{ number_format($quote->subtotal, 2) }} ريال</strong>
+                        <strong>{{ number_format($quote->subtotal, 2) }} {{ __('common.currency') }}</strong>
                     </div>
                     <div class="d-flex justify-content-between mb-3">
                         <span>الضريبة (15%):</span>
-                        <strong>{{ number_format($quote->tax, 2) }} ريال</strong>
+                        <strong>{{ number_format($quote->tax, 2) }} {{ __('common.currency') }}</strong>
                     </div>
                     @if($quote->discount > 0)
                     <div class="d-flex justify-content-between mb-3 text-success">
                         <span><i class="fas fa-tag me-1"></i>الخصم:</span>
-                        <strong>-{{ number_format($quote->discount, 2) }} ريال</strong>
+                        <strong>-{{ number_format($quote->discount, 2) }} {{ __('common.currency') }}</strong>
                     </div>
                     @endif
                     <hr>
                     <div class="d-flex justify-contentBetween mb-4">
                         <h5>الإجمالي:</h5>
-                        <h4 class="text-primary mb-0">{{ number_format($quote->total, 2) }} ريال</h4>
+                        <h4 class="text-primary mb-0">{{ number_format($quote->total, 2) }} {{ __('common.currency') }}</h4>
                     </div>
                     
                     <div class="d-grid gap-2">
@@ -185,10 +185,20 @@
                         </a>
                         
                         @if($quote->status === 'approved')
-                        <a href="{{ route('quotes.payment', $quote) }}" class="btn btn-success btn-lg">
-                            <i class="fas fa-check-circle me-2"></i>
-                            تأكيد عرض السعر والدفع
+                        <a href="{{ route('quotes.complete-booking', $quote) }}" class="btn btn-success btn-lg">
+                            <i class="fas fa-credit-card me-2"></i>
+                            استكمال بيانات الحجز والدفع
                         </a>
+                        @elseif($quote->payment_status === 'paid' || $quote->status === 'paid')
+                        <button type="button" class="btn btn-outline-success btn-lg" disabled>
+                            <i class="fas fa-check-circle me-2"></i>
+                            تم الدفع
+                        </button>
+                        @else
+                        <button type="button" class="btn btn-outline-success btn-lg" disabled>
+                            <i class="fas fa-clock me-2"></i>
+                            استكمال بيانات الحجز والدفع
+                        </button>
                         @endif
                         
                         @if($quote->status === 'paid')
@@ -198,10 +208,17 @@
                         </div>
                         @endif
                         
+                        @if($quote->payment_status === 'paid' || $quote->status === 'paid')
+                        <a href="{{ route('booking.my-bookings') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-right me-2"></i>
+                            العودة لحجوزاتي
+                        </a>
+                        @else
                         <a href="{{ route('quotes.index') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-right me-2"></i>
                             العودة لعروض الأسعار
                         </a>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -236,7 +253,7 @@
                     <div class="mb-3">
                         <label class="form-label">الملاحظات</label>
                         <textarea name="customer_notes" class="form-control" rows="5">{{ $quote->customer_notes }}</textarea>
-                        <small class="text-muted">يمكنك تعديل ملاحظاتك فقط إذا كان العرض قيد الانتظار</small>
+                                <small class="text-muted">يمكنك تعديل ملاحظاتك فقط إذا كان العرض في حالة الانتظار أو قيد المراجعة</small>
                     </div>
                 </div>
                 <div class="modal-footer">

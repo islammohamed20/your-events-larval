@@ -28,6 +28,9 @@
                 <a href="#contact" class="list-group-item list-group-item-action" data-bs-toggle="pill">
                     <i class="fas fa-address-book me-2"></i>معلومات التواصل
                 </a>
+                <a href="#notifications" class="list-group-item list-group-item-action" data-bs-toggle="pill">
+                    <i class="fas fa-bell me-2"></i>إعدادات الإشعارات
+                </a>
                 <a href="#social" class="list-group-item list-group-item-action" data-bs-toggle="pill">
                     <i class="fas fa-share-alt me-2"></i>وسائل التواصل
                 </a>
@@ -243,6 +246,230 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notifications Settings -->
+                <div class="tab-pane fade" id="notifications">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-bell me-2"></i>إعدادات الإشعارات
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- General Notification Settings -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="border-bottom pb-2 mb-3">
+                                        <i class="fas fa-cog me-2 text-primary"></i>الإعدادات العامة
+                                    </h6>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="notifications_enabled" 
+                                               name="notifications_enabled" 
+                                               value="1"
+                                               {{ old('notifications_enabled', $settings['notifications_enabled'] ?? true) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="notifications_enabled">
+                                            <i class="fas fa-bell me-2 text-success"></i>تفعيل الإشعارات
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="notification_sound_enabled" 
+                                               name="notification_sound_enabled" 
+                                               value="1"
+                                               {{ old('notification_sound_enabled', $settings['notification_sound_enabled'] ?? true) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="notification_sound_enabled">
+                                            <i class="fas fa-volume-up me-2 text-info"></i>تفعيل صوت الإشعارات
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="notification_refresh_interval" class="form-label">
+                                            <i class="fas fa-clock me-2 text-warning"></i>فترة تحديث الإشعارات (بالثواني)
+                                        </label>
+                                        <select class="form-select @error('notification_refresh_interval') is-invalid @enderror" 
+                                                id="notification_refresh_interval" 
+                                                name="notification_refresh_interval">
+                                            <option value="1" {{ old('notification_refresh_interval', $settings['notification_refresh_interval'] ?? 3) == 1 ? 'selected' : '' }}>كل ثانية</option>
+                                            <option value="3" {{ old('notification_refresh_interval', $settings['notification_refresh_interval'] ?? 3) == 3 ? 'selected' : '' }}>كل 3 ثواني (موصى به)</option>
+                                            <option value="5" {{ old('notification_refresh_interval', $settings['notification_refresh_interval'] ?? 3) == 5 ? 'selected' : '' }}>كل 5 ثواني</option>
+                                            <option value="10" {{ old('notification_refresh_interval', $settings['notification_refresh_interval'] ?? 3) == 10 ? 'selected' : '' }}>كل 10 ثواني</option>
+                                            <option value="30" {{ old('notification_refresh_interval', $settings['notification_refresh_interval'] ?? 3) == 30 ? 'selected' : '' }}>كل 30 ثانية</option>
+                                            <option value="60" {{ old('notification_refresh_interval', $settings['notification_refresh_interval'] ?? 3) == 60 ? 'selected' : '' }}>كل دقيقة</option>
+                                        </select>
+                                        @error('notification_refresh_interval')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="notification_auto_dismiss" class="form-label">
+                                            <i class="fas fa-eye-slash me-2 text-secondary"></i>إخفاء الإشعار تلقائياً بعد (بالثواني)
+                                        </label>
+                                        <select class="form-select @error('notification_auto_dismiss') is-invalid @enderror" 
+                                                id="notification_auto_dismiss" 
+                                                name="notification_auto_dismiss">
+                                            <option value="5" {{ old('notification_auto_dismiss', $settings['notification_auto_dismiss'] ?? 10) == 5 ? 'selected' : '' }}>5 ثواني</option>
+                                            <option value="10" {{ old('notification_auto_dismiss', $settings['notification_auto_dismiss'] ?? 10) == 10 ? 'selected' : '' }}>10 ثواني (موصى به)</option>
+                                            <option value="15" {{ old('notification_auto_dismiss', $settings['notification_auto_dismiss'] ?? 10) == 15 ? 'selected' : '' }}>15 ثانية</option>
+                                            <option value="30" {{ old('notification_auto_dismiss', $settings['notification_auto_dismiss'] ?? 10) == 30 ? 'selected' : '' }}>30 ثانية</option>
+                                            <option value="60" {{ old('notification_auto_dismiss', $settings['notification_auto_dismiss'] ?? 10) == 60 ? 'selected' : '' }}>دقيقة واحدة</option>
+                                        </select>
+                                        @error('notification_auto_dismiss')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Notification Types -->
+                            <div class="row">
+                                <div class="col-12">
+                                    <h6 class="border-bottom pb-2 mb-3">
+                                        <i class="fas fa-list me-2 text-primary"></i>أنواع الإشعارات
+                                    </h6>
+                                    <p class="text-muted small mb-3">اختر أنواع الإشعارات التي تريد استلامها في لوحة التحكم</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="notification_quotes" 
+                                               name="notification_quotes" 
+                                               value="1"
+                                               {{ old('notification_quotes', $settings['notification_quotes'] ?? true) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="notification_quotes">
+                                            <i class="fas fa-file-alt me-2 text-warning"></i>عروض الأسعار الجديدة
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="notification_bookings" 
+                                               name="notification_bookings" 
+                                               value="1"
+                                               {{ old('notification_bookings', $settings['notification_bookings'] ?? true) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="notification_bookings">
+                                            <i class="fas fa-calendar me-2 text-success"></i>الحجوزات الجديدة والمحدثة
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="notification_orders" 
+                                               name="notification_orders" 
+                                               value="1"
+                                               {{ old('notification_orders', $settings['notification_orders'] ?? true) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="notification_orders">
+                                            <i class="fas fa-shopping-cart me-2 text-info"></i>الطلبات الجديدة
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="notification_payments" 
+                                               name="notification_payments" 
+                                               value="1"
+                                               {{ old('notification_payments', $settings['notification_payments'] ?? true) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="notification_payments">
+                                            <i class="fas fa-credit-card me-2 text-primary"></i>المدفوعات والتحصيلات
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="notification_contacts" 
+                                               name="notification_contacts" 
+                                               value="1"
+                                               {{ old('notification_contacts', $settings['notification_contacts'] ?? true) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="notification_contacts">
+                                            <i class="fas fa-envelope me-2 text-warning"></i>رسائل التواصل الجديدة
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="notification_suppliers" 
+                                               name="notification_suppliers" 
+                                               value="1"
+                                               {{ old('notification_suppliers', $settings['notification_suppliers'] ?? true) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="notification_suppliers">
+                                            <i class="fas fa-store me-2 text-info"></i>الموردين الجدد
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="notification_customers" 
+                                               name="notification_customers" 
+                                               value="1"
+                                               {{ old('notification_customers', $settings['notification_customers'] ?? true) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="notification_customers">
+                                            <i class="fas fa-users me-2 text-success"></i>العملاء الجدد
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Help Section -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <h6 class="alert-heading">
+                                            <i class="fas fa-info-circle me-2"></i>معلومات مهمة
+                                        </h6>
+                                        <ul class="mb-0 small">
+                                            <li>الإشعارات تظهر فقط لمستخدمي لوحة التحكم المصرح لهم</li>
+                                            <li>يتم حفظ الإشعارات في قاعدة البيانات حتى لو لم تكن متصلاً</li>
+                                            <li>يمكن التحكم في فترة تحديث الإشعارات لتوازن الأداء</li>
+                                            <li>يمكن إيقاف الصوت دون إيقاف الإشعارات المرئية</li>
+                                        </ul>
+                                        
+                                        <hr class="my-3">
+                                        
+                                        <h6 class="mb-2">
+                                            <i class="fas fa-tools me-2"></i>أدوات الصيانة
+                                        </h6>
+                                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="clearNotificationHistory()">
+                                            <i class="fas fa-trash me-2"></i>مسح تاريخ الإشعارات المعروضة
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <script>
+                            function clearNotificationHistory() {
+                                if (confirm('هل أنت متأكد من مسح تاريخ الإشعارات؟ سيتم عرض جميع الإشعارات الحديثة مرة أخرى.')) {
+                                    localStorage.removeItem('admin_notifications_last_check');
+                                    localStorage.removeItem('admin_shown_notifications');
+                                    alert('تم مسح تاريخ الإشعارات بنجاح!');
+                                    location.reload();
+                                }
+                            }
+                            </script>
                         </div>
                     </div>
                 </div>

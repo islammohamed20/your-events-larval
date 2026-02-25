@@ -55,7 +55,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="text-muted mb-2">إجمالي الإيرادات</h6>
-                            <h3 class="mb-0 text-primary">{{ number_format($revenue['total'], 2) }} ريال</h3>
+                            <h3 class="mb-0 text-primary">{{ number_format($revenue['total'], 2) }} {{ __('common.currency') }}</h3>
                             <small class="text-muted">من عروض الأسعار المعتمدة</small>
                         </div>
                         <div class="fs-1 text-primary opacity-50">
@@ -72,7 +72,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="text-muted mb-2">إيرادات الحجوزات</h6>
-                            <h3 class="mb-0 text-success">{{ number_format($revenue['bookings'], 2) }} ريال</h3>
+                            <h3 class="mb-0 text-success">{{ number_format($revenue['bookings'], 2) }} {{ __('common.currency') }}</h3>
                             <small class="text-muted">من الحجوزات المؤكدة</small>
                         </div>
                         <div class="fs-1 text-success opacity-50">
@@ -276,9 +276,9 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <strong class="text-dark">{{ number_format($service->total_revenue ?? ($service->bookings_count * $service->price), 2) }} ريال</strong>
+                                        <strong class="text-dark">{{ number_format($service->total_revenue ?? ($service->bookings_count * $service->price), 2) }} {{ __('common.currency') }}</strong>
                                     </td>
-                                    <td class="text-dark">{{ number_format($service->avg_price ?? $service->price, 2) }} ريال</td>
+                                    <td class="text-dark">{{ number_format($service->avg_price ?? $service->price, 2) }} {{ __('common.currency') }}</td>
                                     <td>
                                         @php
                                             $growth = $service->growth_rate ?? rand(-5, 25);
@@ -359,9 +359,9 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <strong class="text-dark">{{ number_format($product->total_revenue ?? 0, 2) }} ريال</strong>
+                                        <strong class="text-dark">{{ number_format($product->total_revenue ?? 0, 2) }} {{ __('common.currency') }}</strong>
                                     </td>
-                                    <td class="text-dark">{{ number_format($product->avg_price ?? $product->price, 2) }} ريال</td>
+                                    <td class="text-dark">{{ number_format($product->avg_price ?? $product->price, 2) }} {{ __('common.currency') }}</td>
                                     <td>
                                         @php
                                             $stock = $product->current_stock ?? 0;
@@ -406,6 +406,7 @@
 const ctx = document.getElementById('monthlyRevenueChart');
 // Read JSON from the embedded script tag to avoid linter issues
 const monthlyData = JSON.parse(document.getElementById('monthlyRevenueData').textContent);
+const currencyText = @json(__('common.currency'));
 
 new Chart(ctx, {
     type: 'line',
@@ -415,7 +416,7 @@ new Chart(ctx, {
             return new Date(year, month - 1).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short' });
         }),
         datasets: [{
-            label: 'الإيرادات (ريال)',
+            label: `الإيرادات (${currencyText})`,
             data: monthlyData.map(item => item.total),
             borderColor: '#000000',
             backgroundColor: 'rgba(0, 0, 0, 0.1)',
@@ -439,7 +440,7 @@ new Chart(ctx, {
                 beginAtZero: true,
                 ticks: {
                     callback: function(value) {
-                        return value.toLocaleString('ar-SA') + ' ريال';
+                        return value.toLocaleString('ar-SA') + ' ' + currencyText;
                     }
                 }
             }

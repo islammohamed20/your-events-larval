@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'الباقات - Your Events')
+@section('title', __('common.packages') . ' - Your Events')
 
 @section('content')
 <!-- Page Header -->
-<section class="hero-section" style="padding: 0; background-image: url('{{ Storage::url('extra/packetge-banner.jpg') }}'); background-position: center; background-size: cover; background-repeat: no-repeat; min-height: 205px; display: flex; align-items: center;">
+<section class="hero-section packages-hero" data-bg-url="{{ Storage::url('extra/packetge-banner.jpg') }}" style="padding: 0; background-position: center; background-size: cover; background-repeat: no-repeat; min-height: 205px; display: flex; align-items: center;">
 </section>
 
 <!-- Packages Grid -->
@@ -29,7 +29,7 @@
                                 });
                             @endphp
                             @if($validFeatures->count() > 0)
-                                <h6 class="mt-3 mb-2">المميزات:</h6>
+                                <h6 class="mt-3 mb-2">{{ __('common.features') }}:</h6>
                                 <ul class="list-unstyled mb-3">
                                     @foreach($validFeatures as $feature)
                                         <li class="mb-1">
@@ -40,13 +40,13 @@
                             @endif
                             
                             <div class="d-flex justify-content-between align-items-center mt-auto">
-                                <span class="price-tag">{{ number_format($package->price) }} ر.س</span>
+                                <span class="price-tag">{{ number_format($package->price) }} {{ __('common.currency') }}</span>
                                 <div>
                                     <a href="{{ route('packages.show', $package->id) }}" class="btn btn-outline-primary btn-sm me-2">
-                                        التفاصيل
+                                        {{ __('common.details') }}
                                     </a>
                                     <a href="{{ route('booking.create', ['package_id' => $package->id]) }}" class="btn btn-primary btn-sm">
-                                        احجز الآن
+                                        {{ __('buttons.book_now') }}
                                     </a>
                                 </div>
                             </div>
@@ -57,10 +57,10 @@
                 <div class="col-12">
                     <div class="text-center py-5">
                         <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-                        <h4>لا توجد باقات متاحة حالياً</h4>
-                        <p class="text-muted">نعمل على إضافة المزيد من الباقات قريباً</p>
+                        <h4>{{ __('common.no_packages_available') }}</h4>
+                        <p class="text-muted">{{ __('common.more_packages_soon') }}</p>
                         <a href="{{ route('contact') }}" class="btn btn-primary mt-3">
-                            تواصل معنا للحصول على عرض مخصص
+                            {{ __('common.contact_for_custom_offer') }}
                         </a>
                     </div>
                 </div>
@@ -96,15 +96,15 @@
 <!-- Package Benefits -->
 <section class="py-4 bg-secondary-custom">
     <div class="container">
-        <h2 class="section-title" data-aos="fade-up" style="margin-bottom: 2rem; background: none; -webkit-text-fill-color: #000000; color: #000000;">مميزات باقاتنا</h2>
+        <h2 class="section-title" data-aos="fade-up" style="margin-bottom: 2rem; background: none; -webkit-text-fill-color: #000000; color: #000000;">{{ __('common.our_package_benefits') }}</h2>
         <div class="row">
             <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="100">
                 <div class="text-center">
                     <div class="mb-3">
                         <i class="fas fa-gem fa-3x" style="color: var(--primary-color);"></i>
                     </div>
-                    <h5>جودة عالية</h5>
-                    <p class="text-muted">نستخدم أفضل المواد والتجهيزات لضمان جودة عالية</p>
+                    <h5>{{ __('common.benefit_high_quality_title') }}</h5>
+                    <p class="text-muted">{{ __('common.benefit_high_quality_desc') }}</p>
                 </div>
             </div>
             <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="200">
@@ -112,8 +112,8 @@
                     <div class="mb-3">
                         <i class="fas fa-palette fa-3x" style="color: var(--primary-color);"></i>
                     </div>
-                    <h5>تصميم إبداعي</h5>
-                    <p class="text-muted">فريق من المصممين المبدعين لإنشاء تصاميم فريدة</p>
+                    <h5>{{ __('common.benefit_creative_design_title') }}</h5>
+                    <p class="text-muted">{{ __('common.benefit_creative_design_desc') }}</p>
                 </div>
             </div>
             <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="300">
@@ -121,8 +121,8 @@
                     <div class="mb-3">
                         <i class="fas fa-handshake fa-3x" style="color: var(--primary-color);"></i>
                     </div>
-                    <h5>خدمة شاملة</h5>
-                    <p class="text-muted">نوفر جميع الخدمات المطلوبة في مكان واحد</p>
+                    <h5>{{ __('common.benefit_all_in_one_title') }}</h5>
+                    <p class="text-muted">{{ __('common.benefit_all_in_one_desc') }}</p>
                 </div>
             </div>
             <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="400">
@@ -130,8 +130,8 @@
                     <div class="mb-3">
                         <i class="fas fa-money-bill-wave fa-3x" style="color: var(--primary-color);"></i>
                     </div>
-                    <h5>أسعار تنافسية</h5>
-                    <p class="text-muted">أفضل الأسعار مع أعلى مستويات الجودة</p>
+                    <h5>{{ __('common.benefit_competitive_prices_title') }}</h5>
+                    <p class="text-muted">{{ __('common.benefit_competitive_prices_desc') }}</p>
                 </div>
             </div>
             <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="500">
@@ -139,8 +139,8 @@
                     <div class="mb-3">
                         <i class="fas fa-headset fa-3x" style="color: var(--primary-color);"></i>
                     </div>
-                    <h5>دعم مستمر</h5>
-                    <p class="text-muted">فريق دعم متاح على مدار الساعة لخدمتكم</p>
+                    <h5>{{ __('common.benefit_support_title') }}</h5>
+                    <p class="text-muted">{{ __('common.benefit_support_desc') }}</p>
                 </div>
             </div>
             <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="600">
@@ -148,11 +148,23 @@
                     <div class="mb-3">
                         <i class="fas fa-shield-alt fa-3x" style="color: var(--primary-color);"></i>
                     </div>
-                    <h5>ضمان الجودة</h5>
-                    <p class="text-muted">نضمن جودة العمل والالتزام بالمواصفات</p>
+                    <h5>{{ __('common.benefit_quality_assurance_title') }}</h5>
+                    <p class="text-muted">{{ __('common.benefit_quality_assurance_desc') }}</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const hero = document.querySelector('.packages-hero');
+    if (!hero || !hero.dataset.bgUrl) {
+        return;
+    }
+    hero.style.backgroundImage = `url('${hero.dataset.bgUrl}')`;
+});
+</script>
+@endpush

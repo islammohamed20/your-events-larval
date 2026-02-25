@@ -186,6 +186,17 @@
                                 @enderror
                             </div>
 
+                            <div class="col-md-6">
+                                <label for="card_number" class="form-label">رقم البطاقة</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-credit-card"></i></span>
+                                    <input type="text" class="form-control" id="card_number" name="card_number"
+                                           value="{{ old('card_number') }}" inputmode="numeric" autocomplete="off"
+                                           placeholder="•••• •••• •••• ••••">
+                                </div>
+                                <small class="text-muted">لن يتم حفظ رقم البطاقة الكامل</small>
+                            </div>
+
                             <div class="col-md-4">
                                 <label for="card_last_four" class="form-label">آخر 4 أرقام</label>
                                 <div class="input-group">
@@ -246,7 +257,7 @@
                             <div class="col-12">
                                 <div class="alert alert-info">
                                     <i class="fas fa-info-circle me-2"></i>
-                                    <strong>ملاحظة:</strong> لن يتم حفظ رقم البطاقة الكامل أو CVV لأسباب أمنية. نحفظ فقط آخر 4 أرقام للتعريف.
+                                    <strong>ملاحظة:</strong> يمكنك إدخال رقم البطاقة للتأكد، لكن لن يتم حفظ رقم البطاقة الكامل أو CVC. نحفظ فقط آخر 4 أرقام للتعريف.
                                 </div>
                             </div>
                         </div>
@@ -277,4 +288,19 @@
     border-color: #0d6efd;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const cardNumberInput = document.getElementById('card_number');
+    const lastFourInput = document.getElementById('card_last_four');
+    if (!cardNumberInput || !lastFourInput) return;
+
+    cardNumberInput.addEventListener('input', function () {
+        const digits = (this.value || '').replace(/\D/g, '');
+        if (digits.length >= 4) {
+            lastFourInput.value = digits.slice(-4);
+        }
+    });
+});
+</script>
 @endsection

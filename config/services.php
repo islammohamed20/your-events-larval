@@ -45,4 +45,18 @@ return [
         'enabled' => env('N8N_ENABLED', true),
     ],
 
+    'tap' => [
+        'base_url' => env('TAP_BASE_URL', 'https://api.tap.company/v2'),
+        'secret_key' => env('TAP_SECRET_KEY'),
+        'public_key' => env('TAP_PUBLIC_KEY'),
+        'webhook_secret' => env('TAP_WEBHOOK_SECRET'),
+    ],
+
+    'recaptcha' => [
+        'site_key'   => env('RECAPTCHA_V3_SITE_KEY', ''),
+        'secret_key' => env('RECAPTCHA_V3_SECRET_KEY', ''),
+        'enabled'    => env('RECAPTCHA_ENABLED', true),
+        'threshold'  => env('RECAPTCHA_THRESHOLD', 0.5),
+    ],
+
 ];

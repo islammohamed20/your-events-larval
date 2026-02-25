@@ -173,7 +173,7 @@
 
                 <div class="detail-row">
                     <span class="detail-label">السعر المقترح:</span>
-                    <span class="detail-value">{{ number_format($order->price, 2) }} ريال</span>
+                    <span class="detail-value">{{ number_format($order->price, 2) }} {{ __('common.currency') }}</span>
                 </div>
 
                 <div class="detail-row">

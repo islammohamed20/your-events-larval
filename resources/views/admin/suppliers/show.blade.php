@@ -75,45 +75,6 @@
                 </div>
             </div>
 
-            <!-- Services Offered -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-black py-3">
-                    <h5 class="mb-0"><i class="fas fa-concierge-bell text-primary me-2"></i>الخدمات المقدمة</h5>
-                </div>
-                <div class="card-body">
-                    @if($supplier->services_offered && count($supplier->services_offered) > 0)
-                        <div class="row g-3">
-                            @foreach($supplier->services_offered as $service)
-                                <div class="col-md-6">
-                                    <div class="d-flex align-items-center p-3 border rounded">
-                                        <i class="fas fa-{{ match($service) {
-                                            'photography' => 'camera',
-                                            'catering' => 'utensils',
-                                            'entertainment' => 'music',
-                                            'gifts' => 'gift',
-                                            'logistics' => 'truck',
-                                            'handicrafts' => 'palette',
-                                            default => 'check'
-                                        } }} text-warning fs-4 me-3"></i>
-                                        <span>{{ match($service) {
-                                            'photography' => 'التصوير الفوتوغرافي',
-                                            'catering' => 'تقديم الطعام والضيافة',
-                                            'entertainment' => 'الترفيه والتنشيط',
-                                            'gifts' => 'الهدايا والتوزيعات',
-                                            'logistics' => 'اللوجستيات والنقل',
-                                            'handicrafts' => 'الأعمال والحرف اليدوية',
-                                            default => $service
-                                        } }}</span>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <p class="text-muted mb-0">لم يتم تحديد خدمات</p>
-                    @endif
-                </div>
-            </div>
-
             <!-- Services by Categories (from relations) -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-black py-3">

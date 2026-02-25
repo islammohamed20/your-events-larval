@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'الخدمات - Your Events')
+@section('title', __('common.services') . ' - Your Events')
 
 @section('content')
 <!-- Page Header -->
@@ -35,18 +35,18 @@
                         <div class="card-header bg-white border-0 py-3">
                             <h5 class="mb-0">
                                 <i class="fas fa-filter me-2"></i>
-                                تصفية النتائج
+                                {{ __('common.filter_results') }}
                             </h5>
                         </div>
                         <div class="card-body">
                             <!-- Categories Filter -->
                             <div class="filter-group mb-4">
-                                <h6 class="fw-bold mb-3">الفئات</h6>
+                                <h6 class="fw-bold mb-3">{{ __('common.categories') }}</h6>
                                 <div class="list-group list-group-flush">
                                     <a href="{{ route('services.index') }}" 
                                        class="list-group-item list-group-item-action border-0 px-0 {{ !$selectedCategory ? 'active' : '' }}">
                                         <i class="fas fa-th-large me-2"></i>
-                                        كل الخدمات
+                                        {{ __('common.all_services') }}
                                         <span class="badge bg-secondary float-end">{{ $services->total() }}</span>
                                     </a>
                                     @foreach($categories as $category)
@@ -65,48 +65,48 @@
 
                             <!-- Price Range Filter -->
                             <div class="filter-group mb-4">
-                                <h6 class="fw-bold mb-3">السعر</h6>
+                                <h6 class="fw-bold mb-3">{{ __('common.price') }}</h6>
                                 <div class="form-check mb-2">
                                     <input class="form-check-input price-filter" type="checkbox" value="0-500" id="price1">
                                     <label class="form-check-label" for="price1">
-                                        أقل من 500 ريال
+                                        {{ __('common.price_less_than', ['amount' => 500]) }} {{ __('common.currency') }}
                                     </label>
                                 </div>
                                 <div class="form-check mb-2">
                                     <input class="form-check-input price-filter" type="checkbox" value="500-1000" id="price2">
                                     <label class="form-check-label" for="price2">
-                                        500 - 1000 ريال
+                                        {{ __('common.price_between', ['from' => 500, 'to' => 1000]) }} {{ __('common.currency') }}
                                     </label>
                                 </div>
                                 <div class="form-check mb-2">
                                     <input class="form-check-input price-filter" type="checkbox" value="1000-2000" id="price3">
                                     <label class="form-check-label" for="price3">
-                                        1000 - 2000 ريال
+                                        {{ __('common.price_between', ['from' => 1000, 'to' => 2000]) }} {{ __('common.currency') }}
                                     </label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input price-filter" type="checkbox" value="2000+" id="price4">
                                     <label class="form-check-label" for="price4">
-                                        أكثر من 2000 ريال
+                                        {{ __('common.price_more_than', ['amount' => 2000]) }} {{ __('common.currency') }}
                                     </label>
                                 </div>
                             </div>
 
                             <!-- Sort Filter -->
                             <div class="filter-group mb-4">
-                                <h6 class="fw-bold mb-3">ترتيب حسب</h6>
+                                <h6 class="fw-bold mb-3">{{ __('common.sort_by') }}</h6>
                                 <select class="form-select" id="sortFilter">
-                                    <option value="latest">الأحدث</option>
-                                    <option value="price_low">السعر: من الأقل للأعلى</option>
-                                    <option value="price_high">السعر: من الأعلى للأقل</option>
-                                    <option value="name">الاسم</option>
+                                    <option value="latest">{{ __('common.latest') }}</option>
+                                    <option value="price_low">{{ __('common.price_low_to_high') }}</option>
+                                    <option value="price_high">{{ __('common.price_high_to_low') }}</option>
+                                    <option value="name">{{ __('common.name') }}</option>
                                 </select>
                             </div>
 
                             <!-- Clear Filters Button -->
                             <button type="button" class="btn btn-outline-secondary w-100" id="clearFilters">
                                 <i class="fas fa-redo me-2"></i>
-                                إعادة تعيين الفلاتر
+                                {{ __('common.reset_filters') }}
                             </button>
                         </div>
                     </div>
@@ -117,7 +117,7 @@
             <div class="col-12 d-lg-none mb-3">
                 <button class="btn btn-outline-primary w-100" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileFilters">
                     <i class="fas fa-filter me-2"></i>
-                    تصفية النتائج
+                    {{ __('common.filter_results') }}
                 </button>
             </div>
 
@@ -126,7 +126,7 @@
                 <!-- Results Header -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
-                        <h5 class="mb-0">عرض {{ $services->count() }} من {{ $services->total() }} خدمة</h5>
+                        <h5 class="mb-0">{{ __('common.showing_count_of_total_services', ['count' => $services->count(), 'total' => $services->total()]) }}</h5>
                     </div>
                     <div class="d-none d-md-block">
                         <div class="btn-group" role="group">
@@ -146,7 +146,7 @@
                         <div class="service-item mb-4" 
                              data-price="{{ $service->price }}" 
                              data-name="{{ $service->name }}"
-                             data-type="{{ Str::lower($service->type ? $service->type : 'أخرى') }}"
+                             data-type="{{ Str::lower($service->type ? $service->type : __('common.other')) }}"
                              data-aos="fade-up" 
                              data-aos-delay="{{ $loop->index * 50 }}">
                             <div class="card h-100 service-card">
@@ -192,10 +192,18 @@
                                         </a>
                                     </h5>
                                     
+                                    @if(isset($service->suppliers_count) && $service->suppliers_count === 0)
+                                        <div class="mb-2">
+                                            <span class="badge bg-danger">
+                                                غير متوفرة حالياً
+                                            </span>
+                                        </div>
+                                    @endif
+                                    
                                     <!-- Service Price -->
                                     @if($service->price)
                                         <div class="mb-3">
-                                            <span class="h5 text-primary mb-0">{{ number_format($service->price) }} ريال</span>
+                                            <span class="h5 text-primary mb-0">{{ number_format($service->price) }} {{ __('common.currency') }}</span>
                                             @if($service->duration)
                                                 <small class="text-muted d-block">{{ $service->duration }}</small>
                                             @endif
@@ -209,21 +217,30 @@
                                     
                                     <!-- Actions -->
                                     <div class="mt-auto">
-                                        @if($service->isVariable())
-                                            <a href="{{ route('services.show', $service->id) }}" 
-                                               class="btn btn-primary w-100">
-                                                <i class="fas fa-sliders-h me-2"></i>
-                                                اختر الخيارات
-                                            </a>
-                                        @else
-                                            <button type="button" 
-                                                    class="btn btn-primary w-100 add-to-cart-btn" 
-                                                    data-service-id="{{ $service->id }}"
-                                                    data-service-name="{{ $service->name }}"
-                                                    data-service-price="{{ $service->price }}">
-                                                <i class="fas fa-cart-plus me-2"></i>
-                                                اضف إلي السلة
+                                        @php $unavailable = isset($service->suppliers_count) && $service->suppliers_count === 0; @endphp
+                                        @if($unavailable)
+                                            <button type="button"
+                                                    class="btn btn-secondary w-100"
+                                                    disabled>
+                                                غير متوفرة حالياً
                                             </button>
+                                        @else
+                                            @if($service->isVariable())
+                                                <a href="{{ route('services.show', $service->id) }}" 
+                                                   class="btn btn-primary w-100">
+                                                    <i class="fas fa-sliders-h me-2"></i>
+                                                    {{ __('common.choose_options') }}
+                                                </a>
+                                            @else
+                                                <button type="button" 
+                                                        class="btn btn-primary w-100 add-to-cart-btn" 
+                                                        data-service-id="{{ $service->id }}"
+                                                        data-service-name="{{ $service->name }}"
+                                                        data-service-price="{{ $service->price }}">
+                                                    <i class="fas fa-cart-plus me-2"></i>
+                                                    {{ __('common.add_to_cart') }}
+                                                </button>
+                                            @endif
                                         @endif
                                     </div>
                                 </div>
@@ -233,8 +250,8 @@
                         <div class="col-12">
                             <div class="text-center py-5">
                                 <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                                <h4>لا توجد خدمات متاحة</h4>
-                                <p class="text-muted">جرب تغيير الفلاتر</p>
+                                <h4>{{ __('common.no_services_available') }}</h4>
+                                <p class="text-muted">{{ __('common.try_changing_filters') }}</p>
                             </div>
                         </div>
                     @endforelse
@@ -279,6 +296,40 @@
     .service-card .service-image-wrapper { width: 100%; }
     .service-card .service-image { width: 100%; height: 100%; object-fit: cover; }
 }
+
+/* Service Card Text Alignment */
+.service-card .card-body {
+    text-align: center;
+}
+
+.service-card .card-title {
+    text-align: center !important;
+}
+
+.service-card .card-title a {
+    display: block;
+    text-align: center !important;
+}
+
+.service-card .card-body p {
+    text-align: center;
+    color: #666;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.service-card .card-body .mb-3 {
+    text-align: center;
+}
+
+/* LTR specific for services page */
+[dir="ltr"] .service-card .card-body {
+    text-align: center;
+}
+
+[dir="rtl"] .service-card .card-body {
+    text-align: center;
+}
 </style>
 
 <!-- Mobile Filters Offcanvas -->
@@ -286,18 +337,18 @@
     <div class="offcanvas-header">
         <h5 class="offcanvas-title">
             <i class="fas fa-filter me-2"></i>
-            تصفية النتائج
+            {{ __('common.filter_results') }}
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
     </div>
 <div class="offcanvas-body">
         <!-- Same filters as sidebar -->
         <div class="filter-group mb-4">
-            <h6 class="fw-bold mb-3">الفئات</h6>
+            <h6 class="fw-bold mb-3">{{ __('common.categories') }}</h6>
             <div class="list-group list-group-flush">
                 <a href="{{ route('services.index') }}" 
                    class="list-group-item list-group-item-action {{ !$selectedCategory ? 'active' : '' }}">
-                    كل الخدمات
+                    {{ __('common.all_services') }}
                     <span class="badge bg-secondary float-end">{{ $services->total() }}</span>
                 </a>
                 @foreach($categories as $category)
@@ -313,42 +364,42 @@
         
 
         <div class="filter-group mb-4">
-            <h6 class="fw-bold mb-3">السعر</h6>
+            <h6 class="fw-bold mb-3">{{ __('common.price') }}</h6>
             <div class="form-check mb-2">
                 <input class="form-check-input price-filter-mobile" type="checkbox" value="0-500" id="priceM1">
-                <label class="form-check-label" for="priceM1">أقل من 500 ريال</label>
+                <label class="form-check-label" for="priceM1">{{ __('common.price_less_than', ['amount' => 500]) }} {{ __('common.currency') }}</label>
             </div>
             <div class="form-check mb-2">
                 <input class="form-check-input price-filter-mobile" type="checkbox" value="500-1000" id="priceM2">
-                <label class="form-check-label" for="priceM2">500 - 1000 ريال</label>
+                <label class="form-check-label" for="priceM2">{{ __('common.price_between', ['from' => 500, 'to' => 1000]) }} {{ __('common.currency') }}</label>
             </div>
             <div class="form-check mb-2">
                 <input class="form-check-input price-filter-mobile" type="checkbox" value="1000-2000" id="priceM3">
-                <label class="form-check-label" for="priceM3">1000 - 2000 ريال</label>
+                <label class="form-check-label" for="priceM3">{{ __('common.price_between', ['from' => 1000, 'to' => 2000]) }} {{ __('common.currency') }}</label>
             </div>
             <div class="form-check">
                 <input class="form-check-input price-filter-mobile" type="checkbox" value="2000+" id="priceM4">
-                <label class="form-check-label" for="priceM4">أكثر من 2000 ريال</label>
+                <label class="form-check-label" for="priceM4">{{ __('common.price_more_than', ['amount' => 2000]) }} {{ __('common.currency') }}</label>
             </div>
         </div>
 
         <div class="filter-group mb-4">
-            <h6 class="fw-bold mb-3">ترتيب حسب</h6>
+            <h6 class="fw-bold mb-3">{{ __('common.sort_by') }}</h6>
             <select class="form-select" id="sortFilterMobile">
-                <option value="latest">الأحدث</option>
-                <option value="price_low">السعر: من الأقل للأعلى</option>
-                <option value="price_high">السعر: من الأعلى للأقل</option>
-                <option value="name">الاسم</option>
+                <option value="latest">{{ __('common.latest') }}</option>
+                <option value="price_low">{{ __('common.price_low_to_high') }}</option>
+                <option value="price_high">{{ __('common.price_high_to_low') }}</option>
+                <option value="name">{{ __('common.name') }}</option>
             </select>
         </div>
 
         <button type="button" class="btn btn-outline-secondary w-100 mb-2" id="clearFiltersMobile">
             <i class="fas fa-redo me-2"></i>
-            إعادة تعيين
+            {{ __('common.reset') }}
         </button>
         <button type="button" class="btn btn-primary w-100" data-bs-dismiss="offcanvas">
             <i class="fas fa-check me-2"></i>
-            تطبيق الفلاتر
+            {{ __('common.apply_filters') }}
         </button>
     </div>
 </div>
@@ -386,6 +437,29 @@
     overflow: hidden;
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Service Card Title - Always Center */
+.service-card .card-title {
+    text-align: center !important;
+}
+
+.service-card .card-title a {
+    display: block;
+    text-align: center !important;
+}
+
+/* Service Card Body Center Alignment */
+.service-card .card-body {
+    text-align: center;
+}
+
+.service-card .card-body .mb-3 {
+    text-align: center;
+}
+
+.service-card .card-body p {
+    text-align: center;
 }
 
 .service-card:hover {
@@ -628,8 +702,23 @@
 </style>
 
 @push('scripts')
+<div id="services-translations"
+     style="display: none;"
+     data-adding-to-cart="{{ __('common.adding_to_cart') }}"
+     data-added-to-cart="{{ __('common.added_to_cart') }}"
+     data-added-service-to-cart-template="{{ __('common.added_service_to_cart', ['service' => ':service']) }}"
+     data-error-occurred="{{ __('common.error_occurred') }}"
+     data-add-to-cart-error="{{ __('common.add_to_cart_error') }}"
+     data-wishlist-toggle-url="{{ route('wishlist.toggle') }}">
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const translationsEl = document.getElementById('services-translations');
+    const addingToCartText = translationsEl ? (translationsEl.dataset.addingToCart || '') : '';
+    const addedToCartText = translationsEl ? (translationsEl.dataset.addedToCart || '') : '';
+    const addedServiceToCartTemplate = translationsEl ? (translationsEl.dataset.addedServiceToCartTemplate || '') : '';
+    const errorOccurredText = translationsEl ? (translationsEl.dataset.errorOccurred || '') : '';
+    const addToCartErrorText = translationsEl ? (translationsEl.dataset.addToCartError || '') : '';
     const servicesContainer = document.getElementById('servicesContainer');
     const serviceItems = document.querySelectorAll('.service-item');
 
@@ -728,7 +817,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const originalHtml = this.innerHTML;
             
             this.classList.add('loading');
-            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الإضافة...';
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>' + addingToCartText;
             
             fetch(`/cart/add/${serviceId}`, {
                 method: 'POST',
@@ -753,23 +842,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     this.classList.remove('loading');
                     this.classList.add('success');
-                    this.innerHTML = '<i class="fas fa-check me-2"></i>تمت الإضافة!';
+                    this.innerHTML = '<i class="fas fa-check me-2"></i>' + addedToCartText;
                     
-                    showAlert('success', `تمت إضافة "${serviceName}" إلى السلة بنجاح`);
+                    showAlert('success', addedServiceToCartTemplate.replace(':service', serviceName));
                     
                     setTimeout(() => {
                         this.classList.remove('success');
                         this.innerHTML = originalHtml;
                     }, 2000);
                 } else {
-                    throw new Error(data.message || 'حدث خطأ');
+                    throw new Error(data.message || errorOccurredText);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 this.classList.remove('loading');
                 this.innerHTML = originalHtml;
-                showAlert('danger', 'حدث خطأ أثناء الإضافة للسلة. حاول مرة أخرى.');
+                showAlert('danger', addToCartErrorText);
             });
         });
     });
@@ -820,7 +909,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const serviceId = this.dataset.serviceId;
             const icon = this.querySelector('i');
             
-            fetch('{{ route("wishlist.toggle") }}', {
+            const wishlistToggleUrl = translationsEl ? (translationsEl.dataset.wishlistToggleUrl || '') : '';
+            fetch(wishlistToggleUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -843,7 +933,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error:', error);
-                showAlert('danger', 'حدث خطأ');
+                showAlert('danger', errorOccurredText);
             });
         });
     });

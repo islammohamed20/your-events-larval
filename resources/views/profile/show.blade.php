@@ -233,7 +233,7 @@
                                             <span class="badge bg-danger">ملغاة</span>
                                         @endif
                                     </td>
-                                    <td>{{ number_format($booking->total_amount ?? 0, 2) }} ر.س</td>
+                                    <td>{{ number_format($booking->total_amount ?? 0, 2) }} {{ __('common.currency') }}</td>
                                 </tr>
                                 @endforeach
                             </tbody>

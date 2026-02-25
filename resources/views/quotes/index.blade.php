@@ -5,7 +5,7 @@
 @section('content')
 <div class="container py-5" style="margin-top: 100px;">
     <div class="row">
-        <div class="col-12">
+        <div class="col-12" id="customerQuotesAutoRefresh">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2>
                     <i class="fas fa-file-invoice-dollar me-2 text-primary"></i>
@@ -63,13 +63,26 @@
                                         {!! $quote->status_badge !!}
                                     </div>
                                     <div class="col-md-3 text-center mb-3 mb-md-0">
-                                        <h4 class="text-primary mb-0">{{ number_format($quote->total, 2) }} ريال</h4>
+                                        <h4 class="text-primary mb-0">{{ number_format($quote->total, 2) }} {{ __('common.currency') }}</h4>
                                         <small class="text-muted">شامل الضريبة</small>
                                     </div>
                                     <div class="col-md-2 text-center">
                                         <a href="{{ url('https://yourevents.sa' . route('quotes.show', $quote, false)) }}" class="btn btn-primary btn-sm w-100 mb-2">
                                             <i class="fas fa-eye me-1"></i>عرض
                                         </a>
+                                        @if($quote->status === 'approved' && $quote->payment_status !== 'paid')
+                                            <a href="{{ url('https://yourevents.sa' . route('quotes.complete-booking', $quote, false)) }}" class="btn btn-success btn-sm w-100 mb-2">
+                                                <i class="fas fa-credit-card me-1"></i>استكمال بيانات الحجز والدفع
+                                            </a>
+                                        @elseif($quote->payment_status === 'paid' || $quote->status === 'paid')
+                                            <button type="button" class="btn btn-outline-success btn-sm w-100 mb-2" disabled>
+                                                <i class="fas fa-check-circle me-1"></i>تم الدفع
+                                            </button>
+                                        @else
+                                            <button type="button" class="btn btn-outline-success btn-sm w-100 mb-2" disabled>
+                                                <i class="fas fa-clock me-1"></i>استكمال بيانات الحجز والدفع
+                                            </button>
+                                        @endif
                                         <a href="{{ route('quotes.download', $quote) }}" class="btn btn-outline-secondary btn-sm w-100">
                                             <i class="fas fa-download me-1"></i>PDF
                                         </a>
@@ -137,3 +150,41 @@
 }
 </style>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var container = document.getElementById('customerQuotesAutoRefresh');
+    if (!container) {
+        return;
+    }
+
+    function refreshCustomerQuotes() {
+        if (document.visibilityState !== 'visible') {
+            return;
+        }
+
+        fetch(window.location.href, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            cache: 'no-store'
+        })
+            .then(function(response) {
+                return response.text();
+            })
+            .then(function(html) {
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(html, 'text/html');
+                var newContainer = doc.getElementById('customerQuotesAutoRefresh');
+                if (newContainer) {
+                    container.innerHTML = newContainer.innerHTML;
+                }
+            })
+            .catch(function() {});
+    }
+
+    setInterval(refreshCustomerQuotes, 5000);
+});
+</script>
+@endpush

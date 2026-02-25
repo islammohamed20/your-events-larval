@@ -9,7 +9,7 @@ class ServicesController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Service::active();
+        $query = Service::active()->withCount('suppliers');
 
         // Filter by category if provided
         if ($request->has('category') && $request->category) {
@@ -36,6 +36,7 @@ class ServicesController extends Controller
             'variations' => function ($q) {
                 $q->where('is_active', true);
             },
+            'suppliers',
         ])->findOrFail($id);
 
         // Similar services: same category if available, exclude current, active only

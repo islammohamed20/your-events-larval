@@ -144,7 +144,7 @@
                                     @endif
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">المبلغ الإجمالي:</label>
-                                        <p class="text-success fs-4 fw-bold">{{ number_format($booking->total_amount) }} ريال</p>
+                                        <p class="text-success fs-4 fw-bold">{{ number_format($booking->total_amount) }} {{ __('common.currency') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -169,7 +169,7 @@
                                 <p class="text-muted">{{ $booking->package->description }}</p>
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <strong>السعر:</strong> {{ number_format($booking->package->price) }} ريال
+                                        <strong>السعر:</strong> {{ number_format($booking->package->price) }} {{ __('common.currency') }}
                                     </div>
                                     @if($booking->package->duration)
                                         <div class="col-md-6">
@@ -188,7 +188,7 @@
                                 <p class="text-muted">{{ $booking->service->description }}</p>
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <strong>السعر:</strong> {{ number_format($booking->service->price) }} ريال
+                                        <strong>السعر:</strong> {{ number_format($booking->service->price) }} {{ __('common.currency') }}
                                     </div>
                                     @if($booking->service->duration)
                                         <div class="col-md-6">
@@ -221,8 +221,8 @@
                                                     <td>{{ $item->service->name ?? $item->service_name }}</td>
                                                     <td>{{ Str::limit($item->service->description ?? $item->service_description, 80) }}</td>
                                                     <td>{{ $item->quantity }}</td>
-                                                    <td>{{ number_format($item->price, 2) }} ريال</td>
-                                                    <td>{{ number_format($item->subtotal, 2) }} ريال</td>
+                                                    <td>{{ number_format($item->price, 2) }} {{ __('common.currency') }}</td>
+                                                    <td>{{ number_format($item->subtotal, 2) }} {{ __('common.currency') }}</td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
@@ -291,6 +291,11 @@
                                     <p class="mb-0">
                                         <i class="fas fa-map-marker-alt me-1"></i>{{ $booking->event_location }}
                                     </p>
+                                    @if($booking->event_lat && $booking->event_lng)
+                                        <a class="small text-decoration-none" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps?q={{ $booking->event_lat }},{{ $booking->event_lng }}">
+                                            <i class="fas fa-map me-1"></i>فتح على الخريطة
+                                        </a>
+                                    @endif
                                 </div>
                             @endif
 

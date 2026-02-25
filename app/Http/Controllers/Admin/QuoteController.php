@@ -129,7 +129,7 @@ class QuoteController extends Controller
             $quote->payment_status = 'paid';
             $quote->payment_date = now();
             if (empty($quote->payment_method)) {
-                $quote->payment_method = 'bank_transfer';
+                $quote->payment_method = 'card';
             }
             $quote->save();
 
@@ -144,18 +144,18 @@ class QuoteController extends Controller
             try {
                 \App\Models\Payment::create([
                     'user_id' => $quote->user_id,
-                    'quote_id' => $quote->id,
                     'booking_id' => optional($quote->bookings()->latest()->first())->id,
+                    'gateway' => 'manual',
+                    'gateway_transaction_id' => $quote->payment_reference,
                     'amount' => $quote->total,
                     'currency' => 'SAR',
-                    'method' => $quote->payment_method ?? 'bank_transfer',
                     'status' => 'paid',
-                    'provider' => 'manual',
-                    'notes' => $quote->payment_notes,
+                    'payment_method' => $quote->payment_method ?? 'card',
+                    'description' => $quote->payment_notes,
                     'metadata' => [
                         'source' => 'admin.quotes.updateStatus',
                     ],
-                    'captured_at' => now(),
+                    'paid_at' => now(),
                 ]);
             } catch (\Throwable $e) {
                 Log::warning('Failed to record payment on admin paid status: '.$e->getMessage());
@@ -192,6 +192,11 @@ class QuoteController extends Controller
      */
     public function destroy(Quote $quote)
     {
+        if ($quote->bookings()->exists()) {
+            return redirect()->route('admin.quotes.index')
+                ->with('error', 'لا يمكن حذف عرض السعر لأنه مرتبط بحجوزات. يمكنك إلغاء الحجز أو أرشفة العرض بدلاً من حذفه.');
+        }
+
         $quote->delete();
 
         return redirect()->route('admin.quotes.index')->with('success', 'تم حذف عرض السعر بنجاح');

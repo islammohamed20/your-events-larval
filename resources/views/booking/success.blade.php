@@ -80,7 +80,7 @@
                                 <div class="col-12 mb-3">
                                     <div class="alert alert-info">
                                         <h5 class="alert-heading">التكلفة المقدرة:</h5>
-                                        <h4 class="mb-0 text-primary">{{ number_format($booking->total_amount) }} ر.س</h4>
+                                        <h4 class="mb-0 text-primary">{{ number_format($booking->total_amount) }} {{ __('common.currency') }}</h4>
                                         <small>* السعر النهائي سيتم تأكيده معك هاتفياً</small>
                                     </div>
                                 </div>

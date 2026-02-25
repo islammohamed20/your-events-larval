@@ -15,7 +15,7 @@ class BookingController extends Controller
     public function create(Request $request)
     {
         $packages = Package::active()->get();
-        $services = Service::active()->get();
+        $services = Service::active()->whereHas('suppliers')->get();
 
         $selectedPackage = null;
         $selectedService = null;
@@ -25,7 +25,7 @@ class BookingController extends Controller
         }
 
         if ($request->has('service_id')) {
-            $selectedService = Service::find($request->service_id);
+            $selectedService = Service::whereHas('suppliers')->find($request->service_id);
         }
 
         return view('booking.create', compact('packages', 'services', 'selectedPackage', 'selectedService'));
@@ -40,6 +40,8 @@ class BookingController extends Controller
             'client_phone' => 'required|string|max:20',
             'event_date' => 'required|date|after:today',
             'event_location' => 'required|string|max:255',
+            'event_lat' => 'required|numeric|between:-90,90',
+            'event_lng' => 'required|numeric|between:-180,180',
             'guests_count' => 'required|integer|min:1',
             'package_id' => 'nullable|exists:packages,id',
             'service_id' => 'nullable|exists:services,id',
@@ -53,7 +55,12 @@ class BookingController extends Controller
             $totalAmount += $package->price;
         }
         if (isset($validated['service_id']) && $validated['service_id']) {
-            $service = Service::find($validated['service_id']);
+            $service = Service::whereHas('suppliers')->find($validated['service_id']);
+            if (! $service) {
+                return redirect()->back()->withInput()->withErrors([
+                    'service_id' => 'هذه الخدمة غير متوفرة حالياً ولا يمكن حجزها.',
+                ]);
+            }
             $totalAmount += $service->price;
         }
 

@@ -3,7 +3,7 @@
 @section('title', 'إدارة المدفوعات')
 
 @section('content')
-<div class="container-fluid">
+<div class="container-fluid" id="adminPaymentsAutoRefresh">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>المدفوعات</h1>
         <div>
@@ -27,7 +27,7 @@
                 <div class="col-md-3">
                     <select name="method" class="form-select">
                         <option value="">كل الطرق</option>
-                        @foreach(['card','bank_transfer','cash'] as $m)
+                        @foreach(['card'] as $m)
                             <option value="{{ $m }}" {{ request('method')===$m ? 'selected' : '' }}>{{ $m }}</option>
                         @endforeach
                     </select>
@@ -123,3 +123,33 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var container = document.getElementById('adminPaymentsAutoRefresh');
+    if (!container) return;
+
+    function refreshPayments() {
+        if (document.visibilityState !== 'visible') return;
+
+        fetch(window.location.href, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            cache: 'no-store'
+        })
+        .then(response => response.text())
+        .then(html => {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var newContainer = doc.getElementById('adminPaymentsAutoRefresh');
+            if (newContainer) {
+                container.innerHTML = newContainer.innerHTML;
+            }
+        })
+        .catch(() => {});
+    }
+
+    setInterval(refreshPayments, 5000); // كل 5 ثواني
+});
+</script>
+@endpush

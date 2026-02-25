@@ -140,7 +140,7 @@
                     </tr>
                     <tr>
                         <td>الإجمالي الكلي:</td>
-                        <td><strong style="color: #4caf50; font-size: 18px;">{{ number_format($quote->total, 2) }} ر.س</strong></td>
+                        <td><strong style="color: #4caf50; font-size: 18px;">{{ number_format($quote->total, 2) }} {{ __('common.currency') }}</strong></td>
                     </tr>
                     <tr>
                         <td>تاريخ الموافقة:</td>

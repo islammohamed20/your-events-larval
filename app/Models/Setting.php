@@ -50,6 +50,29 @@ class Setting extends Model
     }
 
     /**
+     * Get multiple settings by keys
+     */
+    public static function getSettings($keys = [])
+    {
+        return Cache::remember('settings_' . md5(implode(',', $keys)), 3600, function () use ($keys) {
+            if (empty($keys)) {
+                return self::all()->pluck('value', 'key')->toArray();
+            }
+            
+            $settings = self::whereIn('key', $keys)->pluck('value', 'key')->toArray();
+            
+            // Add defaults for missing keys
+            foreach ($keys as $key) {
+                if (!isset($settings[$key])) {
+                    $settings[$key] = null;
+                }
+            }
+            
+            return $settings;
+        });
+    }
+
+    /**
      * Clear settings cache
      */
     public static function clearCache()

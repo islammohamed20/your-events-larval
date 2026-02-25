@@ -60,7 +60,7 @@
                             
                             @if($service->price)
                                 <div class="mb-2">
-                                    <span class="h6 text-primary">{{ number_format($service->price) }} ريال</span>
+                                    <span class="h6 text-primary">{{ number_format($service->price) }} {{ __('common.currency') }}</span>
                                     @if($service->duration)
                                         <small class="text-muted"> - {{ $service->duration }}</small>
                                     @endif
@@ -78,7 +78,7 @@
                                             data-service-id="{{ $service->id }}"
                                             data-service-name="{{ $service->name }}"
                                             data-service-price="{{ $service->price }}">
-                                        <i class="fas fa-cart-plus me-2"></i>اضف إلي السلة
+                                        <i class="fas fa-cart-plus me-2"></i>{{ __('common.add_to_cart') }}
                                     </button>
                                 @endif
                             </div>

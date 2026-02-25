@@ -3,7 +3,7 @@
 @section('title', 'إدارة الموردين')
 
 @section('content')
-<div class="container-fluid py-4">
+<div class="container-fluid py-4" id="adminSuppliersAutoRefresh">
     <div class="d-flex align-items-center justify-content-between mb-3">
         <h1 class="h4 mb-0">إدارة الموردين</h1>
         <a href="{{ route('admin.suppliers.create') }}" class="btn btn-primary">
@@ -150,3 +150,33 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var container = document.getElementById('adminSuppliersAutoRefresh');
+    if (!container) return;
+
+    function refreshSuppliers() {
+        if (document.visibilityState !== 'visible') return;
+
+        fetch(window.location.href, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            cache: 'no-store'
+        })
+        .then(response => response.text())
+        .then(html => {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var newContainer = doc.getElementById('adminSuppliersAutoRefresh');
+            if (newContainer) {
+                container.innerHTML = newContainer.innerHTML;
+            }
+        })
+        .catch(() => {});
+    }
+
+    setInterval(refreshSuppliers, 15000); // كل 15 ثانية
+});
+</script>
+@endpush

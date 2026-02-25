@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\CustomerDetailExport;
 use App\Exports\CustomersExport;
 use App\Models\Booking;
+use App\Models\OtpVerification;
 use App\Models\Quote;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -20,6 +21,9 @@ class CustomerManagementController extends Controller
         // Get only customers (non-admin users)
         $customers = User::where('is_admin', false)
             ->withCount(['quotes', 'bookings'])
+            ->withSum(['bookings' => function ($query) {
+                $query->where('status', 'confirmed');
+            }], 'total_amount')
             ->latest()
             ->paginate(15);
 
@@ -264,5 +268,14 @@ class CustomerManagementController extends Controller
         } catch (\Throwable $e) {
             return redirect()->back()->with('error', 'فشل حذف العميل: '.$e->getMessage());
         }
+    }
+
+    public function sendPasswordResetOtp($id)
+    {
+        $customer = User::where('is_admin', false)->findOrFail($id);
+
+        OtpVerification::generate($customer->email, 'password_reset');
+
+        return redirect()->back()->with('success', 'تم إرسال رمز إعادة تعيين كلمة المرور إلى بريد العميل.');
     }
 }

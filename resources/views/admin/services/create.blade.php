@@ -313,7 +313,7 @@
                                             <p class="text-muted small">مناسب للخدمات التي لها سعر واحد ثابت لا يتغير</p>
                                             
                                             <div id="simple_price_section" style="display: none;">
-                                                <label for="price" class="form-label">السعر (ريال) <span class="text-danger">*</span></label>
+                                                <label for="price" class="form-label">السعر ({{ __('common.currency') }}) <span class="text-danger">*</span></label>
                                                 <input type="number" 
                                                        class="form-control @error('price') is-invalid @enderror" 
                                                        id="price" 

@@ -55,7 +55,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold text-muted">السعر</label>
-                            <p class="fs-5 text-success fw-bold">{{ number_format($order->price, 2) }} ريال</p>
+                            <p class="fs-5 text-success fw-bold">{{ number_format($order->price, 2) }} {{ __('common.currency') }}</p>
                         </div>
                     </div>
 

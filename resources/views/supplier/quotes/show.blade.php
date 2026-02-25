@@ -52,7 +52,7 @@
                                     </div>
                                     <div>
                                         <div class="stat-label">إجمالي عناصر خدماتي</div>
-                                        <div class="stat-value">{{ number_format($supplierSubtotal, 2) }} ر.س</div>
+                                        <div class="stat-value">{{ number_format($supplierSubtotal, 2) }} {{ __('common.currency') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -97,8 +97,8 @@
                                                 </td>
                                                 <td>{{ $item->description ?? '-' }}</td>
                                                 <td>{{ $item->quantity }}</td>
-                                                <td>{{ number_format($item->price, 2) }} ر.س</td>
-                                                <td>{{ number_format($item->subtotal, 2) }} ر.س</td>
+                                                <td>{{ number_format($item->price, 2) }} {{ __('common.currency') }}</td>
+                                                <td>{{ number_format($item->subtotal, 2) }} {{ __('common.currency') }}</td>
                                             </tr>
                                         @empty
                                             <tr>
@@ -168,4 +168,3 @@
     </div>
 </div>
 @endsection
-

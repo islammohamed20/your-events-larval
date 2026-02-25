@@ -258,8 +258,6 @@
                 إحنا مو بس نرسل لك أسعار وخدمات… إحنا نحط لك تجربة كاملة، خطوة بخطوة، بحيث كل شيء مرتب، من البداية للنهاية، وانت بس استمتع. 🎊
             </div>
             
-            <h3 class="section-title">تفاصيل عرضك</h3>
-            
             <div class="panel">
                 <strong>رقم العرض:</strong> {{ $quote->quote_number }}<br>
                 <strong>التاريخ:</strong> {{ $quote->created_at->format('Y/m/d') }}<br>
@@ -290,8 +288,8 @@
                                 @endif
                             </td>
                             <td style="text-align:center;">{{ $item->quantity }}</td>
-                            <td style="text-align:center;">{{ number_format($item->price, 2) }} ريال</td>
-                            <td style="text-align:left;"><strong>{{ number_format($item->subtotal, 2) }} ريال</strong></td>
+                            <td style="text-align:center;">{{ number_format($item->price, 2) }} {{ __('common.currency') }}</td>
+                            <td style="text-align:left;"><strong>{{ number_format($item->subtotal, 2) }} {{ __('common.currency') }}</strong></td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -301,21 +299,21 @@
             <div class="total-section">
                 <div class="total-row">
                     <span>المجموع الفرعي:</span>
-                    <span>{{ number_format($quote->subtotal, 2) }} ريال</span>
+                    <span>{{ number_format($quote->subtotal, 2) }} {{ __('common.currency') }}</span>
                 </div>
                 <div class="total-row">
                     <span>الضريبة (15%):</span>
-                    <span>{{ number_format($quote->tax, 2) }} ريال</span>
+                    <span>{{ number_format($quote->tax, 2) }} {{ __('common.currency') }}</span>
                 </div>
                 @if($quote->discount > 0)
                 <div class="total-row">
                     <span>الخصم:</span>
-                    <span style="color: #28a745;">- {{ number_format($quote->discount, 2) }} ريال</span>
+                    <span style="color: #28a745;">- {{ number_format($quote->discount, 2) }} {{ __('common.currency') }}</span>
                 </div>
                 @endif
                 <div class="total-row final">
                     <span>💰 المجموع الإجمالي:</span>
-                    <span>{{ number_format($quote->total, 2) }} ريال</span>
+                    <span>{{ number_format($quote->total, 2) }} {{ __('common.currency') }}</span>
                 </div>
             </div>
 
@@ -365,12 +363,16 @@
             </div>
 
             <div class="btn-container">
+                <a href="{{ route('quotes.show', $quote) }}" class="btn">
+                    📋 تفاصيل عرضك
+                </a>
+                @if($quote->status === 'approved')
+                <a href="{{ route('quotes.complete-booking', $quote) }}" class="btn btn-secondary">
+                    ✅ استكمال بيانات الحجز والدفع
+                </a>
+                @endif
                 <a href="{{ route('quotes.download', $quote) }}" class="btn btn-secondary">
                     ⬇️ تحميل عرض السعر PDF
-                </a>
-                <br><br>
-                <a href="{{ url('/quotes/' . $quote->id) }}" class="btn">
-                    ✅ تأكيد الطلب أو تعديل التفاصيل
                 </a>
             </div>
 

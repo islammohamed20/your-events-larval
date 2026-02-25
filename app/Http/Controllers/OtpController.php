@@ -266,6 +266,15 @@ class OtpController extends Controller
 
                         // تنظيف بيانات الجلسة المؤقتة الخاصة بتسجيل الدخول
                         $request->session()->forget(['login_pending', 'login_remember', 'login_user_id']);
+
+                        // ─── تفعيل prompt تسجيل البصمة ────────────────
+                        // نضع userId+type في session حتى يستخدمه BiometricController
+                        if (isset($user) && $user) {
+                            $request->session()->put('biometric_register_user_id', $user->id);
+                            $request->session()->put('biometric_register_user_type', 'user');
+                            $request->session()->put('biometric_prompt', true);
+                        }
+                        // ───────────────────────────────────────────────
                     } catch (\Exception $e) {
                         \Illuminate\Support\Facades\Log::error('Login after OTP failed: '.$e->getMessage());
                     }
@@ -297,6 +306,14 @@ class OtpController extends Controller
                             $redirectUrl = route('supplier.login');
                         }
                         $request->session()->forget(['supplier_login_pending', 'supplier_login_remember', 'supplier_login_supplier_id']);
+
+                        // ─── تفعيل prompt تسجيل البصمة للمورد ─────────
+                        if (isset($supplier) && $supplier) {
+                            $request->session()->put('biometric_register_user_id', $supplier->id);
+                            $request->session()->put('biometric_register_user_type', 'supplier');
+                            $request->session()->put('biometric_prompt', true);
+                        }
+                        // ───────────────────────────────────────────────
                     } catch (\Exception $e) {
                         \Illuminate\Support\Facades\Log::error('Supplier login after OTP failed: '.$e->getMessage());
                         $redirectUrl = route('supplier.login');
@@ -310,9 +327,10 @@ class OtpController extends Controller
                 ]);
 
                 return response()->json([
-                    'success' => true,
-                    'message' => $result['message'],
-                    'redirect' => $redirectUrl,
+                    'success'         => true,
+                    'message'         => $result['message'],
+                    'redirect'        => $redirectUrl,
+                    'biometric_prompt'=> $request->session()->get('biometric_prompt', false),
                 ]);
             }
 
