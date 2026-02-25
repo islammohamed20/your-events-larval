@@ -514,9 +514,9 @@
 {{-- تحميل reCAPTCHA بدون async/defer حتى يكون جاهزاً قبل أي تفاعل --}}
 <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
 @endif
+@if(config('services.recaptcha.site_key'))
 <script>
 // ─── reCAPTCHA v3 ─────────────────────────────────────────────────────────
-@if(config('services.recaptcha.site_key'))
 const RECAPTCHA_SITE_KEY = '{{ config("services.recaptcha.site_key") }}';
 
 // تعطيل الزر حتى يتحمل reCAPTCHA
@@ -589,8 +589,10 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
         });
     });
 });
+</script>
 @endif
 
+<script>
 // ─── Biometric / WebAuthn ─────────────────────────────────────────────────
 // نتحقق أن المتصفح يدعم WebAuthn
 if (window.PublicKeyCredential) {
