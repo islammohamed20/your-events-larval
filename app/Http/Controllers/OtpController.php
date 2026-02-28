@@ -202,6 +202,44 @@ class OtpController extends Controller
                         }
 
                         if ($user) {
+                            if ($user->isAdmin()) {
+                                $request->session()->forget([
+                                    'otp_verified',
+                                    'otp_email',
+                                    'otp_type',
+                                    'login_pending',
+                                    'login_remember',
+                                    'login_user_id',
+                                    'biometric_prompt',
+                                    'biometric_register_user_id',
+                                    'biometric_register_user_type',
+                                ]);
+
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => 'تسجيل الدخول من هذه الصفحة مخصص للعملاء فقط.',
+                                ], 403);
+                            }
+
+                            if (\App\Models\Supplier::where('email', $user->email)->exists()) {
+                                $request->session()->forget([
+                                    'otp_verified',
+                                    'otp_email',
+                                    'otp_type',
+                                    'login_pending',
+                                    'login_remember',
+                                    'login_user_id',
+                                    'biometric_prompt',
+                                    'biometric_register_user_id',
+                                    'biometric_register_user_type',
+                                ]);
+
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => 'هذا البريد مرتبط بحساب مورد. يرجى استخدام صفحة دخول المورد.',
+                                ], 403);
+                            }
+
                             Auth::login($user, $remember);
                             $request->session()->regenerate();
                             try {
@@ -220,35 +258,7 @@ class OtpController extends Controller
                                 // تجاهل أي خطأ يتعلق بعمود غير موجود
                             }
 
-                            // تحديد إعادة التوجيه حسب الدور أو وجود حساب مورد
-                            if ($user->isAdmin()) {
-                                $redirectUrl = route('admin.dashboard');
-                            } else {
-                                // إن كان للمستخدم حساب مورد (موافق ومؤكد البريد)، نسجّل دخوله كـ مورّد ونحوّله للوحة الموردين
-                                try {
-                                    $supplier = \App\Models\Supplier::where('email', $user->email)->first();
-                                    if ($supplier && $supplier->status === 'approved' && $supplier->email_verified_at) {
-                                        // تسجيل خروج من حارس الويب ثم تسجيل دخول على حارس المورد
-                                        Auth::logout();
-                                        $remember = (bool) $request->session()->get('login_remember', false);
-                                        Auth::guard('supplier')->login($supplier, $remember);
-                                        $request->session()->regenerate();
-                                        try {
-                                            DB::table(config('session.table', 'sessions'))
-                                                ->where('user_id', $supplier->getAuthIdentifier())
-                                                ->where('id', '!=', $request->session()->getId())
-                                                ->delete();
-                                        } catch (\Throwable $e) {
-                                        }
-                                        $redirectUrl = route('supplier.dashboard');
-                                    } else {
-                                        $redirectUrl = url('/');
-                                    }
-                                } catch (\Throwable $e) {
-                                    \Illuminate\Support\Facades\Log::error('Supplier auto-login after OTP failed: '.$e->getMessage());
-                                    $redirectUrl = url('/');
-                                }
-                            }
+                            $redirectUrl = route('home');
 
                             // سجل نشاط تسجيل الدخول (OTP)
                             try {

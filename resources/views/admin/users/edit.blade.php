@@ -275,9 +275,179 @@
                             </div>
                         </div>
                     </form>
+                    
+                    <!-- Biometric / Passkeys Management -->
+                    <hr class="my-4">
+                    <div class="row" id="passkeys-section">
+                        <div class="col-12">
+                            <h5 class="mb-3 text-primary"><i class="fas fa-fingerprint me-2"></i>إدارة البصمة (Passkeys)</h5>
+                            
+                            <div id="passkeys-list" class="mb-3">
+                                @if($user->passkeys->count() > 0)
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>الجهاز</th>
+                                                    <th>تاريخ الإضافة</th>
+                                                    <th>آخر استخدام</th>
+                                                    <th>العمليات</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($user->passkeys as $passkey)
+                                                    <tr>
+                                                        <td>{{ $passkey->device_name }}</td>
+                                                        <td>{{ $passkey->created_at->format('Y-m-d') }}</td>
+                                                        <td>{{ $passkey->last_used_at ? $passkey->last_used_at->diffForHumans() : 'لم يستخدم بعد' }}</td>
+                                                        <td>
+                                                            <button type="button" 
+                                                                    class="btn btn-sm btn-danger js-delete-passkey"
+                                                                    data-passkey-id="{{ $passkey->id }}">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <p class="text-muted small">لا توجد بصمات مسجلة لهذا المستخدم حالياً.</p>
+                                @endif
+                            </div>
+
+                            @if($user->id === Auth::id())
+                                <div id="biometric-support-notice" style="display: none;">
+                                    <button type="button" class="btn btn-outline-primary" onclick="registerPasskey()">
+                                        <i class="fas fa-plus me-1"></i> تسجيل بصمة جديدة لهذا الجهاز
+                                    </button>
+                                    <p class="form-text mt-2">يمكنك تسجيل بصمة جهازك الحالي لتسجيل الدخول بها لاحقاً.</p>
+                                </div>
+                                <div id="biometric-no-support" class="alert alert-warning small" style="display: none;">
+                                    <i class="fas fa-exclamation-triangle me-1"></i> متصفحك أو جهازك الحالي لا يدعم تسجيل البصمة.
+                                </div>
+                            @else
+                                <div class="alert alert-light border small">
+                                    <i class="fas fa-info-circle me-1"></i> لا يمكن للمسؤول تسجيل بصمة لمستخدم آخر؛ يجب على المستخدم تسجيل بصمته بنفسه من خلال حسابه.
+                                </div>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (window.PublicKeyCredential && 
+            PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
+            await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()) {
+            
+            const supportDiv = document.getElementById('biometric-support-notice');
+            if(supportDiv) supportDiv.style.display = 'block';
+        } else {
+            const noSupportDiv = document.getElementById('biometric-no-support');
+            if(noSupportDiv) noSupportDiv.style.display = 'block';
+        }
+    });
+
+    async function registerPasskey() {
+        try {
+            // 1. Get registration options
+            const optionsRes = await fetch("{{ route('biometric.register.options') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+
+            if (!optionsRes.ok) {
+                const errorData = await optionsRes.json();
+                throw new Error(errorData.error || 'فشل في جلب خيارات التسجيل');
+            }
+            
+            const options = await optionsRes.json();
+
+            // 2. Decode options
+            options.challenge = Uint8Array.from(atob(options.challenge), c => c.charCodeAt(0));
+            options.user.id = Uint8Array.from(atob(options.user.id), c => c.charCodeAt(0));
+
+            // 3. Create credential
+            const credential = await navigator.credentials.create({ publicKey: options });
+
+            // 4. Encode response
+            const deviceName = prompt("أدخل اسماً لهذا الجهاز (مثلاً: هاتف آيفون، لابتوب العمل):", "جهازي الحالي");
+            if (deviceName === null) return;
+
+            const response = {
+                id: credential.id,
+                rawId: credential.id,
+                type: credential.type,
+                device_name: deviceName,
+                response: {
+                    clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON))),
+                    attestationObject: btoa(String.fromCharCode(...new Uint8Array(credential.response.attestationObject)))
+                }
+            };
+
+            // 5. Save credential
+            const saveRes = await fetch("{{ route('biometric.register') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(response)
+            });
+
+            const saveData = await saveRes.json();
+            if (saveData.success) {
+                alert(saveData.message || 'تم تسجيل البصمة بنجاح ✅');
+                location.reload();
+            } else {
+                alert(saveData.error || 'فشل الحفظ');
+            }
+
+        } catch (e) {
+            console.error(e);
+            alert('خطأ: ' + (e.message || e));
+        }
+    }
+
+    async function deletePasskey(id) {
+        if (!confirm('هل أنت متأكد من رغبتك في حذف هذه البصمة؟')) return;
+
+        try {
+            const res = await fetch(`/biometric/passkey/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.error || 'فشل الحذف');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('حدث خطأ أثناء الحذف');
+        }
+    }
+
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.js-delete-passkey');
+        if (!btn) return;
+        const id = btn.getAttribute('data-passkey-id');
+        if (id) deletePasskey(id);
+    });
+</script>
+@endpush

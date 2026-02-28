@@ -3,6 +3,13 @@
 @section('title', 'إدارة المستخدمين')
 
 @section('content')
+<style>
+    .ye-user-management-table.table-dark,
+    .ye-user-management-table.table-dark th,
+    .ye-user-management-table.table-dark td {
+        color: #000 !important;
+    }
+</style>
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -34,8 +41,8 @@
                     @endif
 
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover">
-                            <thead class="table-dark">
+                        <table class="table table-striped table-hover ye-user-management-table">
+                            <thead class="table-dark ye-user-management-table">
                                 <tr>
                                     <th>#</th>
                                     <th>الاسم</th>

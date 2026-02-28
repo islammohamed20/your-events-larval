@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\Auth\AdminAuthController;
 use App\Http\Controllers\Admin\AttributeController as AdminAttributeController;
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
 use App\Http\Controllers\Admin\GalleryController as AdminGalleryController;
@@ -235,6 +236,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Biometric / Passkey Routes
 Route::prefix('biometric')->name('biometric.')->group(function () {
+    Route::post('/precheck',              [BiometricController::class, 'precheck'])->name('precheck');
     Route::post('/auth-options',          [BiometricController::class, 'authOptions'])->name('auth.options');
     Route::post('/authenticate',          [BiometricController::class, 'authenticate'])->name('authenticate');
     Route::post('/registration-options',  [BiometricController::class, 'registrationOptions'])->name('register.options');
@@ -332,8 +334,15 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Admin Authentication Routes
+Route::prefix('ye/admin')->name('admin.')->group(function () {
+    Route::get('login', [AdminAuthController::class, 'showLogin'])->name('login');
+    Route::post('login', [AdminAuthController::class, 'login']);
+    Route::post('logout', [AdminAuthController::class, 'logout'])->name('logout');
+});
+
 // Admin Routes
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
+Route::prefix('ye/admin')->name('admin.')->middleware(['admin'])->group(function () {
     // Ensure {service} route-model binding only matches numeric IDs
     Route::pattern('service', '[0-9]+');
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
@@ -493,6 +502,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::post('/', [\App\Http\Controllers\Admin\UserManagementController::class, 'store'])->name('store');
         Route::get('/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'show'])->name('show');
         Route::get('/{user}/edit', [\App\Http\Controllers\Admin\UserManagementController::class, 'edit'])->name('edit');
+        Route::get('/{user}/passkeys', [\App\Http\Controllers\Admin\UserManagementController::class, 'passkeys'])->name('passkeys');
+        Route::delete('/{user}/passkeys', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroyAllPasskeys'])->name('passkeys.destroy-all');
+        Route::delete('/{user}/passkeys/{passkey}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroyPasskey'])->name('passkeys.destroy');
         Route::put('/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'update'])->name('update');
         Route::delete('/{user}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroy'])->name('destroy');
         Route::post('/{user}/toggle-admin', [\App\Http\Controllers\Admin\UserManagementController::class, 'toggleAdmin'])->name('toggle-admin');

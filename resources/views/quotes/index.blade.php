@@ -67,17 +67,23 @@
                                         <small class="text-muted">شامل الضريبة</small>
                                     </div>
                                     <div class="col-md-2 text-center">
-                                        <a href="{{ url('https://yourevents.sa' . route('quotes.show', $quote, false)) }}" class="btn btn-primary btn-sm w-100 mb-2">
+                                        <a href="{{ route('quotes.show', $quote, false) }}" class="btn btn-primary btn-sm w-100 mb-2">
                                             <i class="fas fa-eye me-1"></i>عرض
                                         </a>
-                                        @if($quote->status === 'approved' && $quote->payment_status !== 'paid')
-                                            <a href="{{ url('https://yourevents.sa' . route('quotes.complete-booking', $quote, false)) }}" class="btn btn-success btn-sm w-100 mb-2">
-                                                <i class="fas fa-credit-card me-1"></i>استكمال بيانات الحجز والدفع
-                                            </a>
-                                        @elseif($quote->payment_status === 'paid' || $quote->status === 'paid')
+                                        @php
+                                            $quoteIsPaid = ($quote->payment_status === 'paid')
+                                                || ($quote->status === 'paid')
+                                                || ((int) ($quote->paid_bookings_count ?? 0) > 0);
+                                        @endphp
+
+                                        @if($quoteIsPaid)
                                             <button type="button" class="btn btn-outline-success btn-sm w-100 mb-2" disabled>
                                                 <i class="fas fa-check-circle me-1"></i>تم الدفع
                                             </button>
+                                        @elseif($quote->status === 'approved')
+                                            <a href="{{ route('quotes.complete-booking', $quote, false) }}" class="btn btn-success btn-sm w-100 mb-2">
+                                                <i class="fas fa-credit-card me-1"></i>استكمال بيانات الحجز والدفع
+                                            </a>
                                         @else
                                             <button type="button" class="btn btn-outline-success btn-sm w-100 mb-2" disabled>
                                                 <i class="fas fa-clock me-1"></i>استكمال بيانات الحجز والدفع

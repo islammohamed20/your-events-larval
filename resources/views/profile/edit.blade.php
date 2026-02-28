@@ -262,6 +262,58 @@
                             </div>
                         </div>
 
+                        <h6 class="mb-3 text-primary">
+                            <i class="fas fa-fingerprint me-2"></i> البصمة
+                        </h6>
+
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                                    <div class="text-muted small">
+                                        الأجهزة المسجلة: <span class="fw-bold" id="passkeysCount">{{ isset($passkeys) ? $passkeys->count() : 0 }}</span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="registerPasskeyBtn" onclick="registerPasskey()">
+                                        <i class="fas fa-plus me-1"></i> إضافة بصمة
+                                    </button>
+                                </div>
+
+                                <div id="passkeyMsg" class="alert d-none mb-3" role="alert"></div>
+                                <div class="alert alert-light border small mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    تسجيل البصمة لا يوقف OTP، وستظل قادرًا على تسجيل الدخول بكود التحقق عند الحاجة.
+                                </div>
+
+                                @if(isset($passkeys) && $passkeys->isNotEmpty())
+                                    <div class="table-responsive">
+                                        <table class="table table-sm align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>الاسم</th>
+                                                    <th>آخر استخدام</th>
+                                                    <th class="text-end">إجراء</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="passkeysTableBody">
+                                                @foreach($passkeys as $passkey)
+                                                    <tr data-passkey-id="{{ $passkey->id }}">
+                                                        <td class="fw-semibold">{{ $passkey->device_name ?: 'الجهاز' }}</td>
+                                                        <td>{{ $passkey->last_used_at ? $passkey->last_used_at->format('Y-m-d H:i') : '—' }}</td>
+                                                        <td class="text-end">
+                                                            <button type="button" class="btn btn-outline-danger btn-sm js-delete-passkey" data-passkey-id="{{ $passkey->id }}">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @else
+                                    <div class="text-muted small" id="passkeysEmptyState">لا توجد بصمات مسجلة حالياً.</div>
+                                @endif
+                            </div>
+                        </div>
+
                         <!-- Buttons -->
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('profile.show') }}" class="btn btn-secondary">
@@ -301,6 +353,171 @@ document.addEventListener('DOMContentLoaded', function () {
             lastFourInput.value = digits.slice(-4);
         }
     });
+});
+
+function showPasskeyMsg(message, type) {
+    const el = document.getElementById('passkeyMsg');
+    if (!el) return;
+    el.className = 'alert mb-3';
+    el.classList.add(type === 'success' ? 'alert-success' : (type === 'warning' ? 'alert-warning' : 'alert-danger'));
+    el.textContent = message;
+}
+
+function hidePasskeyMsg() {
+    const el = document.getElementById('passkeyMsg');
+    if (!el) return;
+    el.className = 'alert d-none mb-3';
+    el.textContent = '';
+}
+
+function base64ToAB(base64) {
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+    return bytes.buffer;
+}
+
+function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+}
+
+async function registerPasskey() {
+    hidePasskeyMsg();
+    const btn = document.getElementById('registerPasskeyBtn');
+    if (!window.PublicKeyCredential) {
+        showPasskeyMsg('المتصفح لا يدعم تسجيل البصمة (WebAuthn).', 'danger');
+        return;
+    }
+
+    btn && (btn.disabled = true);
+    try {
+        const optRes = await fetch('{{ route("biometric.register.options") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({}),
+            credentials: 'same-origin',
+        });
+
+        const options = await optRes.json();
+        if (!optRes.ok) {
+            showPasskeyMsg(options.error || 'تعذر بدء تسجيل البصمة.', 'danger');
+            return;
+        }
+
+        const publicKey = {
+            challenge: base64ToAB(options.challenge),
+            rp: options.rp,
+            user: {
+                id: base64ToAB(options.user.id),
+                name: options.user.name,
+                displayName: options.user.displayName,
+            },
+            pubKeyCredParams: options.pubKeyCredParams,
+            authenticatorSelection: options.authenticatorSelection,
+            timeout: options.timeout,
+            attestation: options.attestation,
+        };
+
+        const credential = await navigator.credentials.create({ publicKey });
+        if (!credential) {
+            showPasskeyMsg('لم يتم إنشاء بيانات البصمة.', 'danger');
+            return;
+        }
+
+        const regRes = await fetch('{{ route("biometric.register") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                id: credential.id,
+                rawId: arrayBufferToBase64(credential.rawId),
+                response: {
+                    clientDataJSON: arrayBufferToBase64(credential.response.clientDataJSON),
+                    attestationObject: arrayBufferToBase64(credential.response.attestationObject),
+                },
+                type: credential.type,
+                device_name: 'الجهاز',
+            }),
+            credentials: 'same-origin',
+        });
+
+        const reg = await regRes.json();
+        if (!regRes.ok || !reg.success) {
+            showPasskeyMsg(reg.error || 'فشل تسجيل البصمة.', 'danger');
+            return;
+        }
+
+        localStorage.setItem('ye_biometric_registered', '1');
+        showPasskeyMsg((reg.message || 'تم تسجيل البصمة بنجاح.') + ' OTP لن يتم إيقافه.', 'success');
+        setTimeout(() => window.location.reload(), 700);
+    } catch (err) {
+        if (err && err.name === 'NotAllowedError') {
+            showPasskeyMsg('تم إلغاء العملية.', 'warning');
+        } else {
+            showPasskeyMsg('حدث خطأ غير متوقع أثناء تسجيل البصمة.', 'danger');
+        }
+    } finally {
+        btn && (btn.disabled = false);
+    }
+}
+
+async function deletePasskey(passkeyId) {
+    if (!passkeyId) return;
+    hidePasskeyMsg();
+    if (!confirm('حذف هذه البصمة؟')) return;
+    try {
+        const res = await fetch('{{ url("/biometric/passkey") }}/' + encodeURIComponent(String(passkeyId)), {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            showPasskeyMsg(data.error || 'تعذر حذف البصمة.', 'danger');
+            return;
+        }
+        const row = document.querySelector('tr[data-passkey-id="' + passkeyId + '"]');
+        row && row.remove();
+        const countEl = document.getElementById('passkeysCount');
+        if (countEl) {
+            const current = parseInt(countEl.textContent || '0', 10);
+            const next = Number.isFinite(current) ? Math.max(0, current - 1) : 0;
+            countEl.textContent = String(next);
+            if (next === 0) {
+                const body = document.getElementById('passkeysTableBody');
+                if (body && body.children.length === 0) {
+                    const empty = document.getElementById('passkeysEmptyState');
+                    if (empty) empty.classList.remove('d-none');
+                }
+                if (localStorage.getItem('ye_biometric_registered') === '1') {
+                    localStorage.removeItem('ye_biometric_registered');
+                }
+            }
+        }
+        showPasskeyMsg('تم حذف البصمة.', 'success');
+    } catch (e) {
+        showPasskeyMsg('حدث خطأ أثناء حذف البصمة.', 'danger');
+    }
+}
+
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.js-delete-passkey');
+    if (!btn) return;
+    const id = btn.getAttribute('data-passkey-id');
+    if (id) deletePasskey(id);
 });
 </script>
 @endsection

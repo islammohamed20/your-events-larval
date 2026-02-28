@@ -18,7 +18,7 @@ class AdminMiddleware
     {
         // Check if user is authenticated
         if (! Auth::check()) {
-            return redirect()->route('login')
+            return redirect()->route('admin.login')
                 ->with('error', 'يجب تسجيل الدخول للوصول إلى لوحة التحكم');
         }
 

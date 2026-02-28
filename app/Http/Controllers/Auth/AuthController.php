@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\OtpVerification;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -36,24 +37,24 @@ class AuthController extends Controller
             /** @var \App\Models\User $user */
             $user = Auth::user();
 
-            // تخطي OTP للمسؤولين (Admins)
-            if ($user->is_admin || $user->role === 'admin') {
-                try {
-                    $user->last_login_at = now();
-                    $user->save();
-                } catch (\Throwable $e) {}
+            if ($user->isAdmin()) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
 
-                $request->session()->regenerate();
+                return back()
+                    ->withErrors(['email' => 'تسجيل الدخول من هذه الصفحة مخصص للعملاء فقط.'], 'customer_login')
+                    ->onlyInput('email');
+            }
 
-                try {
-                    DB::table(config('session.table', 'sessions'))
-                        ->where('user_id', $user->getAuthIdentifier())
-                        ->where('id', '!=', $request->session()->getId())
-                        ->delete();
-                } catch (\Throwable $e) {}
+            if (Supplier::where('email', $user->email)->exists()) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
 
-                return redirect()->intended(route('admin.dashboard'))
-                    ->with('success', 'مرحباً بك '.$user->name);
+                return back()
+                    ->withErrors(['email' => 'هذا البريد مرتبط بحساب مورد. يرجى استخدام صفحة دخول المورد.'], 'customer_login')
+                    ->onlyInput('email');
             }
 
             // OTP للعملاء
@@ -113,52 +114,12 @@ class AuthController extends Controller
 
     public function showRegister()
     {
-        return view('auth.register');
+        return redirect()->route('login')->with('error', 'التسجيل المباشر غير متاح حالياً. يرجى التواصل مع الإدارة.');
     }
 
     public function register(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'company_name' => 'required|string|max:255',
-            'tax_number' => 'nullable|string|max:20',
-            'email' => 'required|string|email|max:255|unique:users',
-            'phone' => 'required|string|max:20',
-            'password' => 'required|string|min:8|confirmed',
-        ], [
-            'name.required' => 'الاسم الكامل مطلوب',
-            'company_name.required' => 'اسم الجهة مطلوب',
-            'tax_number.max' => 'الرقم الضريبي يجب ألا يزيد عن 20 حرف',
-            'email.required' => 'البريد الإلكتروني مطلوب',
-            'email.email' => 'صيغة البريد الإلكتروني غير صحيحة',
-            'email.unique' => 'البريد الإلكتروني مستخدم بالفعل',
-            'phone.required' => 'رقم الهاتف مطلوب',
-            'password.required' => 'كلمة المرور مطلوبة',
-            'password.min' => 'كلمة المرور يجب أن تكون 8 أحرف على الأقل',
-            'password.confirmed' => 'كلمة المرور غير متطابقة',
-        ]);
-
-        // إضافة مصدر التسجيل
-        $validated['registration_source'] = 'web';
-
-        // حفظ بيانات التسجيل في الـ session
-        $request->session()->put('registration_data', $validated);
-
-        // إرسال OTP للبريد الإلكتروني
-        try {
-            OtpVerification::generate($validated['email'], 'email_verification');
-
-            // حفظ البريد في الـ session
-            $request->session()->put('otp_email', $validated['email']);
-            $request->session()->put('otp_type', 'email_verification');
-
-            return redirect()->route('otp.verify.form')
-                ->with('success', 'تم إنشاء حسابك بنجاح! تم إرسال كود التحقق إلى بريدك الإلكتروني')
-                ->with('show_success_message', true);
-        } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'فشل في إرسال كود التحقق: '.$e->getMessage()])
-                ->withInput();
-        }
+        return redirect()->route('login')->with('error', 'التسجيل المباشر غير متاح حالياً.');
     }
 
     public function logout(Request $request)

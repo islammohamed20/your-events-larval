@@ -39,10 +39,10 @@
                                 </ul>
                             @endif
                             
-                            <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mt-auto gap-2">
                                 <span class="price-tag">{{ number_format($package->price) }} {{ __('common.currency') }}</span>
-                                <div>
-                                    <a href="{{ route('packages.show', $package->id) }}" class="btn btn-outline-primary btn-sm me-2">
+                                <div class="d-flex gap-1 flex-wrap">
+                                    <a href="{{ route('packages.show', $package->id) }}" class="btn btn-outline-primary btn-sm">
                                         {{ __('common.details') }}
                                     </a>
                                     <a href="{{ route('booking.create', ['package_id' => $package->id]) }}" class="btn btn-primary btn-sm">

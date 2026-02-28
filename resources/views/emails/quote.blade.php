@@ -366,7 +366,7 @@
                 <a href="{{ route('quotes.show', $quote) }}" class="btn">
                     📋 تفاصيل عرضك
                 </a>
-                @if($quote->status === 'approved')
+                @if($quote->status === 'approved' && $quote->payment_status !== 'paid')
                 <a href="{{ route('quotes.complete-booking', $quote) }}" class="btn btn-secondary">
                     ✅ استكمال بيانات الحجز والدفع
                 </a>

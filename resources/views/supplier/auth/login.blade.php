@@ -10,7 +10,7 @@
                 <!-- Logo -->
                 <div class="text-center mb-4">
                     <a href="{{ route('home') }}">
-                        <img src="{{ asset('images/logo/logo-white.png') }}" alt="Your Events" style="max-width: 180px;" onerror="this.src='{{ asset('images/logo/logo.png') }}'">
+                        <img src="{{ asset('images/logo/logo-white.png') }}" alt="Your Events" style="max-width: 180px;" class="js-img-fallback" data-fallback-src="{{ asset('images/logo/logo.png') }}">
                     </a>
                 </div>
                 
@@ -44,6 +44,7 @@
                             @if(config('services.recaptcha.site_key'))
                             <input type="hidden" name="recaptcha_token" id="recaptcha_token_supplier">
                             @endif
+                            <input type="hidden" id="supplierRecaptchaSiteKey" value="{{ config('services.recaptcha.site_key') }}">
                             
                             <!-- Email -->
                             <div class="mb-4">
@@ -170,6 +171,15 @@
 <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
 @endif
 <script>
+document.querySelectorAll('img.js-img-fallback').forEach(function(img) {
+    img.addEventListener('error', function() {
+        const fallback = img.getAttribute('data-fallback-src');
+        if (fallback && img.getAttribute('src') !== fallback) {
+            img.setAttribute('src', fallback);
+        }
+    }, { once: true });
+});
+
 function togglePassword() {
     const passwordInput = document.getElementById('password');
     const toggleIcon = document.getElementById('toggleIcon');
@@ -186,8 +196,8 @@ function togglePassword() {
 }
 
 // ─── reCAPTCHA v3 ─────────────────────────────────────────────────────────
-@if(config('services.recaptcha.site_key'))
-const RECAPTCHA_SITE_KEY_SUPPLIER = '{{ config("services.recaptcha.site_key") }}';
+const RECAPTCHA_SITE_KEY_SUPPLIER = document.getElementById('supplierRecaptchaSiteKey')?.value || '';
+if (RECAPTCHA_SITE_KEY_SUPPLIER) {
 
 // تعطيل الزر حتى يتحمل reCAPTCHA
 const _sLoginBtn = document.getElementById('supplierLoginBtn');
@@ -259,27 +269,40 @@ document.getElementById('supplierLoginForm').addEventListener('submit', function
         });
     });
 });
-@endif
+}
 
 // ─── Biometric ────────────────────────────────────────────────────────────
+function _yeSupplierHasCredentials() {
+    const email = document.getElementById('email')?.value?.trim() || '';
+    const password = document.getElementById('password')?.value?.trim() || '';
+    return Boolean(email && password);
+}
+
+function _yeUpdateSupplierBiometricVisibility() {
+    const section = document.getElementById('supplierBiometricSection');
+    const btn = document.getElementById('supplierBiometricBtn');
+    if (!section || !btn) return;
+    const hasBiometric = localStorage.getItem('ye_supplier_biometric_registered') === '1';
+    section.style.display = hasBiometric ? 'block' : 'none';
+    btn.disabled = !(_yeSupplierHasCredentials());
+}
+
 if (window.PublicKeyCredential) {
     PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(available => {
-        if (available && localStorage.getItem('ye_supplier_biometric_registered') === '1') {
-            document.getElementById('supplierBiometricSection').style.display = 'block';
+        if (available) {
+            _yeUpdateSupplierBiometricVisibility();
         }
     });
 }
 
-document.getElementById('email')?.addEventListener('blur', function() {
-    if (localStorage.getItem('ye_supplier_biometric_registered') === '1' && this.value) {
-        document.getElementById('supplierBiometricSection').style.display = 'block';
-    }
-});
+document.getElementById('email')?.addEventListener('input', _yeUpdateSupplierBiometricVisibility);
+document.getElementById('password')?.addEventListener('input', _yeUpdateSupplierBiometricVisibility);
 
 async function startSupplierBiometricAuth() {
     const email = document.getElementById('email').value.trim();
-    if (!email) {
-        showSupplierBioMsg('يرجى إدخال البريد الإلكتروني أولاً', 'danger');
+    const password = document.getElementById('password').value.trim();
+    if (!email || !password) {
+        showSupplierBioMsg('يرجى إدخال البريد الإلكتروني وكلمة المرور أولاً', 'danger');
         return;
     }
 
@@ -288,6 +311,19 @@ async function startSupplierBiometricAuth() {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جارٍ التحقق...';
 
     try {
+        const preRes = await fetch('{{ route("biometric.precheck") }}', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json'},
+            body: JSON.stringify({email, password, user_type: 'supplier'})
+        });
+
+        if (!preRes.ok) {
+            const err = await preRes.json();
+            showSupplierBioMsg(err.error || 'بيانات الدخول غير صحيحة.', 'danger');
+            resetSupplierBiometricBtn();
+            return;
+        }
+
         const optRes = await fetch('{{ route("biometric.auth.options") }}', {
             method: 'POST',
             headers: {'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json'},

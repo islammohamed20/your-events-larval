@@ -396,10 +396,16 @@
                     </div>
                     
                     <div class="card-body p-5">
-                        @if($errors->any())
+                        @php
+                            $customerLoginErrors = $errors->getBag('customer_login');
+                        @endphp
+                        @if($errors->any() || $customerLoginErrors->any())
                             <div class="alert alert-danger border-0 rounded-3" style="background-color: #ffe0e0;">
                                 <ul class="mb-0">
                                     @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                    @foreach($customerLoginErrors->all() as $error)
                                         <li>{{ $error }}</li>
                                     @endforeach
                                 </ul>
@@ -597,30 +603,38 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
 <script>
 // ─── Biometric / WebAuthn ─────────────────────────────────────────────────
 // نتحقق أن المتصفح يدعم WebAuthn
+function _yeLoginHasCredentials() {
+    const email = document.getElementById('email')?.value?.trim() || '';
+    const password = document.getElementById('password')?.value?.trim() || '';
+    return Boolean(email && password);
+}
+
+function _yeUpdateBiometricVisibility() {
+    const section = document.getElementById('biometricSection');
+    const btn = document.getElementById('biometricBtn');
+    if (!section || !btn) return;
+    const hasBiometric = localStorage.getItem('ye_biometric_registered') === '1';
+    section.style.display = hasBiometric ? 'grid' : 'none';
+    btn.disabled = !(_yeLoginHasCredentials());
+}
+
 if (window.PublicKeyCredential) {
     PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(available => {
         if (available) {
             // نتحقق من localStorage: هل يوجد passkey مسجّل لهذا المتصفح؟
-            const hasBiometric = localStorage.getItem('ye_biometric_registered');
-            if (hasBiometric === '1') {
-                document.getElementById('biometricSection').style.display = 'grid';
-            }
+            _yeUpdateBiometricVisibility();
         }
     });
 }
 
-// عند تغيير البريد الإلكتروني، أُظهر/أُخفي زر البصمة
-document.getElementById('email')?.addEventListener('blur', function() {
-    const hasBiometric = localStorage.getItem('ye_biometric_registered');
-    if (hasBiometric === '1' && this.value) {
-        document.getElementById('biometricSection').style.display = 'grid';
-    }
-});
+document.getElementById('email')?.addEventListener('input', _yeUpdateBiometricVisibility);
+document.getElementById('password')?.addEventListener('input', _yeUpdateBiometricVisibility);
 
 async function startBiometricAuth() {
     const email = document.getElementById('email').value.trim();
-    if (!email) {
-        showBioMsg('يرجى إدخال البريد الإلكتروني أولاً', 'danger');
+    const password = document.getElementById('password').value.trim();
+    if (!email || !password) {
+        showBioMsg('يرجى إدخال البريد الإلكتروني وكلمة المرور أولاً', 'danger');
         return;
     }
 
@@ -629,6 +643,19 @@ async function startBiometricAuth() {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جارٍ التحقق...';
 
     try {
+        const preRes = await fetch('{{ route("biometric.precheck") }}', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json'},
+            body: JSON.stringify({email, password, user_type: 'user', context: 'customer'})
+        });
+
+        if (!preRes.ok) {
+            const err = await preRes.json();
+            showBioMsg(err.error || 'بيانات الدخول غير صحيحة.', 'danger');
+            resetBiometricBtn();
+            return;
+        }
+
         // 1. احصل على challenge من الخادم
         const optRes = await fetch('{{ route("biometric.auth.options") }}', {
             method: 'POST',

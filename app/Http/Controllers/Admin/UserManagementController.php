@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Passkey;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -66,6 +67,49 @@ class UserManagementController extends Controller
         }
 
         return view('admin.user-management.edit', compact('user'));
+    }
+
+    public function passkeys(User $user)
+    {
+        if (! $user->is_admin) {
+            abort(404, 'المستخدم غير موجود');
+        }
+
+        $passkeys = Passkey::forUser($user->id, 'user')
+            ->orderByDesc('id')
+            ->get();
+
+        return view('admin.user-management.passkeys', compact('user', 'passkeys'));
+    }
+
+    public function destroyPasskey(User $user, Passkey $passkey)
+    {
+        if (! $user->is_admin) {
+            abort(404, 'المستخدم غير موجود');
+        }
+
+        if ($passkey->user_id !== $user->id || $passkey->user_type !== 'user') {
+            abort(404);
+        }
+
+        $passkey->delete();
+
+        return redirect()
+            ->route('admin.user-management.passkeys', $user)
+            ->with('success', 'تم حذف البصمة بنجاح');
+    }
+
+    public function destroyAllPasskeys(User $user)
+    {
+        if (! $user->is_admin) {
+            abort(404, 'المستخدم غير موجود');
+        }
+
+        Passkey::forUser($user->id, 'user')->delete();
+
+        return redirect()
+            ->route('admin.user-management.passkeys', $user)
+            ->with('success', 'تم حذف جميع البصمات بنجاح');
     }
 
     public function update(Request $request, User $user)

@@ -165,6 +165,17 @@
                                 </div>
 
                                 <div class="card mt-3">
+                                    <div class="card-header">
+                                        <h5 class="card-title mb-0">البصمة</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <a href="{{ route('admin.user-management.passkeys', $user) }}" class="btn btn-outline-primary w-100">
+                                            <i class="fas fa-fingerprint"></i> إدارة البصمات
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="card mt-3">
                                     <div class="card-body text-center">
                                         <button type="submit" class="btn btn-primary btn-lg w-100">
                                             <i class="fas fa-save"></i> حفظ التغييرات

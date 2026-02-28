@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\Passkey;
 use App\Models\Quote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,7 +45,9 @@ class ProfileController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        return view('profile.edit', compact('user'));
+        $passkeys = Passkey::forUser($user->id, 'user')->orderByDesc('id')->get();
+
+        return view('profile.edit', compact('user', 'passkeys'));
     }
 
     /**

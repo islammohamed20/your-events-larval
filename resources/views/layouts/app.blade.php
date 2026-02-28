@@ -1968,6 +1968,18 @@
                 margin-bottom: 30px;
             }
             
+            .hero-overlay,
+            .cta-overlay {
+                padding: 25px 20px;
+                border-radius: 15px;
+            }
+            
+            .hero-bg-section,
+            .cta-bg-section,
+            .hero-bg-image {
+                background-attachment: scroll !important;
+            }
+            
             /* Mobile Navbar */
         .navbar .container {
             padding-left: 15px !important;

@@ -9,6 +9,8 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
 /**
@@ -21,6 +23,69 @@ use Illuminate\Support\Str;
  */
 class BiometricController extends Controller
 {
+    public function precheck(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+            'user_type' => 'required|in:user,supplier',
+            'context' => 'nullable|string|in:customer,admin',
+        ]);
+
+        $email = $request->input('email');
+        $password = $request->input('password');
+        $userType = $request->input('user_type');
+        $context = $request->input('context', 'customer');
+
+        $rateKey = 'biometric-precheck:' . strtolower($email) . '|' . $request->ip();
+        if (RateLimiter::tooManyAttempts($rateKey, 5)) {
+            return response()->json(['error' => 'محاولات كثيرة. حاول مرة أخرى لاحقاً.'], 429);
+        }
+        RateLimiter::hit($rateKey, 60);
+
+        if ($userType === 'supplier') {
+            $supplier = Supplier::where('email', $email)->first();
+            if (! $supplier || ! Hash::check($password, $supplier->password)) {
+                return response()->json(['error' => 'بيانات الدخول غير صحيحة.'], 422);
+            }
+            if ($supplier->status === 'pending') {
+                return response()->json(['error' => 'حسابك قيد المراجعة. سيتم إعلامك عند الموافقة.'], 403);
+            }
+            if ($supplier->status === 'rejected') {
+                return response()->json(['error' => 'تم رفض طلبك.'], 403);
+            }
+            if ($supplier->status === 'suspended') {
+                return response()->json(['error' => 'تم إيقاف حسابك. يرجى التواصل مع الإدارة.'], 403);
+            }
+            if (! $supplier->email_verified_at) {
+                return response()->json(['error' => 'يرجى تأكيد بريدك الإلكتروني أولاً.'], 403);
+            }
+        } else {
+            $user = User::where('email', $email)->first();
+            if (! $user || ! Hash::check($password, $user->password)) {
+                return response()->json(['error' => 'بيانات الدخول غير صحيحة.'], 422);
+            }
+            if ($context === 'admin') {
+                if (! $user->isAdmin()) {
+                    return response()->json(['error' => 'هذه الصفحة مخصصة للإدارة فقط.'], 403);
+                }
+            } else {
+                if ($user->isAdmin()) {
+                    return response()->json(['error' => 'تسجيل الدخول من هذه الصفحة مخصص للعملاء فقط.'], 403);
+                }
+                if (Supplier::where('email', $email)->exists()) {
+                    return response()->json(['error' => 'هذا البريد مرتبط بحساب مورد. يرجى استخدام صفحة دخول المورد.'], 403);
+                }
+            }
+        }
+
+        $sig = hash_hmac('sha256', strtolower($email) . '|' . $userType . '|' . $context, (string) config('app.key'));
+        $request->session()->put('biometric_precheck_sig', $sig);
+        $request->session()->put('biometric_precheck_at', time());
+
+        return response()->json(['success' => true]);
+    }
+
     // ────────────────────────────────────────────────────────────────────────
     //  Registration
     // ────────────────────────────────────────────────────────────────────────
@@ -123,15 +188,46 @@ class BiometricController extends Controller
      */
     public function authOptions(Request $request): JsonResponse
     {
-        $request->validate(['email' => 'required|email', 'user_type' => 'required|in:user,supplier']);
+        $request->validate([
+            'email' => 'required|email',
+            'user_type' => 'required|in:user,supplier',
+            'context' => 'nullable|string|in:customer,admin',
+        ]);
 
         $email    = $request->input('email');
         $userType = $request->input('user_type');
+        $context  = $request->input('context', 'customer');
+
+        $sig = $request->session()->get('biometric_precheck_sig');
+        $at = (int) $request->session()->get('biometric_precheck_at', 0);
+        $expectedSig = hash_hmac('sha256', strtolower($email) . '|' . $userType . '|' . $context, (string) config('app.key'));
+        if (! $sig || ! hash_equals($expectedSig, (string) $sig) || $at < (time() - 300)) {
+            return response()->json(['error' => 'يرجى إدخال البريد الإلكتروني وكلمة المرور أولاً.'], 403);
+        }
 
         $userId = $this->findUserByEmail($email, $userType);
 
         if (! $userId) {
             return response()->json(['error' => 'البريد الإلكتروني غير مسجل'], 404);
+        }
+
+        if ($userType === 'user') {
+            $u = User::find($userId);
+            if (! $u) {
+                return response()->json(['error' => 'البريد الإلكتروني غير مسجل'], 404);
+            }
+            if ($context === 'admin') {
+                if (! $u->isAdmin()) {
+                    return response()->json(['error' => 'هذه الصفحة مخصصة للإدارة فقط.'], 403);
+                }
+            } else {
+                if ($u->isAdmin()) {
+                    return response()->json(['error' => 'تسجيل الدخول من هذه الصفحة مخصص للعملاء فقط.'], 403);
+                }
+                if (Supplier::where('email', $email)->exists()) {
+                    return response()->json(['error' => 'هذا البريد مرتبط بحساب مورد. يرجى استخدام صفحة دخول المورد.'], 403);
+                }
+            }
         }
 
         $keys = Passkey::where('user_id', $userId)
@@ -147,6 +243,7 @@ class BiometricController extends Controller
         $request->session()->put('webauthn_auth_challenge', $challenge);
         $request->session()->put('webauthn_auth_user_id', $userId);
         $request->session()->put('webauthn_auth_user_type', $userType);
+        $request->session()->put('webauthn_auth_context', $context);
 
         return response()->json([
             'challenge'        => $challenge,
@@ -165,12 +262,14 @@ class BiometricController extends Controller
         $request->validate([
             'id'       => 'required|string',
             'response' => 'required|array',
+            'context'  => 'nullable|string|in:customer,admin',
         ]);
 
         $credentialId = $request->input('id');
         $userId       = $request->session()->get('webauthn_auth_user_id');
         $userType     = $request->session()->get('webauthn_auth_user_type');
         $challenge    = $request->session()->get('webauthn_auth_challenge');
+        $context      = $request->input('context') ?: $request->session()->get('webauthn_auth_context', 'customer');
 
         if (! $challenge || ! $userId) {
             return response()->json(['error' => 'الجلسة منتهية، أعد المحاولة'], 401);
@@ -183,6 +282,29 @@ class BiometricController extends Controller
 
         if (! $passkey) {
             return response()->json(['error' => 'البصمة غير معروفة'], 401);
+        }
+
+        if ($userType === 'user') {
+            $u = User::find((int) $userId);
+            if (! $u) {
+                $request->session()->forget(['webauthn_auth_challenge', 'webauthn_auth_user_id', 'webauthn_auth_user_type', 'webauthn_auth_context']);
+                return response()->json(['error' => 'البريد الإلكتروني غير مسجل'], 404);
+            }
+            if ($context === 'admin') {
+                if (! $u->isAdmin()) {
+                    $request->session()->forget(['webauthn_auth_challenge', 'webauthn_auth_user_id', 'webauthn_auth_user_type', 'webauthn_auth_context']);
+                    return response()->json(['error' => 'هذه الصفحة مخصصة للإدارة فقط.'], 403);
+                }
+            } else {
+                if ($u->isAdmin()) {
+                    $request->session()->forget(['webauthn_auth_challenge', 'webauthn_auth_user_id', 'webauthn_auth_user_type', 'webauthn_auth_context']);
+                    return response()->json(['error' => 'تسجيل الدخول من هذه الصفحة مخصص للعملاء فقط.'], 403);
+                }
+                if (Supplier::where('email', $u->email)->exists()) {
+                    $request->session()->forget(['webauthn_auth_challenge', 'webauthn_auth_user_id', 'webauthn_auth_user_type', 'webauthn_auth_context']);
+                    return response()->json(['error' => 'هذا البريد مرتبط بحساب مورد. يرجى استخدام صفحة دخول المورد.'], 403);
+                }
+            }
         }
 
         // التحقق من clientDataJSON
@@ -216,10 +338,10 @@ class BiometricController extends Controller
             'last_used_at' => now(),
         ]);
 
-        $request->session()->forget(['webauthn_auth_challenge', 'webauthn_auth_user_id', 'webauthn_auth_user_type']);
-
         // تسجيل الدخول
         $redirect = $this->loginUser($userId, $userType, $request);
+
+        $request->session()->forget(['webauthn_auth_challenge', 'webauthn_auth_user_id', 'webauthn_auth_user_type', 'webauthn_auth_context']);
 
         return response()->json(['success' => true, 'redirect' => $redirect]);
     }
@@ -292,11 +414,29 @@ class BiometricController extends Controller
             return route('supplier.dashboard');
         }
 
+        $context = $request->session()->get('webauthn_auth_context', 'customer');
         $user = User::find($userId);
+        if (! $user) {
+            Auth::logout();
+            return route('login');
+        }
+
+        if ($user->isAdmin()) {
+            if ($context !== 'admin') {
+                Auth::logout();
+                return route('login');
+            }
+            Auth::login($user, true);
+            return route('admin.dashboard');
+        }
+
+        if (Supplier::where('email', $user->email)->exists()) {
+            Auth::logout();
+            return route('login');
+        }
+
         Auth::login($user, true);
 
-        return $user->is_admin
-            ? route('admin.dashboard')
-            : route('home');
+        return route('home');
     }
 }

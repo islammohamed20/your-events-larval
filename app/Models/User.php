@@ -150,6 +150,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get passkeys for this user
+     */
+    public function passkeys()
+    {
+        return $this->hasMany(Passkey::class, 'user_id')->where('user_type', 'user');
+    }
+
+    /**
      * Supplier order statuses (orders sent to this supplier)
      */
     public function orderStatuses()

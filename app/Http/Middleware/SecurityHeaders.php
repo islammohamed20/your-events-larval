@@ -15,6 +15,10 @@ class SecurityHeaders
      */
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->getHost() === 'www.yourevents.sa') {
+            return redirect()->to('https://yourevents.sa'.$request->getRequestUri(), 301);
+        }
+
         $response = $next($request);
 
         // Content Security Policy
@@ -25,13 +29,13 @@ class SecurityHeaders
             "font-src 'self' https://fonts.gstatic.com https://fonts.bunny.net https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; ".
             "img-src 'self' data: https: blob:; ".
             "media-src 'self'; ".
-            "connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.tiny.cloud https://www.google.com; ".
+            "connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.tiny.cloud https://www.google.com https://nominatim.openstreetmap.org; ".
             "frame-src 'self' https://www.google.com https://maps.google.com https://www.youtube.com; ".
             "child-src 'self' https://www.google.com https://maps.google.com https://www.youtube.com; ".
             "object-src 'none'; ".
             "frame-ancestors 'none'; ".
             "base-uri 'self'; ".
-            "form-action 'self';"
+            "form-action 'self' https://yourevents.sa https://yourevents.sa/;"
         );
 
         // HTTP Strict Transport Security

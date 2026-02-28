@@ -184,16 +184,22 @@
                             تحميل PDF
                         </a>
                         
-                        @if($quote->status === 'approved')
-                        <a href="{{ route('quotes.complete-booking', $quote) }}" class="btn btn-success btn-lg">
-                            <i class="fas fa-credit-card me-2"></i>
-                            استكمال بيانات الحجز والدفع
-                        </a>
-                        @elseif($quote->payment_status === 'paid' || $quote->status === 'paid')
+                        @php
+                            $quoteIsPaid = ($quote->payment_status === 'paid')
+                                || ($quote->status === 'paid')
+                                || ((int) ($quote->paid_bookings_count ?? 0) > 0);
+                        @endphp
+
+                        @if($quoteIsPaid)
                         <button type="button" class="btn btn-outline-success btn-lg" disabled>
                             <i class="fas fa-check-circle me-2"></i>
                             تم الدفع
                         </button>
+                        @elseif($quote->status === 'approved')
+                        <a href="{{ route('quotes.complete-booking', $quote) }}" class="btn btn-success btn-lg">
+                            <i class="fas fa-credit-card me-2"></i>
+                            استكمال بيانات الحجز والدفع
+                        </a>
                         @else
                         <button type="button" class="btn btn-outline-success btn-lg" disabled>
                             <i class="fas fa-clock me-2"></i>
@@ -208,7 +214,7 @@
                         </div>
                         @endif
                         
-                        @if($quote->payment_status === 'paid' || $quote->status === 'paid')
+                        @if($quoteIsPaid)
                         <a href="{{ route('booking.my-bookings') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-right me-2"></i>
                             العودة لحجوزاتي

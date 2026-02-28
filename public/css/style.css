@@ -908,11 +908,21 @@ body::before {
         height: 35px;
     }
     
-    .btn {
+    .btn-gold,
+    .btn-cta {
         width: 100%;
         max-width: 300px;
         margin: 0 auto;
         display: block;
+    }
+}
+
+/* Fix background-attachment:fixed on mobile (not supported on iOS Safari) */
+@media (max-width: 991px) {
+    .hero-bg-section,
+    .cta-bg-section,
+    .hero-bg-image {
+        background-attachment: scroll !important;
     }
 }
 

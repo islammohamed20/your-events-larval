@@ -354,7 +354,19 @@
     
     @yield('styles')
 </head>
-<body data-confirm-delete="{{ __('common.confirm_delete') }}">
+@php
+    $notificationSettings = app(\App\Models\Setting::class)->getSettings([
+        'notifications_enabled',
+        'notification_sound_enabled',
+        'notification_refresh_interval',
+        'notification_auto_dismiss',
+    ]);
+@endphp
+<body data-confirm-delete="{{ __('common.confirm_delete') }}"
+      data-notifications-enabled="{{ ($notificationSettings['notifications_enabled'] ?? true) ? '1' : '0' }}"
+      data-notification-sound-enabled="{{ ($notificationSettings['notification_sound_enabled'] ?? true) ? '1' : '0' }}"
+      data-notification-refresh-interval="{{ $notificationSettings['notification_refresh_interval'] ?? 3 }}"
+      data-notification-auto-dismiss="{{ $notificationSettings['notification_auto_dismiss'] ?? 10 }}">
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-brand">
@@ -539,7 +551,7 @@
         </div>
         
         <div class="sidebar-footer">
-            <form method="POST" action="{{ route('logout') }}">
+            <form method="POST" action="{{ route('admin.logout') }}">
                 @csrf
                 <button type="submit" class="logout-button nav-link btn border-0 w-auto">
                     <i class="fas fa-sign-out-alt"></i>
@@ -740,25 +752,22 @@
         // ========================================
         // Real-time Admin Notifications System
         // ========================================
-        @php
-            $notificationSettings = app(\App\Models\Setting::class)->getSettings([
-                'notifications_enabled',
-                'notification_sound_enabled', 
-                'notification_refresh_interval',
-                'notification_auto_dismiss'
-            ]);
-        @endphp
-        
-        @if(($notificationSettings['notifications_enabled'] ?? true))
+        const notificationSettings = {
+            notifications_enabled: (document.body.dataset.notificationsEnabled || '1') === '1',
+            notification_sound_enabled: (document.body.dataset.notificationSoundEnabled || '1') === '1',
+            notification_refresh_interval: parseInt(document.body.dataset.notificationRefreshInterval || '3', 10) || 3,
+            notification_auto_dismiss: parseInt(document.body.dataset.notificationAutoDismiss || '10', 10) || 10,
+        };
+        if (notificationSettings.notifications_enabled) {
         (function() {
             // Load last check time from localStorage
             let lastCheck = localStorage.getItem('admin_notifications_last_check');
             let notificationSound = null;
             let shownNotifications = JSON.parse(localStorage.getItem('admin_shown_notifications') || '[]');
             
-            const refreshInterval = {{ $notificationSettings['notification_refresh_interval'] ?? 3 }} * 1000; // Convert to milliseconds
-            const autoDismissTime = {{ $notificationSettings['notification_auto_dismiss'] ?? 10 }} * 1000; // Convert to milliseconds
-            const soundEnabled = {{ ($notificationSettings['notification_sound_enabled'] ?? true) ? 'true' : 'false' }};
+            const refreshInterval = (notificationSettings.notification_refresh_interval ?? 3) * 1000;
+            const autoDismissTime = (notificationSettings.notification_auto_dismiss ?? 10) * 1000;
+            const soundEnabled = (notificationSettings.notification_sound_enabled ?? true) === true;
             
             // Clean old shown notifications (older than 1 hour)
             const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
@@ -928,7 +937,7 @@
             // Then check at configured interval
             setInterval(checkNotifications, refreshInterval);
         })();
-        @endif
+        }
     </script>
 
     @stack('scripts')

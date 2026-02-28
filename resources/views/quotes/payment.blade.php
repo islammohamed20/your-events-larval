@@ -74,15 +74,42 @@
                                 <div class="row g-3">
                                     <div class="col-12">
                                         <label class="form-label">طريقة الدفع</label>
-                                        <div class="d-flex gap-3 flex-wrap">
-                                            <div class="form-check payment-method-card">
-                                                <input class="form-check-input" type="radio" name="payment_method" 
-                                                       id="card" value="card" checked>
-                                                <label class="form-check-label" for="card">
-                                                    <i class="fas fa-credit-card me-2"></i>
-                                                    بطاقة (Tap)
-                                                </label>
-                                            </div>
+                                        @php
+                                            $selectedPaymentMethod = old('payment_method', 'mada');
+                                            if ($selectedPaymentMethod === 'card') {
+                                                $selectedPaymentMethod = 'mada';
+                                            }
+                                        @endphp
+                                        <div class="payment-method-grid">
+                                            <input class="btn-check" type="radio" name="payment_method" id="pm_mada" value="mada" {{ $selectedPaymentMethod === 'mada' ? 'checked' : '' }}>
+                                            <label class="payment-method-pill" for="pm_mada">
+                                                <span class="pm-icon"><i class="fas fa-id-card"></i></span>
+                                                <span class="pm-text">مدى</span>
+                                            </label>
+
+                                            <input class="btn-check" type="radio" name="payment_method" id="pm_visa" value="visa" {{ $selectedPaymentMethod === 'visa' ? 'checked' : '' }}>
+                                            <label class="payment-method-pill" for="pm_visa">
+                                                <span class="pm-icon"><i class="fab fa-cc-visa"></i></span>
+                                                <span class="pm-text">Visa</span>
+                                            </label>
+
+                                            <input class="btn-check" type="radio" name="payment_method" id="pm_mastercard" value="mastercard" {{ $selectedPaymentMethod === 'mastercard' ? 'checked' : '' }}>
+                                            <label class="payment-method-pill" for="pm_mastercard">
+                                                <span class="pm-icon"><i class="fab fa-cc-mastercard"></i></span>
+                                                <span class="pm-text">Mastercard</span>
+                                            </label>
+
+                                            <input class="btn-check" type="radio" name="payment_method" id="pm_applepay" value="applepay" {{ $selectedPaymentMethod === 'applepay' ? 'checked' : '' }}>
+                                            <label class="payment-method-pill" for="pm_applepay">
+                                                <span class="pm-icon"><i class="fab fa-apple-pay"></i></span>
+                                                <span class="pm-text">Apple Pay</span>
+                                            </label>
+
+                                            <input class="btn-check" type="radio" name="payment_method" id="pm_stcpay" value="stcpay" {{ $selectedPaymentMethod === 'stcpay' ? 'checked' : '' }}>
+                                            <label class="payment-method-pill" for="pm_stcpay">
+                                                <span class="pm-icon"><i class="fas fa-mobile-alt"></i></span>
+                                                <span class="pm-text">STC Pay</span>
+                                            </label>
                                         </div>
                                         @error('payment_method')
                                             <div class="text-danger small mt-2">{{ $message }}</div>
@@ -124,23 +151,46 @@
 </div>
 
 <style>
-.payment-method-card {
-    flex: 1;
-    min-width: 150px;
+.payment-method-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
 }
 
-.payment-method-card .form-check-input:checked ~ .form-check-label {
-    color: #ef4870;
-    font-weight: bold;
-}
-
-.payment-method-card label {
+.payment-method-pill {
     cursor: pointer;
-    padding: 15px 20px;
-    border: 2px solid #dee2e6;
-    border-radius: 10px;
-    display: block;
-    text-align: center;
+    user-select: none;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #fff;
+    font-weight: 700;
+    color: #1f144a;
+}
+
+.payment-method-pill .pm-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.btn-check:checked + .payment-method-pill {
+    border-color: #ef4870;
+    color: #ef4870;
+    box-shadow: 0 0 0 0.15rem rgba(239, 72, 112, 0.16);
+}
+
+@media (max-width: 575px) {
+    .payment-method-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .payment-method-pill {
+        padding: 9px 10px;
+        gap: 8px;
+    }
 }
 
 .payment-method-card input:checked ~ label {

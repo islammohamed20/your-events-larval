@@ -45,12 +45,12 @@
                             <div class="mb-4">
                                 <label for="otp" class="form-label fw-semibold text-dark text-center d-block">أدخل رمز التحقق</label>
                                 <div class="otp-input-wrapper d-flex justify-content-center gap-2 mb-3">
-                                    <input type="text" class="otp-digit form-control form-control-lg text-center" maxlength="1" data-index="0">
-                                    <input type="text" class="otp-digit form-control form-control-lg text-center" maxlength="1" data-index="1">
-                                    <input type="text" class="otp-digit form-control form-control-lg text-center" maxlength="1" data-index="2">
-                                    <input type="text" class="otp-digit form-control form-control-lg text-center" maxlength="1" data-index="3">
-                                    <input type="text" class="otp-digit form-control form-control-lg text-center" maxlength="1" data-index="4">
-                                    <input type="text" class="otp-digit form-control form-control-lg text-center" maxlength="1" data-index="5">
+                                    <input type="tel" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="otp-digit form-control form-control-lg text-center" maxlength="1" data-index="0">
+                                    <input type="tel" inputmode="numeric" pattern="[0-9]*" class="otp-digit form-control form-control-lg text-center" maxlength="1" data-index="1">
+                                    <input type="tel" inputmode="numeric" pattern="[0-9]*" class="otp-digit form-control form-control-lg text-center" maxlength="1" data-index="2">
+                                    <input type="tel" inputmode="numeric" pattern="[0-9]*" class="otp-digit form-control form-control-lg text-center" maxlength="1" data-index="3">
+                                    <input type="tel" inputmode="numeric" pattern="[0-9]*" class="otp-digit form-control form-control-lg text-center" maxlength="1" data-index="4">
+                                    <input type="tel" inputmode="numeric" pattern="[0-9]*" class="otp-digit form-control form-control-lg text-center" maxlength="1" data-index="5">
                                 </div>
                                 <input type="hidden" name="otp" id="otp" required>
                                 @error('otp')

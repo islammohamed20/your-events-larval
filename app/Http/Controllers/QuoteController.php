@@ -33,6 +33,11 @@ class QuoteController extends Controller
     {
         $quotes = Quote::where('user_id', Auth::id())
             ->with('items')
+            ->withCount([
+                'bookings as paid_bookings_count' => function ($q) {
+                    $q->where('payment_status', 'paid');
+                },
+            ])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -52,6 +57,11 @@ class QuoteController extends Controller
         $quote->load([
             'items.service.thumbnailImage',
             'items.service.images',
+        ]);
+        $quote->loadCount([
+            'bookings as paid_bookings_count' => function ($q) {
+                $q->where('payment_status', 'paid');
+            },
         ]);
 
         return view('quotes.show', compact('quote'));
@@ -276,7 +286,7 @@ class QuoteController extends Controller
             'event_lng' => 'required|numeric|between:-180,180',
             'guests_count' => 'required|integer|min:1',
             'special_requests' => 'nullable|string',
-            'payment_method' => 'required|in:card',
+            'payment_method' => 'required|in:mada,visa,mastercard,applepay,stcpay',
         ]);
 
         // Store booking data in session for payment processing
@@ -367,7 +377,7 @@ class QuoteController extends Controller
         }
 
         $rules = [
-            'payment_method' => 'required|in:card',
+            'payment_method' => 'required|in:mada,visa,mastercard,applepay,stcpay',
             'client_name' => 'required|string|max:255',
             'client_phone' => 'required|string|max:20',
             'event_date' => 'required|date|after:today',
@@ -598,6 +608,23 @@ class QuoteController extends Controller
                     }
                 }
             }
+
+            $quoteId = (int) (($payment->metadata['quote_id'] ?? 0) ?: 0);
+            if (! $quoteId && $booking) {
+                $quoteId = (int) ($booking->quote_id ?: 0);
+            }
+            if ($quoteId) {
+                $quoteForUpdate = Quote::find($quoteId);
+                if ($quoteForUpdate && $quoteForUpdate->payment_status !== 'paid') {
+                    $quoteForUpdate->update([
+                        'status' => 'paid',
+                        'payment_status' => 'paid',
+                        'payment_date' => now(),
+                        'payment_method' => 'card',
+                        'payment_reference' => $tapChargeId,
+                    ]);
+                }
+            }
         } elseif (in_array($status, ['FAILED', 'DECLINED', 'CANCELLED'], true) && $payment->status !== 'failed') {
             $payment->update([
                 'status' => 'failed',
@@ -678,6 +705,11 @@ class QuoteController extends Controller
             'expires_at' => now()->addHours(24),
         ]);
 
+        $selectedPaymentMethod = (string) ($validated['payment_method'] ?? 'card');
+        $paymentMethodForPaymentRow = in_array($selectedPaymentMethod, ['mada', 'visa', 'mastercard', 'applepay', 'stcpay'], true)
+            ? $selectedPaymentMethod
+            : null;
+
         $payment = \App\Models\Payment::create([
             'user_id' => Auth::id(),
             'booking_id' => $booking->id,
@@ -685,11 +717,13 @@ class QuoteController extends Controller
             'amount' => $quote->total,
             'currency' => 'SAR',
             'status' => 'processing',
+            'payment_method' => $paymentMethodForPaymentRow,
             'metadata' => [
                 'source' => 'quotes.startTapPayment',
                 'quote_id' => $quote->id,
                 'quote_number' => $quote->quote_number,
                 'booking_id' => $booking->id,
+                'selected_payment_method' => $selectedPaymentMethod,
             ],
         ]);
 
@@ -780,7 +814,19 @@ class QuoteController extends Controller
             ]
         );
 
-        return redirect()->away($transactionUrl);
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'redirect_url' => $transactionUrl,
+                'tap_charge_id' => $tapChargeId,
+            ]);
+        }
+
+        $redirectResponse = redirect()->away($transactionUrl, 303);
+        $redirectResponse->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        $redirectResponse->headers->set('Pragma', 'no-cache');
+
+        return $redirectResponse;
     }
 
     private function fetchTapCharge(string $tapChargeId): ?array

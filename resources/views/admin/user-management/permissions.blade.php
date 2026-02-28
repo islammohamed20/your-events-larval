@@ -3,6 +3,13 @@
 @section('title', 'إدارة الصلاحيات')
 
 @section('content')
+<style>
+    .ye-user-management-table.table-dark,
+    .ye-user-management-table.table-dark th,
+    .ye-user-management-table.table-dark td {
+        color: #000 !important;
+    }
+</style>
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -36,8 +43,8 @@
                     <div class="row">
                         <div class="col-md-8">
                             <div class="table-responsive">
-                                <table class="table table-dark table-striped table-hover align-middle">
-                                    <thead class="table-dark">
+                                <table class="table table-dark table-striped table-hover align-middle ye-user-management-table">
+                                    <thead class="table-dark ye-user-management-table">
                                         <tr>
                                             <th>المستخدم</th>
                                             <th>البريد الإلكتروني</th>

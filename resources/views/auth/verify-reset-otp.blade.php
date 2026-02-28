@@ -46,12 +46,12 @@
                             </label>
                             
                             <div class="otp-input-group d-flex justify-content-center gap-2 mb-3">
-                                <input type="text" class="form-control otp-box text-center" maxlength="1" pattern="[0-9]" autocomplete="off" data-index="0">
-                                <input type="text" class="form-control otp-box text-center" maxlength="1" pattern="[0-9]" autocomplete="off" data-index="1">
-                                <input type="text" class="form-control otp-box text-center" maxlength="1" pattern="[0-9]" autocomplete="off" data-index="2">
-                                <input type="text" class="form-control otp-box text-center" maxlength="1" pattern="[0-9]" autocomplete="off" data-index="3">
-                                <input type="text" class="form-control otp-box text-center" maxlength="1" pattern="[0-9]" autocomplete="off" data-index="4">
-                                <input type="text" class="form-control otp-box text-center" maxlength="1" pattern="[0-9]" autocomplete="off" data-index="5">
+                                <input type="tel" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" class="form-control otp-box text-center" maxlength="1" data-index="0">
+                                <input type="tel" inputmode="numeric" pattern="[0-9]*" class="form-control otp-box text-center" maxlength="1" data-index="1">
+                                <input type="tel" inputmode="numeric" pattern="[0-9]*" class="form-control otp-box text-center" maxlength="1" data-index="2">
+                                <input type="tel" inputmode="numeric" pattern="[0-9]*" class="form-control otp-box text-center" maxlength="1" data-index="3">
+                                <input type="tel" inputmode="numeric" pattern="[0-9]*" class="form-control otp-box text-center" maxlength="1" data-index="4">
+                                <input type="tel" inputmode="numeric" pattern="[0-9]*" class="form-control otp-box text-center" maxlength="1" data-index="5">
                             </div>
                             
                             <input type="hidden" name="otp" id="otpValue">

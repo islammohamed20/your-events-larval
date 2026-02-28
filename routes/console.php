@@ -1,9 +1,11 @@
 <?php
 
 use App\Models\Category;
+use App\Models\Payment;
 use App\Models\Service;
 use App\Models\ServiceVariation;
 use App\Models\Supplier;
+use App\Models\TapPayment;
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -217,3 +219,62 @@ Artisan::command('user:convert-to-supplier {email} {--force-password=}', functio
 
     return 0;
 })->purpose('Convert existing user to supplier and revoke admin privileges');
+
+Artisan::command('payments:purge-by-customer-name {name} {--dry-run} {--force}', function (string $name) {
+    $name = trim($name);
+    if ($name === '') {
+        $this->error('Name is required.');
+        return 1;
+    }
+
+    $this->info("Searching payments related to customer name: {$name}");
+
+    $tapPayments = TapPayment::query()
+        ->where(function ($q) use ($name) {
+            $q->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(charge_data, '$.customer.first_name')) = ?", [$name])
+                ->orWhereRaw("charge_data LIKE ?", ['%\"first_name\":\"'.$name.'\"%']);
+        })
+        ->orderByDesc('id')
+        ->get(['id', 'payment_id', 'booking_id', 'quote_id', 'tap_charge_id', 'customer_email', 'status', 'created_at']);
+
+    $payments = Payment::query()
+        ->where(function ($q) use ($name) {
+            $q->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.tap_charge.customer.first_name')) = ?", [$name])
+                ->orWhereRaw("metadata LIKE ?", ['%\"first_name\":\"'.$name.'\"%']);
+        })
+        ->orderByDesc('id')
+        ->get(['id', 'user_id', 'booking_id', 'gateway', 'gateway_payment_id', 'status', 'amount', 'currency', 'created_at']);
+
+    $this->line('---');
+    $this->info('tap_payments matches: '.$tapPayments->count());
+    foreach ($tapPayments as $tp) {
+        $this->line("- tap_payments#{$tp->id} charge={$tp->tap_charge_id} payment_id={$tp->payment_id} booking_id={$tp->booking_id} quote_id={$tp->quote_id} status={$tp->status} email={$tp->customer_email}");
+    }
+
+    $this->line('---');
+    $this->info('payments matches: '.$payments->count());
+    foreach ($payments as $p) {
+        $this->line("- payments#{$p->id} gateway={$p->gateway} gateway_payment_id={$p->gateway_payment_id} booking_id={$p->booking_id} status={$p->status} amount={$p->amount} {$p->currency}");
+    }
+
+    if ((bool) $this->option('dry-run') || ! (bool) $this->option('force')) {
+        $this->line('---');
+        $this->warn('No deletions performed. Use --force to delete.');
+        return 0;
+    }
+
+    DB::transaction(function () use ($tapPayments, $payments) {
+        if ($tapPayments->count() > 0) {
+            TapPayment::whereIn('id', $tapPayments->pluck('id')->all())->delete();
+        }
+        if ($payments->count() > 0) {
+            Payment::whereIn('id', $payments->pluck('id')->all())->delete();
+        }
+    });
+
+    $this->line('---');
+    $this->info('Deleted tap_payments: '.$tapPayments->count());
+    $this->info('Deleted payments: '.$payments->count());
+
+    return 0;
+})->purpose('Delete payment records associated with a customer name from Tap charge data');

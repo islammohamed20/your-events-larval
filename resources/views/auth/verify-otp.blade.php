@@ -3,6 +3,7 @@
 @section('title', 'تحقق من البريد الإلكتروني') 'التحقق من البريد الإلكتروني')
 
 @section('content')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-md-6 col-lg-5">
@@ -51,12 +52,12 @@
                                 <i class="fas fa-key text-primary"></i> كود التحقق
                             </label>
                             <div class="otp-input-group d-flex justify-content-between" dir="ltr">
-                                <input type="text" maxlength="1" class="otp-input form-control text-center" data-index="0">
-                                <input type="text" maxlength="1" class="otp-input form-control text-center" data-index="1">
-                                <input type="text" maxlength="1" class="otp-input form-control text-center" data-index="2">
-                                <input type="text" maxlength="1" class="otp-input form-control text-center" data-index="3">
-                                <input type="text" maxlength="1" class="otp-input form-control text-center" data-index="4">
-                                <input type="text" maxlength="1" class="otp-input form-control text-center" data-index="5">
+                                <input type="tel" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="1" class="otp-input form-control text-center" data-index="0">
+                                <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input form-control text-center" data-index="1">
+                                <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input form-control text-center" data-index="2">
+                                <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input form-control text-center" data-index="3">
+                                <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input form-control text-center" data-index="4">
+                                <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input form-control text-center" data-index="5">
                             </div>
                             <input type="hidden" id="otpValue" name="otp">
                             <div class="invalid-feedback d-block" id="otpError"></div>
@@ -267,10 +268,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             const formData = new FormData(otpForm);
+            
             const response = await fetch('{{ route("otp.verify") }}', {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     'Accept': 'application/json',
                 },
                 body: formData
@@ -294,7 +295,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(available => {
                         if (available) {
                             window._biometricRedirect = data.redirect;
-                            const modal = new bootstrap.Modal(document.getElementById('biometricRegisterModal'));
+                            const modalEl = document.getElementById('biometricRegisterModal');
+                            // Ensure modal is moved to body to avoid z-index/shadow issues from parents
+                            document.body.appendChild(modalEl);
+                            const modal = new bootstrap.Modal(modalEl);
                             modal.show();
                         } else {
                             setTimeout(() => { window.location.href = data.redirect; }, 1000);
@@ -323,17 +327,17 @@ document.addEventListener('DOMContentLoaded', function() {
         resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
         try {
+            const formData = new FormData();
+            formData.append('_token', '{{ csrf_token() }}');
+            formData.append('email', '{{ $email }}');
+            formData.append('type', '{{ $type }}');
+
             const response = await fetch('{{ route("otp.resend") }}', {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Content-Type': 'application/json',
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify({
-                    email: '{{ $email }}',
-                    type: '{{ $type }}'
-                })
+                body: formData
             });
 
             const data = await response.json();
@@ -381,8 +385,8 @@ document.addEventListener('DOMContentLoaded', function() {
 {{-- ═══════════════════════════════════════════════════════════════════════ --}}
 {{-- Modal: تسجيل البصمة                                                    --}}
 {{-- ═══════════════════════════════════════════════════════════════════════ --}}
-<div class="modal fade" id="biometricRegisterModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
+<div class="modal fade" id="biometricRegisterModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" style="z-index: 9999;">
+    <div class="modal-dialog modal-dialog-centered" style="z-index: 10000;">
         <div class="modal-content border-0 shadow-lg" style="border-radius:20px; overflow:hidden;">
             <div class="modal-body text-center p-5">
                 <div style="font-size:4rem; margin-bottom:1rem;">🔐</div>
@@ -409,6 +413,15 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <script>
+function getXsrfTokenFromCookie() {
+    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
+function getCsrfHeaderValue() {
+    return getXsrfTokenFromCookie() || '{{ csrf_token() }}';
+}
+
 async function registerBiometric() {
     const btn = document.getElementById('registerBiometricBtn');
     btn.disabled = true;
@@ -418,8 +431,13 @@ async function registerBiometric() {
         // احصل على خيارات التسجيل
         const optRes = await fetch('{{ route("biometric.register.options") }}', {
             method: 'POST',
-            headers: {'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json'},
-            body: JSON.stringify({})
+            headers: {
+                'Content-Type': 'application/json',
+                'X-XSRF-TOKEN': getCsrfHeaderValue(),
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({}),
+            credentials: 'same-origin'
         });
 
         if (!optRes.ok) {
@@ -451,7 +469,11 @@ async function registerBiometric() {
         // أرسل النتيجة للحفظ
         const saveRes = await fetch('{{ route("biometric.register") }}', {
             method: 'POST',
-            headers: {'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json'},
+            headers: {
+                'Content-Type': 'application/json',
+                'X-XSRF-TOKEN': getCsrfHeaderValue(),
+                'Accept': 'application/json',
+            },
             body: JSON.stringify({
                 id: credential.id,
                 rawId: abToBase64(credential.rawId),
@@ -461,7 +483,8 @@ async function registerBiometric() {
                 },
                 type: credential.type,
                 device_name: navigator.platform || 'الجهاز',
-            })
+            }),
+            credentials: 'same-origin'
         });
 
         const result = await saveRes.json();
