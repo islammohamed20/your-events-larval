@@ -65,6 +65,18 @@ class OrderController extends Controller
      */
     public function destroy(Order $order)
     {
+        // منع حذف الطلبات المقبولة أو الجارية
+        if (in_array($order->status, ['accepted', 'in_progress', 'completed'])) {
+            return redirect()->route('admin.orders.index')
+                ->with('error', "لا يمكن حذف الطلب رقم #{$order->id} لأن حالته \"{$order->status}\". لا يمكن حذف طلب تم قبوله أو إنجازه.");
+        }
+
+        // منع الحذف إذا كان الطلب مقبولاً من مورد
+        if (! is_null($order->supplier_id)) {
+            return redirect()->route('admin.orders.index')
+                ->with('error', "لا يمكن حذف الطلب رقم #{$order->id} لأنه مرتبط بمورد بالفعل.");
+        }
+
         $order->delete();
 
         return redirect()->route('admin.orders.index')->with('success', 'تم حذف الطلب بنجاح');

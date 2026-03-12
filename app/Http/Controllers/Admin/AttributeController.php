@@ -111,6 +111,13 @@ class AttributeController extends Controller
 
     public function destroy(Attribute $attribute)
     {
+        // منع الحذف إذا كانت الخاصية مرتبطة بخدمات
+        $servicesCount = $attribute->services()->count();
+        if ($servicesCount > 0) {
+            return redirect()->route('admin.attributes.index')
+                ->with('error', "لا يمكن حذف الخاصية \"{$attribute->name}\" لأنها مستخدمة في {$servicesCount} خدمة. قم بإزالتها من الخدمات أولاً.");
+        }
+
         $attribute->delete();
 
         return redirect()->route('admin.attributes.index')->with('success', 'تم حذف الخاصية بنجاح');
@@ -159,6 +166,13 @@ class AttributeController extends Controller
 
     public function destroyValue(Attribute $attribute, AttributeValue $value)
     {
+        // منع الحذف إذا كانت القيمة مستخدمة في تباينات الخدمات
+        $variationsCount = \App\Models\ServiceVariation::whereJsonContains('attribute_value_ids', $value->id)->count();
+        if ($variationsCount > 0) {
+            return redirect()->route('admin.attributes.edit', $attribute)
+                ->with('error', "لا يمكن حذف القيمة \"{$value->value}\" لأنها مستخدمة في {$variationsCount} تباين خدمة.");
+        }
+
         $value->delete();
 
         return redirect()->route('admin.attributes.edit', $attribute)->with('success', 'تم حذف القيمة بنجاح');

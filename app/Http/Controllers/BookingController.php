@@ -9,6 +9,7 @@ use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 
 class BookingController extends Controller
 {
@@ -43,15 +44,35 @@ class BookingController extends Controller
             'event_lat' => 'required|numeric|between:-90,90',
             'event_lng' => 'required|numeric|between:-180,180',
             'guests_count' => 'required|integer|min:1',
-            'package_id' => 'nullable|exists:packages,id',
-            'service_id' => 'nullable|exists:services,id',
+            'booking_type' => 'required|in:service,package',
+            'package_id' => [
+                'nullable',
+                'required_if:booking_type,package',
+                Rule::exists('packages', 'id')->where('is_active', true),
+            ],
+            'service_id' => [
+                'nullable',
+                'required_if:booking_type,service',
+                Rule::exists('services', 'id')->where('is_active', true),
+            ],
             'special_requests' => 'nullable|string',
         ]);
+
+        if ($validated['booking_type'] === 'service') {
+            $validated['package_id'] = null;
+        } else {
+            $validated['service_id'] = null;
+        }
 
         // Calculate total amount
         $totalAmount = 0;
         if (isset($validated['package_id']) && $validated['package_id']) {
-            $package = Package::find($validated['package_id']);
+            $package = Package::active()->find($validated['package_id']);
+            if (! $package) {
+                return redirect()->back()->withInput()->withErrors([
+                    'package_id' => 'هذه الباقة غير متوفرة حالياً ولا يمكن حجزها.',
+                ]);
+            }
             $totalAmount += $package->price;
         }
         if (isset($validated['service_id']) && $validated['service_id']) {

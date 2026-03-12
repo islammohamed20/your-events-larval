@@ -282,8 +282,7 @@ function _yeUpdateSupplierBiometricVisibility() {
     const section = document.getElementById('supplierBiometricSection');
     const btn = document.getElementById('supplierBiometricBtn');
     if (!section || !btn) return;
-    const hasBiometric = localStorage.getItem('ye_supplier_biometric_registered') === '1';
-    section.style.display = hasBiometric ? 'block' : 'none';
+    section.style.display = 'block';
     btn.disabled = !(_yeSupplierHasCredentials());
 }
 

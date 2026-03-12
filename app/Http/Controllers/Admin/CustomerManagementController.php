@@ -60,6 +60,7 @@ class CustomerManagementController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($customer->id)],
             'phone' => 'nullable|string|max:20',
             'status' => 'required|in:active,inactive,suspended',
+            'notes' => 'nullable|string|max:2000',
             'card_type' => 'nullable|in:visa,mastercard,mada',
             'card_holder_name' => 'nullable|string|max:255',
             'card_last_four' => 'nullable|string|size:4|regex:/^[0-9]{4}$/',
@@ -67,10 +68,18 @@ class CustomerManagementController extends Controller
             'card_expiry_year' => 'nullable|string|size:4|regex:/^[0-9]{4}$/',
         ]);
 
+        $notes = $validated['notes'] ?? null;
+        unset($validated['notes']);
+
         // التأكد من عدم تغيير صلاحيات الإدارة
         $validated['is_admin'] = false;
 
         $customer->update($validated);
+
+        $customer->customerProfile()->updateOrCreate(
+            ['user_id' => $customer->id],
+            ['notes' => $notes]
+        );
 
         return redirect()->route('admin.customers.index')
             ->with('success', 'تم تحديث بيانات العميل بنجاح');

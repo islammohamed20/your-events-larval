@@ -79,6 +79,25 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted">سياسة الأمان</label>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            @if($user->must_change_password)
+                                                <span class="badge bg-warning text-dark">إجبار تغيير كلمة المرور عند أول دخول</span>
+                                            @else
+                                                <span class="badge bg-secondary">بدون تغيير إجباري لكلمة المرور</span>
+                                            @endif
+
+                                            @if($user->must_change_password && $user->logout_other_devices)
+                                                <span class="badge bg-info text-dark">تسجيل الخروج من جميع الأجهزة بعد التغيير</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="col-md-4">

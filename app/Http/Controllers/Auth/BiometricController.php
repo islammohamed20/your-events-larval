@@ -149,6 +149,33 @@ class BiometricController extends Controller
             return response()->json(['error' => 'الجلسة منتهية'], 401);
         }
 
+        $challenge = (string) $request->session()->get('webauthn_reg_challenge', '');
+        if ($challenge === '') {
+            return response()->json(['error' => 'الجلسة منتهية'], 401);
+        }
+
+        $clientDataRaw = $this->decodeBase64UrlToRaw((string) $request->input('response.clientDataJSON', ''));
+        if (! $clientDataRaw) {
+            return response()->json(['error' => 'بيانات WebAuthn غير صالحة'], 401);
+        }
+
+        $clientData = json_decode($clientDataRaw, true);
+        if (! is_array($clientData)) {
+            return response()->json(['error' => 'بيانات WebAuthn غير صالحة'], 401);
+        }
+
+        if (($clientData['type'] ?? null) !== 'webauthn.create') {
+            return response()->json(['error' => 'نوع طلب WebAuthn غير صالح'], 401);
+        }
+
+        if (! $this->verifyChallenge((string) ($clientData['challenge'] ?? ''), $challenge)) {
+            return response()->json(['error' => 'Challenge غير صالح'], 401);
+        }
+
+        if (! $this->isValidOrigin((string) ($clientData['origin'] ?? ''), $request)) {
+            return response()->json(['error' => 'Origin غير صالح'], 401);
+        }
+
         $credentialId = $request->input('id');
         $userHandle   = $request->session()->get('webauthn_user_handle', Str::random(20));
 
@@ -284,6 +311,42 @@ class BiometricController extends Controller
             return response()->json(['error' => 'البصمة غير معروفة'], 401);
         }
 
+        $clientDataRaw = $this->decodeBase64UrlToRaw((string) $request->input('response.clientDataJSON', ''));
+        if (! $clientDataRaw) {
+            return response()->json(['error' => 'بيانات WebAuthn غير صالحة'], 401);
+        }
+
+        $clientData = json_decode($clientDataRaw, true);
+        if (! is_array($clientData)) {
+            return response()->json(['error' => 'بيانات WebAuthn غير صالحة'], 401);
+        }
+
+        if (($clientData['type'] ?? null) !== 'webauthn.get') {
+            return response()->json(['error' => 'نوع طلب WebAuthn غير صالح'], 401);
+        }
+
+        if (! $this->verifyChallenge((string) ($clientData['challenge'] ?? ''), $challenge)) {
+            return response()->json(['error' => 'Challenge غير صالح'], 401);
+        }
+
+        if (! $this->isValidOrigin((string) ($clientData['origin'] ?? ''), $request)) {
+            return response()->json(['error' => 'Origin غير صالح'], 401);
+        }
+
+        $authenticatorDataRaw = $this->decodeBase64UrlToRaw((string) $request->input('response.authenticatorData', ''));
+        if (! $authenticatorDataRaw || strlen($authenticatorDataRaw) < 37) {
+            return response()->json(['error' => 'بيانات Authenticator غير صالحة'], 401);
+        }
+
+        if (! $this->isValidRpIdHash($authenticatorDataRaw, (string) parse_url(config('app.url'), PHP_URL_HOST))) {
+            return response()->json(['error' => 'RP ID غير صالح'], 401);
+        }
+
+        $flags = ord($authenticatorDataRaw[32]);
+        if (($flags & 0x01) === 0) {
+            return response()->json(['error' => 'لم يتم تأكيد حضور المستخدم (UP)'], 401);
+        }
+
         if ($userType === 'user') {
             $u = User::find((int) $userId);
             if (! $u) {
@@ -303,31 +366,6 @@ class BiometricController extends Controller
                 if (Supplier::where('email', $u->email)->exists()) {
                     $request->session()->forget(['webauthn_auth_challenge', 'webauthn_auth_user_id', 'webauthn_auth_user_type', 'webauthn_auth_context']);
                     return response()->json(['error' => 'هذا البريد مرتبط بحساب مورد. يرجى استخدام صفحة دخول المورد.'], 403);
-                }
-            }
-        }
-
-        // التحقق من clientDataJSON
-        $clientDataJSON = base64_decode($request->input('response.clientDataJSON', ''));
-        if ($clientDataJSON) {
-            $clientData = json_decode($clientDataJSON, true);
-            if ($clientData) {
-                // تحقق من التحدي
-                $receivedChallenge = $clientData['challenge'] ?? '';
-                // rfc4648 base64url → standard base64
-                $receivedChallenge = strtr($receivedChallenge, '-_', '+/');
-                if (base64_decode($challenge) !== base64_decode($receivedChallenge)) {
-                    // نقبل إذا التحقق الحرفي يطابق
-                    if ($receivedChallenge !== $challenge) {
-                        // نتسامح مع الفارق التشفيري للبيئة المختبرية
-                        // في production يجب التحقق الصارم
-                    }
-                }
-                // تحقق من الـ origin
-                $expectedOrigin = config('app.url');
-                $receivedOrigin = $clientData['origin'] ?? '';
-                if (rtrim($receivedOrigin, '/') !== rtrim($expectedOrigin, '/')) {
-                    return response()->json(['error' => 'Origin غير صالح'], 401);
                 }
             }
         }
@@ -410,6 +448,26 @@ class BiometricController extends Controller
 
         if ($userType === 'supplier') {
             $supplier = Supplier::find($userId);
+            if (! $supplier) {
+                return route('supplier.login');
+            }
+
+            if ($supplier->status !== 'approved' || ! $supplier->email_verified_at) {
+                return route('supplier.login');
+            }
+
+            try {
+                $supplier->forceFill(['last_login_at' => now()])->save();
+            } catch (\Throwable $e) {
+            }
+
+            $newSupplierSessionVersion = ((int) ($supplier->session_version ?: 1)) + 1;
+            $supplier->forceFill([
+                'session_version' => $newSupplierSessionVersion,
+                'remember_token' => Str::random(60),
+            ])->save();
+            $request->session()->put('supplier_session_version', $newSupplierSessionVersion);
+
             Auth::guard('supplier')->login($supplier, true);
             return route('supplier.dashboard');
         }
@@ -427,6 +485,19 @@ class BiometricController extends Controller
                 return route('login');
             }
             Auth::login($user, true);
+
+            $newSessionVersion = ((int) ($user->session_version ?: 1)) + 1;
+            $user->forceFill([
+                'session_version' => $newSessionVersion,
+                'remember_token' => Str::random(60),
+            ])->save();
+            $request->session()->put('user_session_version', $newSessionVersion);
+
+            try {
+                $user->forceFill(['last_login_at' => now()])->save();
+            } catch (\Throwable $e) {
+            }
+
             return route('admin.dashboard');
         }
 
@@ -437,6 +508,86 @@ class BiometricController extends Controller
 
         Auth::login($user, true);
 
+        $newSessionVersion = ((int) ($user->session_version ?: 1)) + 1;
+        $user->forceFill([
+            'session_version' => $newSessionVersion,
+            'remember_token' => Str::random(60),
+        ])->save();
+        $request->session()->put('user_session_version', $newSessionVersion);
+
+        try {
+            $user->forceFill(['last_login_at' => now()])->save();
+        } catch (\Throwable $e) {
+        }
+
         return route('home');
+    }
+
+    private function decodeBase64UrlToRaw(string $value): ?string
+    {
+        if ($value === '') {
+            return null;
+        }
+
+        $normalized = strtr($value, '-_', '+/');
+        $padding = strlen($normalized) % 4;
+        if ($padding > 0) {
+            $normalized .= str_repeat('=', 4 - $padding);
+        }
+
+        $decoded = base64_decode($normalized, true);
+
+        return $decoded === false ? null : $decoded;
+    }
+
+    private function verifyChallenge(string $receivedChallenge, string $storedChallenge): bool
+    {
+        $receivedRaw = $this->decodeBase64UrlToRaw($receivedChallenge);
+        $storedRaw = $this->decodeBase64UrlToRaw($storedChallenge);
+
+        if (! $receivedRaw || ! $storedRaw) {
+            return false;
+        }
+
+        return hash_equals($storedRaw, $receivedRaw);
+    }
+
+    private function isValidOrigin(string $origin, Request $request): bool
+    {
+        if ($origin === '') {
+            return false;
+        }
+
+        $originHost = parse_url($origin, PHP_URL_HOST);
+        $originScheme = parse_url($origin, PHP_URL_SCHEME);
+        if (! $originHost || ! $originScheme) {
+            return false;
+        }
+
+        $appUrl = (string) config('app.url');
+        $appHost = parse_url($appUrl, PHP_URL_HOST);
+        $appScheme = parse_url($appUrl, PHP_URL_SCHEME);
+
+        $requestHost = $request->getHost();
+        $requestScheme = $request->getScheme();
+
+        $allowedOrigins = array_filter([
+            $appHost && $appScheme ? strtolower($appScheme.'://'.$appHost) : null,
+            $requestHost && $requestScheme ? strtolower($requestScheme.'://'.$requestHost) : null,
+        ]);
+
+        return in_array(strtolower($originScheme.'://'.$originHost), $allowedOrigins, true);
+    }
+
+    private function isValidRpIdHash(string $authenticatorDataRaw, string $rpId): bool
+    {
+        if ($rpId === '' || strlen($authenticatorDataRaw) < 32) {
+            return false;
+        }
+
+        $receivedRpIdHash = substr($authenticatorDataRaw, 0, 32);
+        $expectedRpIdHash = hash('sha256', $rpId, true);
+
+        return hash_equals($expectedRpIdHash, $receivedRpIdHash);
     }
 }

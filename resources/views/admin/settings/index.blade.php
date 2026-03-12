@@ -333,6 +333,67 @@
                                 </div>
                             </div>
 
+                            <!-- Notification Destination Emails -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="border-bottom pb-2 mb-3">
+                                        <i class="fas fa-at me-2 text-primary"></i>إيميلات استقبال إشعارات النظام
+                                    </h6>
+                                    <p class="text-muted small mb-3">يمكنك تخصيص الجهة المستلمة حسب نوع الحدث. عند ترك الحقل فارغاً سيتم استخدام الإعداد الاحتياطي.</p>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label for="notification_admin_email" class="form-label">
+                                            <i class="fas fa-user-shield me-2 text-dark"></i>إيميل الإدارة العام (باقي إشعارات الأدمن)
+                                        </label>
+                                        <input type="email"
+                                               class="form-control @error('notification_admin_email') is-invalid @enderror"
+                                               id="notification_admin_email"
+                                               name="notification_admin_email"
+                                               value="{{ old('notification_admin_email', $settings['notification_admin_email'] ?? '') }}"
+                                               placeholder="admin@yourevents.sa">
+                                        @error('notification_admin_email')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="notification_customers_management_email" class="form-label">
+                                            <i class="fas fa-users me-2 text-success"></i>إيميل إدارة العملاء
+                                        </label>
+                                        <input type="email"
+                                               class="form-control @error('notification_customers_management_email') is-invalid @enderror"
+                                               id="notification_customers_management_email"
+                                               name="notification_customers_management_email"
+                                               value="{{ old('notification_customers_management_email', $settings['notification_customers_management_email'] ?? '') }}"
+                                               placeholder="customers@yourevents.sa">
+                                        @error('notification_customers_management_email')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="notification_bookings_management_email" class="form-label">
+                                            <i class="fas fa-calendar-check me-2 text-primary"></i>إيميل إدارة الحجوزات
+                                        </label>
+                                        <input type="email"
+                                               class="form-control @error('notification_bookings_management_email') is-invalid @enderror"
+                                               id="notification_bookings_management_email"
+                                               name="notification_bookings_management_email"
+                                               value="{{ old('notification_bookings_management_email', $settings['notification_bookings_management_email'] ?? '') }}"
+                                               placeholder="bookings@yourevents.sa">
+                                        @error('notification_bookings_management_email')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Notification Types -->
                             <div class="row">
                                 <div class="col-12">

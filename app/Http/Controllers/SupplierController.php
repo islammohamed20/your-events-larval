@@ -10,6 +10,7 @@ use App\Models\SupplierService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class SupplierController extends Controller
 {
@@ -29,6 +30,7 @@ class SupplierController extends Controller
                     'name' => $service->name,
                     'subtitle' => $service->subtitle,
                     'category_id' => $service->category_id,
+                    'url' => route('services.show', $service->id),
                 ];
             });
 
@@ -49,8 +51,11 @@ class SupplierController extends Controller
             'description' => 'required|string|min:50',
             'categories' => 'required|array|min:1',
             'categories.*' => 'exists:categories,id',
-            'services' => 'required|array|min:1',
+            'services' => 'nullable|array',
             'services.*' => 'exists:services,id',
+            'custom_services' => 'nullable|array',
+            'custom_services.*.category_id' => 'required|exists:categories,id',
+            'custom_services.*.name' => 'required|string|max:255',
             'primary_phone' => 'required|string|max:20',
             'secondary_phone' => 'nullable|string|max:20',
             'email' => 'required|email|unique:suppliers,email|unique:users,email',
@@ -72,8 +77,15 @@ class SupplierController extends Controller
         ]);
 
         // تحقق من أن جميع الخدمات تنتمي إلى الفئات المختارة
-        $selectedServiceIds = $validated['services'];
+        $selectedServiceIds = $validated['services'] ?? [];
         $selectedCategoryIds = $validated['categories'];
+        $customServices = $validated['custom_services'] ?? [];
+
+        if (empty($selectedServiceIds) && empty($customServices)) {
+            return back()->withInput()->withErrors([
+                'services' => 'يرجى اختيار خدمة واحدة على الأقل أو إضافة خدمة جديدة.',
+            ]);
+        }
 
         $services = Service::whereIn('id', $selectedServiceIds)->get();
         $invalidServices = $services->whereNotIn('category_id', $selectedCategoryIds);
@@ -82,6 +94,26 @@ class SupplierController extends Controller
             return back()->withInput()->withErrors([
                 'services' => 'بعض الخدمات المختارة لا تنتمي إلى الفئات المحددة',
             ]);
+        }
+
+        // Enforce single-supplier services rule.
+        foreach ($services as $service) {
+            if ($service->supplier_policy === 'single') {
+                $assignedElsewhere = SupplierService::where('service_id', $service->id)->exists();
+                if ($assignedElsewhere) {
+                    return back()->withInput()->withErrors([
+                        'services' => "الخدمة '{$service->name}' محددة لمورد واحد فقط وتم ربطها بالفعل.",
+                    ]);
+                }
+            }
+        }
+
+        foreach ($customServices as $customService) {
+            if (!in_array((int) $customService['category_id'], $selectedCategoryIds, true)) {
+                return back()->withInput()->withErrors([
+                    'custom_services' => 'كل خدمة جديدة يجب أن تكون ضمن الفئات التي اخترتها.',
+                ]);
+            }
         }
 
         // Ensure boolean fields and default status
@@ -122,13 +154,16 @@ class SupplierController extends Controller
             $validated['password'] = \Illuminate\Support\Facades\Hash::make($validated['password']);
         }
 
-        // Create supplier
-        $supplier = Supplier::create($validated);
+        // Create supplier + service mappings in one transaction
+        $supplier = DB::transaction(function () use ($validated, $selectedServiceIds, $customServices, $request) {
+            $supplier = Supplier::create($validated);
 
-        // حفظ الخدمات في جدول SupplierServices (Many-to-Many)
-        foreach ($selectedServiceIds as $serviceId) {
-            $service = Service::find($serviceId);
-            if ($service) {
+            foreach ($selectedServiceIds as $serviceId) {
+                $service = Service::find($serviceId);
+                if (! $service) {
+                    continue;
+                }
+
                 SupplierService::create([
                     'supplier_id' => $supplier->id,
                     'service_id' => $service->id,
@@ -136,7 +171,30 @@ class SupplierController extends Controller
                     'is_available' => true,
                 ]);
             }
-        }
+
+            foreach ($customServices as $customService) {
+                $service = Service::create([
+                    'category_id' => $customService['category_id'],
+                    'name' => $customService['name'],
+                    'subtitle' => $customService['name'],
+                    'description' => 'خدمة مقترحة من مورد جديد - بانتظار مراجعة الإدارة',
+                    'price' => 0,
+                    'service_type' => 'simple',
+                    'supplier_policy' => 'multiple',
+                    'is_active' => false,
+                    'has_variations' => false,
+                ]);
+
+                SupplierService::create([
+                    'supplier_id' => $supplier->id,
+                    'service_id' => $service->id,
+                    'category_id' => $service->category_id,
+                    'is_available' => true,
+                ]);
+            }
+
+            return $supplier;
+        });
 
         // إرسال OTP للبريد الإلكتروني باستخدام القالب الموحد عبر OtpVerification
         try {

@@ -21,6 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'admin.permission' => \App\Http\Middleware\AdminPermissionMiddleware::class,
+            'admin.permission.scope' => \App\Http\Middleware\EnforceAdminPermissionScope::class,
+            'admin.session.valid' => \App\Http\Middleware\EnsureUserSessionVersion::class,
+            'admin.force-password' => \App\Http\Middleware\EnsureAdminPasswordChange::class,
             'supplier' => \App\Http\Middleware\SupplierMiddleware::class,
             'supplier.guest' => \App\Http\Middleware\RedirectIfSupplier::class,
         ]);
@@ -29,6 +33,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Add security headers to all requests
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
+        // Enforce one active session for web users via session version checks.
+        $middleware->append(\App\Http\Middleware\EnsureUserSessionVersion::class);
 
         // Track visits on all web requests
         $middleware->append(\App\Http\Middleware\TrackVisit::class);

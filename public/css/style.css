@@ -1158,7 +1158,7 @@ body::before {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-right: 30px;
+    margin-right: 0;
 }
 
 /* Cart Dropdown Details */

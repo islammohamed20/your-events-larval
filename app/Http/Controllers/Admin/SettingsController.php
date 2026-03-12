@@ -72,6 +72,9 @@ class SettingsController extends Controller
             'notification_contacts' => 'boolean',
             'notification_suppliers' => 'boolean',
             'notification_customers' => 'boolean',
+            'notification_admin_email' => 'nullable|email|max:255',
+            'notification_customers_management_email' => 'nullable|email|max:255',
+            'notification_bookings_management_email' => 'nullable|email|max:255',
             // Appearance
             'primary_color' => 'nullable|string|max:7',
             'secondary_color' => 'nullable|string|max:7',
@@ -262,6 +265,9 @@ class SettingsController extends Controller
             'notification_contacts' => true,
             'notification_suppliers' => true,
             'notification_customers' => true,
+            'notification_admin_email' => '',
+            'notification_customers_management_email' => '',
+            'notification_bookings_management_email' => '',
             // Appearance
             'primary_color' => '#1f144a',
             'secondary_color' => '#2dbcae',

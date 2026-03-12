@@ -409,4 +409,133 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(refreshDashboard, 10000); // كل 10 ثواني
 });
 </script>
+
+{{-- Biometric Registration Prompt --}}
+@if(session('admin_biometric_prompt'))
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    if (!window.PublicKeyCredential) return;
+    try {
+        const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        if (!available) return;
+    } catch(e) { return; }
+
+    // Already registered on this device?
+    if (localStorage.getItem('ye_admin_biometric_registered') === '1') return;
+
+    // Show registration modal
+    const modal = new bootstrap.Modal(document.getElementById('adminBiometricModal'));
+    modal.show();
+});
+
+function base64ToArrayBuffer(base64) {
+    const b64 = base64.replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(b64);
+    const buf = new ArrayBuffer(raw.length);
+    const view = new Uint8Array(buf);
+    for (let i = 0; i < raw.length; i++) view[i] = raw.charCodeAt(i);
+    return buf;
+}
+function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+}
+
+async function registerAdminBiometric() {
+    const btn = document.getElementById('adminBioRegBtn');
+    const msg = document.getElementById('adminBioRegMsg');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جارٍ التسجيل...';
+    msg.style.display = 'none';
+
+    try {
+        // 1. Get registration options
+        const optRes = await fetch('{{ route("biometric.register.options") }}', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json'},
+        });
+        if (!optRes.ok) throw new Error((await optRes.json()).error || 'فشل في الحصول على خيارات التسجيل');
+        const options = await optRes.json();
+
+        // 2. Create credential
+        const credential = await navigator.credentials.create({
+            publicKey: {
+                challenge: base64ToArrayBuffer(options.challenge),
+                rp: options.rp,
+                user: {
+                    id: base64ToArrayBuffer(options.user.id),
+                    name: options.user.name,
+                    displayName: options.user.displayName,
+                },
+                pubKeyCredParams: options.pubKeyCredParams,
+                authenticatorSelection: options.authenticatorSelection,
+                timeout: options.timeout,
+                attestation: options.attestation,
+            }
+        });
+
+        // 3. Send to server
+        const regRes = await fetch('{{ route("biometric.register") }}', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json'},
+            body: JSON.stringify({
+                id: credential.id,
+                rawId: arrayBufferToBase64(credential.rawId),
+                response: {
+                    clientDataJSON: arrayBufferToBase64(credential.response.clientDataJSON),
+                    attestationObject: arrayBufferToBase64(credential.response.attestationObject),
+                },
+                type: credential.type,
+                device_name: navigator.userAgent.match(/\(([^)]+)\)/)?.[1]?.split(';')[0] || navigator.platform,
+            })
+        });
+
+        const result = await regRes.json();
+        if (result.success) {
+            localStorage.setItem('ye_admin_biometric_registered', '1');
+            msg.className = 'alert alert-success small';
+            msg.textContent = '✅ تم تسجيل البصمة بنجاح! يمكنك استخدامها للدخول مباشرة في المرات القادمة.';
+            msg.style.display = 'block';
+            btn.innerHTML = '<i class="fas fa-check me-2"></i>تم التسجيل';
+            setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('adminBiometricModal'))?.hide(), 2000);
+        } else {
+            throw new Error(result.error || 'فشل التسجيل');
+        }
+    } catch(err) {
+        msg.className = 'alert alert-danger small';
+        msg.textContent = err.name === 'NotAllowedError' ? 'تم إلغاء التسجيل' : ('خطأ: ' + err.message);
+        msg.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-fingerprint me-2"></i>نعم، فعّل البصمة';
+    }
+}
+</script>
+
+<!-- Biometric Registration Modal -->
+<div class="modal fade" id="adminBiometricModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:15px;border:none;">
+            <div class="modal-header border-0 pb-0" style="background:linear-gradient(135deg,#1f144a,#3b2d7a);border-radius:15px 15px 0 0;">
+                <h5 class="modal-title text-white"><i class="fas fa-fingerprint me-2"></i>تفعيل الدخول بالبصمة</h5>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div style="font-size:60px;color:#1f144a;margin-bottom:15px;">
+                    <i class="fas fa-fingerprint"></i>
+                </div>
+                <h5 class="fw-bold mb-2">هل تريد تفعيل الدخول السريع بالبصمة؟</h5>
+                <p class="text-muted small">بعد التفعيل، يمكنك تسجيل الدخول لاحقاً بلمسة واحدة باستخدام بصمة الإصبع أو Face ID</p>
+                <div id="adminBioRegMsg" class="mb-2" style="display:none;"></div>
+                <button type="button" class="btn btn-primary w-100 mb-2" id="adminBioRegBtn" onclick="registerAdminBiometric()">
+                    <i class="fas fa-fingerprint me-2"></i>نعم، فعّل البصمة
+                </button>
+                <button type="button" class="btn btn-light w-100" data-bs-dismiss="modal">
+                    تخطي
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 @endpush

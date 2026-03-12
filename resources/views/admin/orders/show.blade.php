@@ -197,11 +197,11 @@
                         <i class="fas fa-envelope me-2"></i>{{ $order->supplier->email }}
                     </p>
                     <p class="text-muted mb-2">
-                        <i class="fas fa-phone me-2"></i>{{ $order->supplier->phone }}
+                        <i class="fas fa-phone me-2"></i>{{ $order->supplier->primary_phone }}
                     </p>
-                    @if($order->supplier->company_name)
+                    @if($order->supplier->headquarters_city)
                     <p class="text-muted mb-0">
-                        <i class="fas fa-briefcase me-2"></i>{{ $order->supplier->company_name }}
+                        <i class="fas fa-map-marker-alt me-2"></i>{{ $order->supplier->headquarters_city }}
                     </p>
                     @endif
                     @else

@@ -362,6 +362,18 @@
         'notification_auto_dismiss',
     ]);
 @endphp
+@php
+    /** @var \App\Models\User|null $adminUser */
+    $adminUser = auth()->user();
+    $canManageUsers = $adminUser?->hasAdminPermission('manage_users') ?? false;
+    $canManageEmails = $adminUser?->hasAdminPermission('manage_emails') ?? false;
+    $canManageServices = $adminUser?->hasAdminPermission('manage_services') ?? false;
+    $canManageCategories = $adminUser?->hasAdminPermission('manage_categories') ?? false;
+    $canManagePackages = $adminUser?->hasAdminPermission('manage_packages') ?? false;
+    $canViewCustomers = $adminUser?->hasAdminPermission('manage_customers') || $adminUser?->hasAdminPermission('customers.view');
+    $canViewBookings = $adminUser?->hasAdminPermission('manage_bookings') || $adminUser?->hasAdminPermission('bookings.view');
+    $canViewQuotes = $adminUser?->hasAdminPermission('manage_bookings') || $adminUser?->hasAdminPermission('quotes.view');
+@endphp
 <body data-confirm-delete="{{ __('common.confirm_delete') }}"
       data-notifications-enabled="{{ ($notificationSettings['notifications_enabled'] ?? true) ? '1' : '0' }}"
       data-notification-sound-enabled="{{ ($notificationSettings['notification_sound_enabled'] ?? true) ? '1' : '0' }}"
@@ -407,138 +419,156 @@
                         <i class="fas fa-tachometer-alt me-2"></i>{{ __('common.admin_dashboard_main') }}
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.categories.index') }}">
-                        <i class="fas fa-folder me-2"></i>{{ __('common.categories') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.packages.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.packages.index') }}">
-                        <i class="fas fa-box me-2"></i>{{ __('common.packages') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.services.index') }}">
-                        <i class="fas fa-cogs me-2"></i>{{ __('common.services') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.attributes.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.attributes.index') }}">
-                        <i class="fas fa-tags me-2"></i>{{ __('common.service_attributes') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.bookings.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.bookings.index') }}">
-                        <i class="fas fa-calendar-check me-2"></i>{{ __('common.bookings') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.quotes.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.quotes.index') }}">
-                        <i class="fas fa-file-invoice-dollar me-2"></i>{{ __('common.quotes') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.payments.index') }}">
-                        <i class="fas fa-credit-card me-2"></i>{{ __('common.payments') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.gallery.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.gallery.index') }}">
-                        <i class="fas fa-images me-2"></i>{{ __('common.gallery') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.user-management.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.user-management.index') }}">
-                        <i class="fas fa-users-cog me-2"></i>{{ __('common.user_management') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.customers.index') }}">
-                        <i class="fas fa-user-tie me-2"></i>{{ __('common.customers_management') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.suppliers.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.suppliers.index') }}">
-                        <i class="fas fa-handshake me-2"></i>{{ __('common.suppliers_management') }}
-                        @if(\App\Models\Supplier::where('status', 'pending')->count() > 0)
-                            <span class="badge bg-warning text-dark ms-1">{{ \App\Models\Supplier::where('status', 'pending')->count() }}</span>
-                        @endif
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.hero-slides.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.hero-slides.index') }}">
-                        <i class="fas fa-images me-2"></i>{{ __('common.hero_slides') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.homepage.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.homepage.index') }}">
-                        <i class="fas fa-home me-2"></i>{{ __('common.homepage_management') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.reports.index') }}">
-                        <i class="fas fa-chart-line me-2"></i>{{ __('common.reports') }}
-                    </a>
-                </li>
-                <li class="nav-item ms-3">
-                    <a class="nav-link {{ request()->routeIs('admin.reports.security') ? 'active' : '' }}" 
-                       href="{{ route('admin.reports.security') }}">
-                        <i class="fas fa-shield-alt me-2 text-muted"></i>
-                        <small>{{ __('common.security_report') }}</small>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.login-activities.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.login-activities.index') }}">
-                        <i class="fas fa-user-shield me-2"></i>{{ __('common.login_logs') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.settings.index') }}">
-                        <i class="fas fa-cog me-2"></i>{{ __('common.settings') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.contact-messages.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.contact-messages.index') }}">
-                        <i class="fas fa-envelope me-2"></i>{{ __('common.contact_messages') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.email-management.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.email-management.index') }}">
-                        <i class="fas fa-envelope-open-text me-2"></i>{{ __('common.email_management') }}
-                    </a>
-                </li>
-                <li class="nav-item ms-3">
-                    <a class="nav-link {{ request()->routeIs('admin.email-templates.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.email-templates.index') }}">
-                        <i class="fas fa-file-alt me-2 text-muted"></i>
-                        <small>{{ __('common.templates') }}</small>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.otp.*') ? 'active' : '' }}" 
-                       href="{{ route('admin.otp.index') }}">
-                        <i class="fas fa-shield-alt me-2 text-muted"></i>
-                        <small>{{ __('common.otp_codes') }}</small>
-                    </a>
-                </li>
+                @if($canManageCategories)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.categories.index') }}">
+                            <i class="fas fa-folder me-2"></i>{{ __('common.categories') }}
+                        </a>
+                    </li>
+                @endif
+                @if($canManagePackages)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.packages.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.packages.index') }}">
+                            <i class="fas fa-box me-2"></i>{{ __('common.packages') }}
+                        </a>
+                    </li>
+                @endif
+                @if($canManageServices)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.services.index') }}">
+                            <i class="fas fa-cogs me-2"></i>{{ __('common.services') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.attributes.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.attributes.index') }}">
+                            <i class="fas fa-tags me-2"></i>{{ __('common.service_attributes') }}
+                        </a>
+                    </li>
+                @endif
+                @if($canViewBookings)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.bookings.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.bookings.index') }}">
+                            <i class="fas fa-calendar-check me-2"></i>{{ __('common.bookings') }}
+                        </a>
+                    </li>
+                @endif
+                @if($canViewQuotes)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.quotes.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.quotes.index') }}">
+                            <i class="fas fa-file-invoice-dollar me-2"></i>{{ __('common.quotes') }}
+                        </a>
+                    </li>
+                @endif
+                @if($canManageUsers)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.payments.index') }}">
+                            <i class="fas fa-credit-card me-2"></i>{{ __('common.payments') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.gallery.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.gallery.index') }}">
+                            <i class="fas fa-images me-2"></i>{{ __('common.gallery') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.user-management.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.user-management.index') }}">
+                            <i class="fas fa-users-cog me-2"></i>{{ __('common.user_management') }}
+                        </a>
+                    </li>
+                @endif
+                @if($canViewCustomers)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.customers.index') }}">
+                            <i class="fas fa-user-tie me-2"></i>{{ __('common.customers_management') }}
+                        </a>
+                    </li>
+                @endif
+                @if($canManageUsers)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.suppliers.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.suppliers.index') }}">
+                            <i class="fas fa-handshake me-2"></i>{{ __('common.suppliers_management') }}
+                            @if(\App\Models\Supplier::where('status', 'pending')->count() > 0)
+                                <span class="badge bg-warning text-dark ms-1">{{ \App\Models\Supplier::where('status', 'pending')->count() }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.hero-slides.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.hero-slides.index') }}">
+                            <i class="fas fa-images me-2"></i>{{ __('common.hero_slides') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.homepage.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.homepage.index') }}">
+                            <i class="fas fa-home me-2"></i>{{ __('common.homepage_management') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.reports.index') }}">
+                            <i class="fas fa-chart-line me-2"></i>{{ __('common.reports') }}
+                        </a>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <a class="nav-link {{ request()->routeIs('admin.reports.security') ? 'active' : '' }}" 
+                           href="{{ route('admin.reports.security') }}">
+                            <i class="fas fa-shield-alt me-2 text-muted"></i>
+                            <small>{{ __('common.security_report') }}</small>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.login-activities.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.login-activities.index') }}">
+                            <i class="fas fa-user-shield me-2"></i>{{ __('common.login_logs') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.settings.index') }}">
+                            <i class="fas fa-cog me-2"></i>{{ __('common.settings') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.contact-messages.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.contact-messages.index') }}">
+                            <i class="fas fa-envelope me-2"></i>{{ __('common.contact_messages') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.otp.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.otp.index') }}">
+                            <i class="fas fa-shield-alt me-2 text-muted"></i>
+                            <small>{{ __('common.otp_codes') }}</small>
+                        </a>
+                    </li>
+                @endif
+                @if($canManageEmails)
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.email-management.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.email-management.index') }}">
+                            <i class="fas fa-envelope-open-text me-2"></i>{{ __('common.email_management') }}
+                        </a>
+                    </li>
+                    <li class="nav-item ms-3">
+                        <a class="nav-link {{ request()->routeIs('admin.email-templates.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.email-templates.index') }}">
+                            <i class="fas fa-file-alt me-2 text-muted"></i>
+                            <small>{{ __('common.templates') }}</small>
+                        </a>
+                    </li>
+                @endif
                 <li class="nav-item">
                     <hr style="border-color: #34495e; margin: 15px 20px;">
                 </li>

@@ -43,6 +43,20 @@ class SupplierMiddleware
             return redirect()->route('supplier.login')->with('error', 'يرجى تأكيد بريدك الإلكتروني أولاً');
         }
 
+        $currentVersion = (int) ($supplier->session_version ?: 1);
+        $sessionVersion = $request->session()->get('supplier_session_version');
+
+        if ($sessionVersion === null) {
+            $request->session()->put('supplier_session_version', $currentVersion);
+        } elseif ((int) $sessionVersion !== $currentVersion) {
+            Auth::guard('supplier')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('supplier.login')
+                ->with('error', 'تم إنهاء جلستك لأن حسابك سُجل دخوله من جهاز آخر.');
+        }
+
         return $next($request);
     }
 }

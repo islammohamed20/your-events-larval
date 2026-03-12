@@ -55,6 +55,21 @@ class BookingController extends Controller
 
     public function destroy(Booking $booking)
     {
+        // منع حذف الحجوزات النشطة أو المكتملة
+        if (in_array($booking->status, ['confirmed', 'completed', 'awaiting_supplier'])) {
+            return redirect()->route('admin.bookings.index')
+                ->with('error', "لا يمكن حذف الحجز \"{$booking->booking_reference}\" لأن حالته \"{$booking->status}\". قم بإلغائه أولاً.");
+        }
+
+        // منع الحذف إذا كانت هناك مدفوعات مرتبطة
+        $paymentsCount = \App\Models\Payment::where('booking_id', $booking->id)
+            ->whereIn('status', ['paid', 'captured'])
+            ->count();
+        if ($paymentsCount > 0) {
+            return redirect()->route('admin.bookings.index')
+                ->with('error', "لا يمكن حذف الحجز \"{$booking->booking_reference}\" لأنه يحتوي على {$paymentsCount} عملية دفع مكتملة.");
+        }
+
         $booking->delete();
 
         return redirect()->route('admin.bookings.index')

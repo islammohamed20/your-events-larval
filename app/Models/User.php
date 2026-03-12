@@ -10,6 +10,27 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    public const ADMIN_PERMISSIONS = [
+        'manage_users',
+        'manage_emails',
+        'manage_services',
+        'manage_categories',
+        'manage_packages',
+        'manage_customers',
+        'manage_bookings',
+        'customers.view',
+        'customers.edit',
+        'customers.delete',
+        'customers.export',
+        'customers.reset_password',
+        'bookings.view',
+        'bookings.edit',
+        'bookings.delete',
+        'quotes.view',
+        'quotes.edit',
+        'quotes.delete',
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -22,15 +43,20 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
+        'address',
         'role',
         'is_admin',
         'status',
         'registration_source',
+        'must_change_password',
+        'logout_other_devices',
+        'session_version',
         'card_type',
         'card_holder_name',
         'card_last_four',
         'card_expiry_month',
         'card_expiry_year',
+        'permissions',
     ];
 
     /**
@@ -42,6 +68,9 @@ class User extends Authenticatable
         'role' => 'user',
         'is_admin' => false,
         'status' => 'active',
+        'must_change_password' => false,
+        'logout_other_devices' => false,
+        'session_version' => 1,
     ];
 
     /**
@@ -66,6 +95,10 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'must_change_password' => 'boolean',
+            'logout_other_devices' => 'boolean',
+            'session_version' => 'integer',
+            'permissions' => 'array',
         ];
     }
 
@@ -75,6 +108,67 @@ class User extends Authenticatable
     public function isAdmin()
     {
         return $this->is_admin || $this->role === 'admin';
+    }
+
+    /**
+     * Check granular admin permission.
+     */
+    public function hasAdminPermission(?string $permission): bool
+    {
+        if (! $this->isAdmin()) {
+            return false;
+        }
+
+        if (! $permission) {
+            return true;
+        }
+
+        $permissions = $this->permissions;
+
+        // Backward compatibility: old admin users without stored permissions keep access.
+        if (empty($permissions) || ! is_array($permissions)) {
+            return true;
+        }
+
+        if (in_array($permission, $permissions, true)) {
+            return true;
+        }
+
+        // manage_users is the top-level admin permission for this panel.
+        if (in_array('manage_users', $permissions, true)) {
+            return true;
+        }
+
+        // Legacy broad permissions still grant granular access.
+        if (str_starts_with($permission, 'customers.') && in_array('manage_customers', $permissions, true)) {
+            return true;
+        }
+
+        if ((str_starts_with($permission, 'bookings.') || str_starts_with($permission, 'quotes.')) && in_array('manage_bookings', $permissions, true)) {
+            return true;
+        }
+
+        if (str_starts_with($permission, 'users.') && in_array('manage_users', $permissions, true)) {
+            return true;
+        }
+
+        if (str_starts_with($permission, 'emails.') && in_array('manage_emails', $permissions, true)) {
+            return true;
+        }
+
+        if (str_starts_with($permission, 'services.') && in_array('manage_services', $permissions, true)) {
+            return true;
+        }
+
+        if (str_starts_with($permission, 'categories.') && in_array('manage_categories', $permissions, true)) {
+            return true;
+        }
+
+        if (str_starts_with($permission, 'packages.') && in_array('manage_packages', $permissions, true)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

@@ -29,47 +29,66 @@
                             
                             <!-- Package/Service Selection -->
                             <div class="row mb-4">
-                                @if($selectedPackage)
-                                    <div class="col-12">
-                                        <div class="alert alert-info">
-                                            <h5 class="alert-heading">الباقة المختارة:</h5>
-                                            <strong>{{ $selectedPackage->name }}</strong> - {{ number_format($selectedPackage->price) }} {{ __('common.currency') }}
-                                            <input type="hidden" name="package_id" value="{{ $selectedPackage->id }}">
+                                @php
+                                    $defaultBookingType = old('booking_type');
+                                    if (! $defaultBookingType) {
+                                        $defaultBookingType = $selectedService ? 'service' : ($selectedPackage ? 'package' : '');
+                                    }
+                                    $selectedServiceId = old('service_id', $selectedService?->id);
+                                    $selectedPackageId = old('package_id', $selectedPackage?->id);
+                                    $serviceFromOld = $selectedServiceId ? $services->firstWhere('id', (int) $selectedServiceId) : null;
+                                    $packageFromOld = $selectedPackageId ? $packages->firstWhere('id', (int) $selectedPackageId) : null;
+                                @endphp
+
+                                <div class="col-12 mb-3">
+                                    <label for="booking_type" class="form-label">اختار نوع الحجز *</label>
+                                    <select class="form-select" name="booking_type" id="booking_type" required>
+                                        <option value="">-- اختار نوع الحجز --</option>
+                                        <option value="service" {{ $defaultBookingType === 'service' ? 'selected' : '' }}>خدمة</option>
+                                        <option value="package" {{ $defaultBookingType === 'package' ? 'selected' : '' }}>باقة</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-12" id="bookingTypeService" style="display:none;">
+                                    <div class="border rounded-3 p-3" style="background:#f8fafc;">
+                                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                                            <div class="fw-semibold">الخدمة المختارة</div>
+                                            <a href="{{ route('services.index') }}" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-search me-1"></i>تصفح الخدمات
+                                            </a>
                                         </div>
+
+                                        <input type="hidden" name="service_id" id="service_id" value="{{ $selectedServiceId ?: '' }}">
+
+                                        @if($serviceFromOld)
+                                            <div class="alert alert-info mb-0">
+                                                <strong>{{ $serviceFromOld->name }}</strong>
+                                            </div>
+                                        @else
+                                            <div class="text-muted small">لم يتم اختيار خدمة بعد.</div>
+                                        @endif
                                     </div>
-                                @elseif($selectedService)
-                                    <div class="col-12">
-                                        <div class="alert alert-info">
-                                            <h5 class="alert-heading">الخدمة المختارة:</h5>
-                                            <strong>{{ $selectedService->name }}</strong>
-                                            <input type="hidden" name="service_id" value="{{ $selectedService->id }}">
-                                        </div>
-                                    </div>
-                                @else
-                                    <div class="col-md-6 mb-3">
-                                        <label for="package_id" class="form-label">اختر الباقة (اختياري)</label>
+                                </div>
+
+                                <div class="col-12" id="bookingTypePackage" style="display:none;">
+                                    <div class="border rounded-3 p-3" style="background:#f8fafc;">
+                                        <label for="package_id" class="form-label">اختر الباقة *</label>
                                         <select class="form-select" name="package_id" id="package_id">
                                             <option value="">-- اختر الباقة --</option>
                                             @foreach($packages as $package)
-                                                <option value="{{ $package->id }}" {{ old('package_id') == $package->id ? 'selected' : '' }}>
+                                                <option value="{{ $package->id }}" {{ (string) $selectedPackageId === (string) $package->id ? 'selected' : '' }}>
                                                     {{ $package->name }} - {{ number_format($package->price) }} {{ __('common.currency') }}
                                                 </option>
                                             @endforeach
                                         </select>
+
+                                        @if($packageFromOld)
+                                            <div class="text-muted small mt-2">
+                                                الباقة الحالية: <span class="fw-semibold">{{ $packageFromOld->name }}</span>
+                                            </div>
+                                        @endif
                                     </div>
-                                    
-                                    <div class="col-md-6 mb-3">
-                                        <label for="service_id" class="form-label">اختر الخدمة (اختياري)</label>
-                                        <select class="form-select" name="service_id" id="service_id">
-                                            <option value="">-- اختر الخدمة --</option>
-                                            @foreach($services as $service)
-                                                <option value="{{ $service->id }}" {{ old('service_id') == $service->id ? 'selected' : '' }}>
-                                                    {{ $service->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                @endif
+                                </div>
                             </div>
 
                             <!-- Client Information -->
@@ -212,34 +231,56 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const bookingTypeSelect = document.getElementById('booking_type');
+    const serviceSection = document.getElementById('bookingTypeService');
+    const packageSection = document.getElementById('bookingTypePackage');
+    const serviceInput = document.getElementById('service_id');
     const packageSelect = document.getElementById('package_id');
-    const serviceSelect = document.getElementById('service_id');
-    
-    if (packageSelect && serviceSelect) {
-        packageSelect.addEventListener('change', function() {
-            if (this.value) {
-                serviceSelect.value = '';
-            }
-        });
-        
-        serviceSelect.addEventListener('change', function() {
-            if (this.value) {
-                packageSelect.value = '';
-            }
-        });
-    }
 
     const form = document.querySelector('form');
     if (form) {
         form.addEventListener('submit', function(e) {
-            const packageId = document.querySelector('[name="package_id"]')?.value;
-            const serviceId = document.querySelector('[name="service_id"]')?.value;
-            
-            if (!packageId && !serviceId) {
+            const bookingType = bookingTypeSelect?.value || '';
+            const packageId = packageSelect?.value || '';
+            const serviceId = serviceInput?.value || '';
+
+            if (!bookingType) {
                 e.preventDefault();
-                alert('يرجى اختيار باقة أو خدمة واحدة على الأقل');
+                alert('يرجى اختيار نوع الحجز');
+                return;
+            }
+
+            if (bookingType === 'service' && !serviceId) {
+                e.preventDefault();
+                alert('يرجى اختيار خدمة');
+                return;
+            }
+
+            if (bookingType === 'package' && !packageId) {
+                e.preventDefault();
+                alert('يرجى اختيار باقة');
+                return;
             }
         });
+    }
+
+    function updateBookingTypeUI() {
+        const type = bookingTypeSelect?.value || '';
+        if (serviceSection) serviceSection.style.display = type === 'service' ? 'block' : 'none';
+        if (packageSection) packageSection.style.display = type === 'package' ? 'block' : 'none';
+
+        if (type === 'service') {
+            if (packageSelect) packageSelect.value = '';
+        }
+
+        if (type === 'package') {
+            if (serviceInput) serviceInput.value = '';
+        }
+    }
+
+    if (bookingTypeSelect) {
+        bookingTypeSelect.addEventListener('change', updateBookingTypeUI);
+        updateBookingTypeUI();
     }
 });
 </script>

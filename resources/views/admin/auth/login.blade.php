@@ -171,13 +171,17 @@
                 <label class="form-check-label small text-muted" for="remember">تذكرني</label>
             </div>
 
-            <button type="submit" class="btn btn-primary mb-3">
+            <button type="submit" class="btn btn-primary mb-3" id="adminLoginBtn">
                 تسجيل الدخول <i class="fas fa-arrow-left me-2"></i>
             </button>
             
-            <button type="button" id="biometric-login-btn" class="btn btn-outline-light w-100 mb-3" style="display: none;" onclick="loginBiometric()">
-                <i class="fas fa-fingerprint me-2"></i> الدخول بالبصمة
-            </button>
+            {{-- زر البصمة --}}
+            <div id="biometricSection" style="display:none;">
+                <button type="button" id="biometric-login-btn" class="btn btn-outline-light w-100 mb-3" onclick="loginBiometric()">
+                    <i class="fas fa-fingerprint me-2"></i> الدخول بالبصمة
+                </button>
+                <div id="biometricMsg" class="text-center small mb-2" style="display:none;"></div>
+            </div>
         </form>
         
         <div class="text-center mt-4">
@@ -187,121 +191,148 @@
         </div>
     </div>
 
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (window.PublicKeyCredential && 
-                PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
-                await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()) {
-                
-                const bioBtn = document.getElementById('biometric-login-btn');
-                if (bioBtn) bioBtn.style.display = 'block';
-            }
-
-            const emailEl = document.getElementById('email');
-            const passEl = document.getElementById('password');
-            emailEl?.addEventListener('input', updateBiometricBtnState);
-            passEl?.addEventListener('input', updateBiometricBtnState);
-            updateBiometricBtnState();
-        });
-
-        function updateBiometricBtnState() {
-            const bioBtn = document.getElementById('biometric-login-btn');
-            if (!bioBtn) return;
-            const email = (document.getElementById('email')?.value || '').trim();
-            const password = (document.getElementById('password')?.value || '').trim();
-            bioBtn.disabled = !(email && password);
+        // ─── Helper functions ───────────────────────────────────────────
+        function base64ToArrayBuffer(base64) {
+            const b64 = base64.replace(/-/g, '+').replace(/_/g, '/');
+            const raw = atob(b64);
+            const buf = new ArrayBuffer(raw.length);
+            const view = new Uint8Array(buf);
+            for (let i = 0; i < raw.length; i++) view[i] = raw.charCodeAt(i);
+            return buf;
+        }
+        function arrayBufferToBase64(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+            return btoa(binary);
+        }
+        function showBioMsg(msg, type) {
+            const el = document.getElementById('biometricMsg');
+            if (!el) return;
+            el.className = 'text-center small mb-2 text-' + type;
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+        function resetBiometricBtn() {
+            const btn = document.getElementById('biometric-login-btn');
+            if (!btn) return;
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-fingerprint me-2"></i> الدخول بالبصمة';
         }
 
+        // ─── Biometric Visibility ───────────────────────────────────────
+        function updateBiometricVisibility() {
+            const section = document.getElementById('biometricSection');
+            const btn = document.getElementById('biometric-login-btn');
+            if (!section || !btn) return;
+            section.style.display = 'block';
+            const email = (document.getElementById('email')?.value || '').trim();
+            const password = (document.getElementById('password')?.value || '').trim();
+            btn.disabled = !(email && password);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.PublicKeyCredential) {
+                PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().then(available => {
+                    if (available) updateBiometricVisibility();
+                });
+            }
+            document.getElementById('email')?.addEventListener('input', updateBiometricVisibility);
+            document.getElementById('password')?.addEventListener('input', updateBiometricVisibility);
+        });
+
+        // ─── Biometric Login ────────────────────────────────────────────
         async function loginBiometric() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
             if (!email || !password) {
-                alert('يرجى إدخال البريد الإلكتروني وكلمة المرور أولاً');
+                showBioMsg('يرجى إدخال البريد الإلكتروني وكلمة المرور أولاً', 'danger');
                 return;
             }
 
+            const btn = document.getElementById('biometric-login-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جارٍ التحقق...';
+
             try {
-                const preRes = await fetch("{{ route('biometric.precheck') }}", {
+                // 1. Precheck (verify credentials)
+                const preRes = await fetch('{{ route("biometric.precheck") }}', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password, user_type: 'user', context: 'admin' }),
-                    credentials: 'same-origin'
+                    headers: {'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json'},
+                    body: JSON.stringify({email, password, user_type: 'user', context: 'admin'})
                 });
-
                 if (!preRes.ok) {
-                    const errorData = await preRes.json();
-                    throw new Error(errorData.error || 'بيانات الدخول غير صحيحة.');
+                    const err = await preRes.json();
+                    showBioMsg(err.error || 'بيانات الدخول غير صحيحة.', 'danger');
+                    resetBiometricBtn();
+                    return;
                 }
 
-                // 1. Get options
-                const optionsRes = await fetch("{{ route('biometric.auth.options') }}", {
+                // 2. Get auth challenge
+                const optRes = await fetch('{{ route("biometric.auth.options") }}', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ email, user_type: 'user', context: 'admin' }),
-                    credentials: 'same-origin'
+                    headers: {'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json'},
+                    body: JSON.stringify({email, user_type: 'user', context: 'admin'})
                 });
-
-                if (!optionsRes.ok) {
-                    const errorData = await optionsRes.json();
-                    throw new Error(errorData.error || 'فشل في جلب خيارات المصادقة');
+                if (!optRes.ok) {
+                    const err = await optRes.json();
+                    showBioMsg(err.error || 'لا توجد بصمة مسجّلة لهذا الحساب', 'warning');
+                    resetBiometricBtn();
+                    return;
                 }
-                
-                const options = await optionsRes.json();
 
-                // 2. Decode options
-                const challengeB64 = String(options.challenge || '').replace(/-/g, '+').replace(/_/g, '/');
-                options.challenge = Uint8Array.from(atob(challengeB64), c => c.charCodeAt(0));
-                options.allowCredentials.forEach(cred => {
-                    const idB64 = String(cred.id || '').replace(/-/g, '+').replace(/_/g, '/');
-                    cred.id = Uint8Array.from(atob(idB64), c => c.charCodeAt(0));
-                });
+                const options = await optRes.json();
 
-                // 3. Get credential
-                const credential = await navigator.credentials.get({ publicKey: options });
-
-                // 4. Encode response
-                const response = {
-                    id: credential.id,
-                    rawId: credential.id,
-                    type: credential.type,
-                    response: {
-                        clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON))),
-                        authenticatorData: btoa(String.fromCharCode(...new Uint8Array(credential.response.authenticatorData))),
-                        signature: btoa(String.fromCharCode(...new Uint8Array(credential.response.signature))),
-                        userHandle: credential.response.userHandle ? btoa(String.fromCharCode(...new Uint8Array(credential.response.userHandle))) : null
+                // 3. Call device authenticator
+                const credential = await navigator.credentials.get({
+                    publicKey: {
+                        challenge: base64ToArrayBuffer(options.challenge),
+                        rpId: options.rpId,
+                        allowCredentials: options.allowCredentials.map(c => ({
+                            type: c.type,
+                            id: base64ToArrayBuffer(c.id),
+                        })),
+                        userVerification: 'preferred',
+                        timeout: 60000,
                     }
-                };
-
-                // 5. Verify
-                const verifyRes = await fetch("{{ route('biometric.authenticate') }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ ...response, context: 'admin' }),
-                    credentials: 'same-origin'
                 });
 
-                const verifyData = await verifyRes.json();
-                if (verifyData.success) {
-                    window.location.href = verifyData.redirect;
-                } else {
-                    alert(verifyData.error || 'فشل التحقق');
-                }
+                // 4. Send to server for verification
+                const authRes = await fetch('{{ route("biometric.authenticate") }}', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}','Accept':'application/json'},
+                    body: JSON.stringify({
+                        id: credential.id,
+                        rawId: arrayBufferToBase64(credential.rawId),
+                        response: {
+                            clientDataJSON: arrayBufferToBase64(credential.response.clientDataJSON),
+                            authenticatorData: arrayBufferToBase64(credential.response.authenticatorData),
+                            signature: arrayBufferToBase64(credential.response.signature),
+                            userHandle: credential.response.userHandle ? arrayBufferToBase64(credential.response.userHandle) : null,
+                        },
+                        type: credential.type,
+                        context: 'admin',
+                    })
+                });
 
-            } catch (e) {
-                console.error(e);
-                alert('خطأ: ' + (e.message || e));
+                const result = await authRes.json();
+                if (result.success) {
+                    showBioMsg('✅ تم التحقق! جارٍ التوجيه...', 'success');
+                    setTimeout(() => window.location.href = result.redirect, 500);
+                } else {
+                    showBioMsg(result.error || 'فشل التحقق', 'danger');
+                    resetBiometricBtn();
+                }
+            } catch (err) {
+                if (err.name === 'NotAllowedError') {
+                    showBioMsg('تم إلغاء التحقق بالبصمة', 'warning');
+                } else {
+                    showBioMsg('خطأ: ' + err.message, 'danger');
+                }
+                resetBiometricBtn();
             }
         }
     </script>

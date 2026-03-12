@@ -157,15 +157,30 @@
                                     <h5 class="fw-bold text-dark mb-3">
                                         <i class="fas fa-cogs me-2"></i> الخطوة 2: اختر الخدمات <span class="text-danger">*</span>
                                     </h5>
-                                    <p class="text-muted mb-4">ستظهر الخدمات بناءً على الفئات المختارة</p>
+                                    <p class="text-muted mb-3">ستظهر الخدمات بناءً على الفئات المختارة</p>
 
                                     <div id="servicesContainer">
                                         <div class="alert alert-info">
                                             <i class="fas fa-info-circle me-2"></i> اختر الفئات أولاً لعرض الخدمات المتاحة
                                         </div>
                                     </div>
+
+                                    <div class="mt-3">
+                                        <button type="button" class="btn btn-outline-warning" id="addCustomServiceBtn">
+                                            <i class="fas fa-plus me-1"></i> إضافة خدمة غير موجودة
+                                        </button>
+                                        <small class="d-block text-muted mt-2">إذا لم تجد الخدمة في القائمة، يمكنك كتابة اسمها بعد اختيار الفئة من الخطوة الأولى.</small>
+                                    </div>
+
+                                    <div id="customServicesContainer" class="mt-3"></div>
                                     @error('services')
                                         <div class="text-danger small mt-3">{{ $message }}</div>
+                                    @enderror
+                                    @error('custom_services')
+                                        <div class="text-danger small mt-2">{{ $message }}</div>
+                                    @enderror
+                                    @error('custom_services.*.name')
+                                        <div class="text-danger small mt-2">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -425,6 +440,36 @@
     .service-checkbox input:checked ~ label {
         color: #000;
     }
+
+    .service-checkbox .form-check-input {
+        float: none;
+        margin: 0;
+        flex: 0 0 auto;
+    }
+
+    .service-checkbox-main {
+        min-width: 0;
+    }
+
+    .service-checkbox-label {
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .service-action-btn {
+        white-space: nowrap;
+    }
+
+    @media (max-width: 767.98px) {
+        .service-checkbox-content {
+            flex-direction: column;
+            align-items: stretch !important;
+        }
+
+        .service-action-btn {
+            width: 100%;
+        }
+    }
     
     .service-checkbox:has(input:checked) {
         border-color: #ffc107 !important;
@@ -457,10 +502,14 @@
 <script type="application/json" id="allServicesData">@json($allServices ?? [])</script>
 <script type="application/json" id="selectedCategoriesData">@json(old('categories', []))</script>
 <script type="application/json" id="selectedServicesData">@json(old('services', []))</script>
+<script type="application/json" id="customServicesData">@json(old('custom_services', []))</script>
+<script type="application/json" id="categoriesData">@json($categories->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->values())</script>
 <script>
 const allServices = JSON.parse(document.getElementById('allServicesData').textContent || '[]');
-const selectedCategories = JSON.parse(document.getElementById('selectedCategoriesData').textContent || '[]');
-const selectedServices = JSON.parse(document.getElementById('selectedServicesData').textContent || '[]');
+const selectedCategories = JSON.parse(document.getElementById('selectedCategoriesData').textContent || '[]').map(value => parseInt(value, 10)).filter(Number.isFinite);
+const selectedServices = JSON.parse(document.getElementById('selectedServicesData').textContent || '[]').map(value => parseInt(value, 10)).filter(Number.isFinite);
+const oldCustomServices = JSON.parse(document.getElementById('customServicesData').textContent || '[]');
+const allCategories = JSON.parse(document.getElementById('categoriesData').textContent || '[]');
 
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('supplierRegisterForm');
@@ -479,6 +528,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function updateServices() {
+        const currentSelectedServices = Array.from(document.querySelectorAll('.service-checkbox-input:checked'))
+            .map(c => parseInt(c.value, 10))
+            .filter(Number.isFinite);
+        const effectiveSelectedServices = new Set([...selectedServices, ...currentSelectedServices]);
+
         // الحصول على الفئات المختارة
         const selected = Array.from(document.querySelectorAll('.category-checkbox-input:checked'))
             .map(c => parseInt(c.value));
@@ -521,21 +575,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="row g-3">`;
 
                 services.forEach(service => {
-                    const isChecked = selectedServices.includes(service.id);
+                    const isChecked = effectiveSelectedServices.has(service.id);
                     const displayText = service.subtitle && service.subtitle.trim() !== '' ? service.subtitle : service.name;
                     html += `
                         <div class="col-md-6">
                             <div class="form-check border rounded-3 p-3 service-checkbox">
-                                <input class="form-check-input service-checkbox-input" 
-                                       type="checkbox" 
-                                       name="services[]" 
-                                       value="${service.id}" 
-                                       id="service_${service.id}"
-                                       data-category-id="${service.category_id}"
-                                       ${isChecked ? 'checked' : ''}>
-                                <label class="form-check-label w-100 cursor-pointer" for="service_${service.id}">
-                                    <div class="fw-500">${displayText}</div>
-                                </label>
+                                <div class="d-flex justify-content-between align-items-start gap-3 service-checkbox-content">
+                                    <div class="d-flex align-items-start gap-2 flex-grow-1 service-checkbox-main">
+                                        <input class="form-check-input service-checkbox-input" 
+                                               type="checkbox" 
+                                               name="services[]" 
+                                               value="${service.id}" 
+                                               id="service_${service.id}"
+                                               data-category-id="${service.category_id}"
+                                               ${isChecked ? 'checked' : ''}>
+                                        <label class="form-check-label cursor-pointer service-checkbox-label" for="service_${service.id}">
+                                            <span class="fw-500">${displayText}</span>
+                                        </label>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <a href="${service.url}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary service-action-btn">
+                                            <i class="fas fa-up-right-from-square me-1"></i>تفاصيل الخدمة
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -571,10 +634,73 @@ document.addEventListener('DOMContentLoaded', function() {
         updateServices();
     }
 
+    // إضافة خدمة مخصصة
+    const customServicesContainer = document.getElementById('customServicesContainer');
+    const addCustomServiceBtn = document.getElementById('addCustomServiceBtn');
+    let customServiceIndex = 0;
+
+    function getSelectedCategoryOptions() {
+        const selectedIds = Array.from(document.querySelectorAll('.category-checkbox-input:checked')).map(el => parseInt(el.value, 10));
+        const categories = allCategories.filter(c => selectedIds.includes(parseInt(c.id, 10)));
+        if (categories.length === 0) {
+            return '<option value="">اختر الفئة أولاً</option>';
+        }
+
+        return '<option value="">اختر الفئة</option>' + categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    }
+
+    function escapeHtmlAttribute(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    function addCustomServiceRow(initialData = {}) {
+        const options = getSelectedCategoryOptions();
+        const row = document.createElement('div');
+        row.className = 'border rounded-3 p-3 mb-3 bg-white';
+        const selectedCategoryId = initialData.category_id ? String(initialData.category_id) : '';
+        const serviceName = initialData.name ? escapeHtmlAttribute(initialData.name) : '';
+        row.innerHTML = `
+            <div class="row g-2 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label small">الفئة</label>
+                    <select class="form-select form-select-sm" name="custom_services[${customServiceIndex}][category_id]" required>
+                        ${options}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label small">اسم الخدمة</label>
+                    <input type="text" class="form-control form-control-sm" name="custom_services[${customServiceIndex}][name]" value="${serviceName}" required>
+                </div>
+                <div class="col-md-2 text-end">
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-custom-service">حذف</button>
+                </div>
+            </div>
+        `;
+
+        customServicesContainer.appendChild(row);
+        const select = row.querySelector('select[name*="[category_id]"]');
+        if (selectedCategoryId && select && select.querySelector(`option[value="${selectedCategoryId}"]`)) {
+            select.value = selectedCategoryId;
+        }
+        customServiceIndex += 1;
+    }
+
+    addCustomServiceBtn.addEventListener('click', addCustomServiceRow);
+    customServicesContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-custom-service')) {
+            e.target.closest('.border').remove();
+        }
+    });
+
     // منع الإرسال إذا لم يتم اختيار خدمات
     form.addEventListener('submit', (e) => {
         const servicesChecked = document.querySelectorAll('.service-checkbox-input:checked').length > 0;
         const categoriesChecked = document.querySelectorAll('.category-checkbox-input:checked').length > 0;
+        const customServicesCount = document.querySelectorAll('#customServicesContainer input[name*="[name]"]').length;
 
         if (!categoriesChecked) {
             e.preventDefault();
@@ -583,12 +709,16 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
 
-        if (!servicesChecked) {
+        if (!servicesChecked && customServicesCount === 0) {
             e.preventDefault();
-            alert('يرجى اختيار خدمة واحدة على الأقل من الفئات المختارة');
+            alert('يرجى اختيار خدمة واحدة على الأقل أو إضافة خدمة جديدة');
             document.getElementById('servicesContainer').scrollIntoView({ behavior: 'smooth', block: 'center' });
             return false;
         }
+
+        const spinner = submitBtn.querySelector('.spinner-border');
+        submitBtn.disabled = true;
+        spinner.classList.remove('d-none');
     });
 
     // ===== الكود الأصلي لإدارة نوع المورد =====
@@ -636,12 +766,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Form submission with loading state
-    form.addEventListener('submit', function(e) {
-        const spinner = submitBtn.querySelector('.spinner-border');
-        submitBtn.disabled = true;
-        spinner.classList.remove('d-none');
+    // Keep custom service category options in sync with selected categories.
+    categoryCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const options = getSelectedCategoryOptions();
+            customServicesContainer.querySelectorAll('select[name*="[category_id]"]').forEach(select => {
+                const current = select.value;
+                select.innerHTML = options;
+                if (current && select.querySelector(`option[value="${current}"]`)) {
+                    select.value = current;
+                }
+            });
+        });
     });
+
+    if (Array.isArray(oldCustomServices) && oldCustomServices.length > 0) {
+        oldCustomServices.forEach((customService) => addCustomServiceRow(customService || {}));
+    }
 });
 </script>
 @endpush

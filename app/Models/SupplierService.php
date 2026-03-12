@@ -11,10 +11,14 @@ class SupplierService extends Model
         'category_id',
         'service_id',
         'is_available',
+        'supplier_price',
+        'public_price',
     ];
 
     protected $casts = [
         'is_available' => 'boolean',
+        'supplier_price' => 'decimal:2',
+        'public_price' => 'decimal:2',
     ];
 
     public function supplier()

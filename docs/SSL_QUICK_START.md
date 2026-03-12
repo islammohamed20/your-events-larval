@@ -19,6 +19,7 @@ sudo systemctl status apache2
 
 ```bash
 cd /var/www/your-events
+sudo chmod +x install-ssl.sh
 sudo ./install-ssl.sh
 ```
 

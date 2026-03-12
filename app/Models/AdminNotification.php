@@ -2,10 +2,18 @@
 
 namespace App\Models;
 
+use App\Services\AdminNotificationEmailService;
 use Illuminate\Database\Eloquent\Model;
 
 class AdminNotification extends Model
 {
+    protected static function booted()
+    {
+        static::created(function (AdminNotification $notification) {
+            app(AdminNotificationEmailService::class)->sendForNotification($notification);
+        });
+    }
+
     protected $fillable = [
         'type',
         'title',

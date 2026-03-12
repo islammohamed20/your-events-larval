@@ -613,8 +613,7 @@ function _yeUpdateBiometricVisibility() {
     const section = document.getElementById('biometricSection');
     const btn = document.getElementById('biometricBtn');
     if (!section || !btn) return;
-    const hasBiometric = localStorage.getItem('ye_biometric_registered') === '1';
-    section.style.display = hasBiometric ? 'grid' : 'none';
+    section.style.display = 'grid';
     btn.disabled = !(_yeLoginHasCredentials());
 }
 

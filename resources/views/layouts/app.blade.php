@@ -420,7 +420,7 @@
         
         .navbar-nav.me-auto {
             margin-right: 0 !important;
-            margin-left: 20px;
+            margin-left: 0 !important;
         }
         
         .navbar-nav.navbar-right-section {
@@ -428,7 +428,7 @@
             align-items: center;
             gap: 8px;
             /* margin-left: auto; */
-            margin-right: 30px;
+            margin-right: 0 !important;
         }
 
         /* تحسين القائمة المنسدلة للهاتف المحمول */
@@ -2333,7 +2333,7 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             
-            <div class="collapse navbar-collapse d-none d-lg-flex" id="navbarNav">
+            <div class="collapse navbar-collapse d-none d-lg-flex justify-content-between" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}" href="{{ route('home') }}">

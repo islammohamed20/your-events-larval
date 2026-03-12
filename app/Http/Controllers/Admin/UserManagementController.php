@@ -8,13 +8,17 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UserManagementController extends Controller
 {
     public function index()
     {
         // عرض المستخدمين المصرحين فقط (المديرين)
-        $users = User::where('is_admin', true)->latest()->paginate(15);
+        $users = User::where(function ($query) {
+            $query->where('is_admin', true)
+                ->orWhere('role', 'admin');
+        })->latest()->paginate(15);
 
         return view('admin.user-management.index', compact('users'));
     }
@@ -32,7 +36,14 @@ class UserManagementController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
+            'status' => 'required|in:active,inactive,suspended',
+            'must_change_password' => 'nullable|boolean',
+            'logout_other_devices' => 'nullable|boolean',
+            'permissions' => 'required|array|min:1',
+            'permissions.*' => 'in:manage_users,manage_emails,manage_services,manage_categories,manage_packages,manage_customers,manage_bookings,customers.view,customers.edit,customers.delete,customers.export,customers.reset_password,bookings.view,bookings.edit,bookings.delete,quotes.view,quotes.edit,quotes.delete',
         ]);
+
+        $mustChangePassword = $request->boolean('must_change_password');
 
         User::create([
             'name' => $request->name,
@@ -40,7 +51,11 @@ class UserManagementController extends Controller
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
             'address' => $request->address,
+            'status' => $request->status,
             'is_admin' => true, // Always set as admin for user management
+            'must_change_password' => $mustChangePassword,
+            'logout_other_devices' => $mustChangePassword && $request->boolean('logout_other_devices'),
+            'permissions' => $request->input('permissions', User::ADMIN_PERMISSIONS),
         ]);
 
         return redirect()->route('admin.user-management.index')
@@ -50,7 +65,7 @@ class UserManagementController extends Controller
     public function show(User $user)
     {
         // التأكد من أن المستخدم مصرح
-        if (! $user->is_admin) {
+        if (! $user->isAdmin()) {
             abort(404, 'المستخدم غير موجود');
         }
 
@@ -62,7 +77,7 @@ class UserManagementController extends Controller
     public function edit(User $user)
     {
         // التأكد من أن المستخدم مصرح
-        if (! $user->is_admin) {
+        if (! $user->isAdmin()) {
             abort(404, 'المستخدم غير موجود');
         }
 
@@ -71,7 +86,7 @@ class UserManagementController extends Controller
 
     public function passkeys(User $user)
     {
-        if (! $user->is_admin) {
+        if (! $user->isAdmin()) {
             abort(404, 'المستخدم غير موجود');
         }
 
@@ -84,7 +99,7 @@ class UserManagementController extends Controller
 
     public function destroyPasskey(User $user, Passkey $passkey)
     {
-        if (! $user->is_admin) {
+        if (! $user->isAdmin()) {
             abort(404, 'المستخدم غير موجود');
         }
 
@@ -101,7 +116,7 @@ class UserManagementController extends Controller
 
     public function destroyAllPasskeys(User $user)
     {
-        if (! $user->is_admin) {
+        if (! $user->isAdmin()) {
             abort(404, 'المستخدم غير موجود');
         }
 
@@ -115,10 +130,12 @@ class UserManagementController extends Controller
     public function update(Request $request, User $user)
     {
         // Ensure we're only updating admin users
-        if (! $user->is_admin) {
+        if (! $user->isAdmin()) {
             return redirect()->route('admin.user-management.index')
                 ->with('error', 'لا يمكن تعديل هذا المستخدم من هنا.');
         }
+
+        $permissionsRule = $user->role === 'admin' ? 'nullable|array' : 'required|array|min:1';
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -126,20 +143,43 @@ class UserManagementController extends Controller
             'password' => 'nullable|string|min:8|confirmed',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
+            'status' => 'required|in:active,inactive,suspended',
+            'must_change_password' => 'nullable|boolean',
+            'logout_other_devices' => 'nullable|boolean',
+            'permissions' => $permissionsRule,
+            'permissions.*' => 'in:manage_users,manage_emails,manage_services,manage_categories,manage_packages,manage_customers,manage_bookings,customers.view,customers.edit,customers.delete,customers.export,customers.reset_password,bookings.view,bookings.edit,bookings.delete,quotes.view,quotes.edit,quotes.delete',
         ]);
+
+        $mustChangePassword = $request->boolean('must_change_password');
+        $logoutOtherDevices = $mustChangePassword && $request->boolean('logout_other_devices');
 
         $data = [
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
             'address' => $request->address,
+            'status' => $request->status,
+            'must_change_password' => $mustChangePassword,
+            'logout_other_devices' => $logoutOtherDevices,
+            'permissions' => $user->role === 'admin'
+                ? (is_array($user->permissions) && ! empty($user->permissions) ? $user->permissions : User::ADMIN_PERMISSIONS)
+                : $request->input('permissions', []),
         ];
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }
 
+        if ($logoutOtherDevices) {
+            $data['session_version'] = ((int) $user->session_version) + 1;
+            $data['remember_token'] = Str::random(60);
+        }
+
         $user->update($data);
+
+        if ($logoutOtherDevices && $user->id === Auth::id()) {
+            $request->session()->put('user_session_version', (int) $user->fresh()->session_version);
+        }
 
         return redirect()->route('admin.user-management.index')
             ->with('success', 'تم تحديث المستخدم بنجاح.');
@@ -148,7 +188,7 @@ class UserManagementController extends Controller
     public function destroy(User $user)
     {
         // التأكد من أن المستخدم مصرح
-        if (! $user->is_admin) {
+        if (! $user->isAdmin()) {
             abort(404, 'المستخدم غير موجود');
         }
 
@@ -189,7 +229,10 @@ class UserManagementController extends Controller
     public function permissions()
     {
         // صفحة إدارة الصلاحيات
-        $users = User::where('is_admin', true)->get();
+        $users = User::where(function ($query) {
+            $query->where('is_admin', true)
+                ->orWhere('role', 'admin');
+        })->get();
 
         return view('admin.user-management.permissions', compact('users'));
     }

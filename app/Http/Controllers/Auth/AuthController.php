@@ -114,12 +114,50 @@ class AuthController extends Controller
 
     public function showRegister()
     {
-        return redirect()->route('login')->with('error', 'التسجيل المباشر غير متاح حالياً. يرجى التواصل مع الإدارة.');
+        if (Auth::check()) {
+            return redirect()->route('home');
+        }
+
+        return view('auth.register');
     }
 
     public function register(Request $request)
     {
-        return redirect()->route('login')->with('error', 'التسجيل المباشر غير متاح حالياً.');
+        if (Auth::check()) {
+            return redirect()->route('home');
+        }
+
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'company_name' => 'required|string|max:255',
+            'tax_number' => 'nullable|string|max:50',
+            'email' => 'required|email|max:255|unique:users,email',
+            'phone' => 'required|string|max:20',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if (Supplier::where('email', $data['email'])->exists()) {
+            return back()->withErrors([
+                'email' => 'هذا البريد مرتبط بحساب مورد. يرجى استخدام صفحة المورد.',
+            ])->withInput();
+        }
+
+        // Save registration payload until OTP verification is completed.
+        $request->session()->put('registration_data', $data);
+        $request->session()->put('otp_email', $data['email']);
+        $request->session()->put('otp_type', 'email_verification');
+        $request->session()->forget('otp_verified');
+
+        try {
+            OtpVerification::generate($data['email'], 'email_verification');
+        } catch (\Throwable $e) {
+            return back()->withErrors([
+                'email' => 'فشل إرسال كود التحقق. حاول مرة أخرى.',
+            ])->withInput();
+        }
+
+        return redirect()->route('otp.verify.form')
+            ->with('success', 'تم إرسال كود التحقق إلى بريدك الإلكتروني لإكمال التسجيل.');
     }
 
     public function logout(Request $request)

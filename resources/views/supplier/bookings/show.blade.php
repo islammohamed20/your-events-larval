@@ -88,7 +88,7 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <strong>نوع الفعالية:</strong>
-                                    <span class="ms-2">{{ $booking->event_type }}</span>
+                                    <span class="ms-2">{{ $booking->activity_name ?? '—' }}</span>
                                 </div>
                                 <div class="col-md-6">
                                     <strong>عدد الضيوف:</strong>
@@ -98,13 +98,33 @@
 
                             <div class="mb-3">
                                 <strong>الموقع:</strong>
-                                <p class="mb-0 mt-1">{{ $booking->location }}</p>
+                                <p class="mb-1 mt-1">{{ $booking->event_location ?: 'غير محدد' }}</p>
+                                @if($booking->event_lat && $booking->event_lng)
+                                    <a class="small text-decoration-none" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps?q={{ $booking->event_lat }},{{ $booking->event_lng }}">
+                                        <i class="fas fa-map-marked-alt me-1"></i>فتح على الخريطة
+                                    </a>
+                                @endif
                             </div>
 
-                            @if($booking->notes)
+                            @if($booking->event_lat && $booking->event_lng)
+                            <div class="mb-3">
+                                <strong class="d-block mb-2">الخريطة:</strong>
+                                <div class="ratio ratio-16x9 rounded border overflow-hidden">
+                                    <iframe
+                                        src="https://www.google.com/maps?q={{ $booking->event_lat }},{{ $booking->event_lng }}&z=15&output=embed"
+                                        loading="lazy"
+                                        referrerpolicy="no-referrer-when-downgrade"
+                                        style="border:0;"
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>
+                            </div>
+                            @endif
+
+                            @if($booking->special_requests)
                             <div class="mb-3">
                                 <strong>ملاحظات العميل:</strong>
-                                <p class="mb-0 mt-1 text-muted">{{ $booking->notes }}</p>
+                                <p class="mb-0 mt-1 text-muted">{{ $booking->special_requests }}</p>
                             </div>
                             @endif
 

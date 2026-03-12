@@ -45,16 +45,16 @@
             margin-top: 0;
             color: #5B21B6;
         }
-        .supplier-info {
-            background: linear-gradient(135deg, #f8f4ff 0%, #fff 100%);
-            border-right: 4px solid #7C3AED;
+        .platform-notice {
+            background: linear-gradient(135deg, #eefbf6 0%, #ffffff 100%);
+            border-right: 4px solid #10b981;
             padding: 20px;
             margin: 20px 0;
             border-radius: 10px;
         }
-        .supplier-info h3 {
+        .platform-notice h3 {
             margin-top: 0;
-            color: #5B21B6;
+            color: #0f766e;
         }
         .button {
             display: inline-block;
@@ -121,28 +121,9 @@
                 </table>
             </div>
 
-            <div class="supplier-info">
-                <h3>👤 معلومات المورد</h3>
-                <table>
-                    <tr>
-                        <td>اسم المورد:</td>
-                        <td><strong>{{ $supplier->name }}</strong></td>
-                    </tr>
-                    <tr>
-                        <td>البريد الإلكتروني:</td>
-                        <td><a href="mailto:{{ $supplier->email }}">{{ $supplier->email }}</a></td>
-                    </tr>
-                    <tr>
-                        <td>رقم الهاتف:</td>
-                        <td><a href="tel:{{ $supplier->primary_phone }}">{{ $supplier->primary_phone }}</a></td>
-                    </tr>
-                    @if($supplier->secondary_phone)
-                    <tr>
-                        <td>هاتف إضافي:</td>
-                        <td><a href="tel:{{ $supplier->secondary_phone }}">{{ $supplier->secondary_phone }}</a></td>
-                    </tr>
-                    @endif
-                </table>
+            <div class="platform-notice">
+                <h3>🔒 سياسة التواصل</h3>
+                <p style="margin:0;">لضمان الخصوصية وجودة الخدمة، يتم التواصل بينك وبين المورد عبر منصة Your Events فقط من خلال صفحة العرض والحجز.</p>
             </div>
 
             @if($quote->supplier_notes)
@@ -153,7 +134,7 @@
             @endif
 
             <p><strong>الخطوة التالية:</strong></p>
-            <p>يرجى استكمال بيانات الحجز والدفع لإتمام العملية.</p>
+            <p>يرجى استكمال بيانات الحجز والدفع من خلال المنصة لإتمام العملية.</p>
             
             <div style="text-align: center; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
                 <a href="{{ url('/quotes/' . $quote->id) }}" class="button" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">عرض تفاصيل العرض</a>

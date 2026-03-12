@@ -216,6 +216,20 @@ class SupplierController extends Controller
      */
     public function destroy(Supplier $supplier)
     {
+        // منع الحذف إذا كان المورد مرتبطاً بحجوزات
+        $bookingsCount = \App\Models\Booking::where('supplier_id', $supplier->id)->count();
+        if ($bookingsCount > 0) {
+            return redirect()->route('admin.suppliers.index')
+                ->with('error', "لا يمكن حذف المورد \"{$supplier->name}\" لأنه مرتبط بـ {$bookingsCount} حجز. قم بإلغاء الحجوزات أو نقلها أولاً.");
+        }
+
+        // منع الحذف إذا كان المورد مرتبطاً بطلبات
+        $ordersCount = \App\Models\Order::where('supplier_id', $supplier->id)->count();
+        if ($ordersCount > 0) {
+            return redirect()->route('admin.suppliers.index')
+                ->with('error', "لا يمكن حذف المورد \"{$supplier->name}\" لأنه مرتبط بـ {$ordersCount} طلب. قم بإنهاء الطلبات أو نقلها أولاً.");
+        }
+
         // حذف ملفات مرتبطة إن أردت (اختياري)
         foreach (['commercial_register_file', 'tax_certificate_file', 'company_profile_file'] as $fileField) {
             if ($supplier->{$fileField}) {
@@ -430,7 +444,21 @@ class SupplierController extends Controller
         $validated = $request->validate([
             'service_id' => 'required|exists:services,id',
             'category_id' => 'required|exists:categories,id',
+            'supplier_price' => 'nullable|numeric|min:0',
+            'public_price' => 'nullable|numeric|min:0',
         ]);
+
+        $service = \App\Models\Service::findOrFail($validated['service_id']);
+
+        if ($service->supplier_policy === 'single') {
+            $assignedElsewhere = SupplierService::where('service_id', $service->id)
+                ->where('supplier_id', '!=', $supplier->id)
+                ->exists();
+
+            if ($assignedElsewhere) {
+                return back()->with('error', 'هذه الخدمة مخصصة لمورد واحد فقط وتم ربطها بالفعل بمورد آخر.');
+            }
+        }
 
         SupplierService::updateOrCreate(
             [
@@ -440,6 +468,8 @@ class SupplierController extends Controller
             [
                 'category_id' => $validated['category_id'],
                 'is_available' => true,
+                'supplier_price' => $validated['supplier_price'] ?? null,
+                'public_price' => $validated['public_price'] ?? $service->price,
             ]
         );
 

@@ -33,6 +33,7 @@ class Supplier extends Authenticatable
         'social_media',
         'terms_accepted',
         'privacy_accepted',
+        'session_version',
     ];
 
     protected $hidden = [
@@ -45,6 +46,11 @@ class Supplier extends Authenticatable
         'social_media' => 'array',
         'portfolio_files' => 'array',
         'services_offered' => 'array',
+        'session_version' => 'integer',
+    ];
+
+    protected $attributes = [
+        'session_version' => 1,
     ];
 
     /**

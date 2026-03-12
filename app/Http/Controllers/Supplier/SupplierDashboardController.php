@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Quote;
 use App\Models\Service;
+use App\Models\Setting;
 use App\Models\Supplier;
 use App\Models\SupplierService;
 use Illuminate\Http\Request;
@@ -21,7 +22,9 @@ class SupplierDashboardController extends Controller
      */
     protected function supplier(): ?Supplier
     {
-        return Auth::guard('supplier')->user();
+        $supplier = Auth::guard('supplier')->user();
+
+        return $supplier instanceof Supplier ? $supplier : null;
     }
 
     /**
@@ -64,9 +67,8 @@ class SupplierDashboardController extends Controller
     protected function getSupplierBookings()
     {
         $supplier = $this->supplier();
-        $serviceIds = $supplier->services()->pluck('services.id');
 
-        return Booking::whereIn('service_id', $serviceIds);
+        return Booking::where('supplier_id', $supplier->id);
     }
 
     /**
@@ -107,7 +109,8 @@ class SupplierDashboardController extends Controller
             ->with(['category', 'variations', 'thumbnailImage'])
             ->findOrFail($id);
 
-        $bookings = Booking::where('service_id', $id)
+        $bookings = $this->getSupplierBookings()
+            ->where('service_id', $id)
             ->with('user')
             ->latest()
             ->take(10)
@@ -209,11 +212,8 @@ class SupplierDashboardController extends Controller
      */
     public function customers(Request $request)
     {
-        $supplier = $this->supplier();
-        $serviceIds = $supplier->services()->pluck('services.id');
-
-        // العملاء الذين حجزوا من المورد
-        $customers = Booking::whereIn('service_id', $serviceIds)
+        // العملاء الذين لديهم حجوزات مقبولة لهذا المورد فقط
+        $customers = $this->getSupplierBookings()
             ->whereIn('status', ['confirmed', 'completed'])
             ->with('user')
             ->select('user_id')
@@ -232,11 +232,8 @@ class SupplierDashboardController extends Controller
      */
     public function showCustomer($id)
     {
-        $supplier = $this->supplier();
-        $serviceIds = $supplier->services()->pluck('services.id');
-
-        // حجوزات العميل من المورد
-        $bookings = Booking::whereIn('service_id', $serviceIds)
+        // حجوزات العميل المقبولة لهذا المورد فقط
+        $bookings = $this->getSupplierBookings()
             ->where('user_id', $id)
             ->with(['service.category'])
             ->latest()
@@ -370,7 +367,9 @@ class SupplierDashboardController extends Controller
 
         // Notify admin
         try {
-            $adminEmail = config('mail.admin_email', 'admin@your-events.com');
+            $adminEmail = Setting::get('notification_admin_email')
+                ?: Setting::get('contact_email')
+                ?: config('mail.from.address', 'admin@your-events.com');
             Mail::to($adminEmail)->send(new \App\Mail\AdminSupplierAcceptedNotification($quote, $supplier));
         } catch (\Exception $e) {
             Log::error('Failed to send admin notification: '.$e->getMessage());

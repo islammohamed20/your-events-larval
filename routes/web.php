@@ -341,8 +341,13 @@ Route::prefix('ye/admin')->name('admin.')->group(function () {
     Route::post('logout', [AdminAuthController::class, 'logout'])->name('logout');
 });
 
+Route::prefix('ye/admin')->name('admin.')->middleware(['admin', 'admin.session.valid'])->group(function () {
+    Route::get('force-password', [AdminAuthController::class, 'showForcePasswordForm'])->name('force-password.edit');
+    Route::put('force-password', [AdminAuthController::class, 'updateForcedPassword'])->name('force-password.update');
+});
+
 // Admin Routes
-Route::prefix('ye/admin')->name('admin.')->middleware(['admin'])->group(function () {
+Route::prefix('ye/admin')->name('admin.')->middleware(['admin', 'admin.session.valid', 'admin.force-password', 'admin.permission.scope'])->group(function () {
     // Ensure {service} route-model binding only matches numeric IDs
     Route::pattern('service', '[0-9]+');
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
@@ -356,8 +361,10 @@ Route::prefix('ye/admin')->name('admin.')->middleware(['admin'])->group(function
     Route::delete('notifications/{id}', [\App\Http\Controllers\Admin\NotificationController::class, 'destroy'])->name('notifications.destroy');
 
     // Categories Management
-    Route::resource('categories', \App\Http\Controllers\Admin\CategoryController::class);
-    Route::patch('categories/{category}/toggle-active', [\App\Http\Controllers\Admin\CategoryController::class, 'toggleActive'])->name('categories.toggle-active');
+    Route::middleware('admin.permission:manage_categories')->group(function () {
+        Route::resource('categories', \App\Http\Controllers\Admin\CategoryController::class);
+        Route::patch('categories/{category}/toggle-active', [\App\Http\Controllers\Admin\CategoryController::class, 'toggleActive'])->name('categories.toggle-active');
+    });
 
     // Contact Messages Management
     Route::get('contact-messages', [\App\Http\Controllers\Admin\ContactMessageController::class, 'index'])->name('contact-messages.index');
@@ -366,35 +373,39 @@ Route::prefix('ye/admin')->name('admin.')->middleware(['admin'])->group(function
     Route::delete('contact-messages/{contactMessage}', [\App\Http\Controllers\Admin\ContactMessageController::class, 'destroy'])->name('contact-messages.destroy');
 
     // Packages Management
-    Route::resource('packages', AdminPackageController::class);
-    Route::delete('packages/{package}/images/{image}', [AdminPackageController::class, 'deleteImage'])->name('packages.images.delete');
-    Route::post('packages/{package}/images/{image}/set-thumbnail', [AdminPackageController::class, 'setThumbnail'])->name('packages.images.set-thumbnail');
+    Route::middleware('admin.permission:manage_packages')->group(function () {
+        Route::resource('packages', AdminPackageController::class);
+        Route::delete('packages/{package}/images/{image}', [AdminPackageController::class, 'deleteImage'])->name('packages.images.delete');
+        Route::post('packages/{package}/images/{image}/set-thumbnail', [AdminPackageController::class, 'setThumbnail'])->name('packages.images.set-thumbnail');
+    });
 
     // Services Management
-    // Redirect accidental GET on bulk-delete to services list with a helpful message
-    Route::get('services/bulk-delete', function () {
-        return redirect()->route('admin.services.index')
-            ->with('error', 'يرجى استخدام زر "حذف جماعي" الذي يرسل طلب DELETE.');
-    })->name('services.bulk-delete.get');
+    Route::middleware('admin.permission:manage_services')->group(function () {
+        // Redirect accidental GET on bulk-delete to services list with a helpful message
+        Route::get('services/bulk-delete', function () {
+            return redirect()->route('admin.services.index')
+                ->with('error', 'يرجى استخدام زر "حذف جماعي" الذي يرسل طلب DELETE.');
+        })->name('services.bulk-delete.get');
 
-    Route::resource('services', AdminServiceController::class);
-    Route::delete('services/bulk-delete', [AdminServiceController::class, 'bulkDelete'])->name('services.bulk-delete');
-    Route::post('services/bulk-update-type', [AdminServiceController::class, 'bulkUpdateType'])->name('services.bulk-update-type');
-    Route::post('services/bulk-toggle-status', [AdminServiceController::class, 'bulkToggleStatus'])->name('services.bulk-toggle-status');
-    Route::post('services/{service}/toggle-status', [AdminServiceController::class, 'toggleStatus'])->name('services.toggle-status');
-    Route::get('services/export/excel', [AdminServiceController::class, 'export'])->name('services.export');
-    Route::post('services/import/excel', [AdminServiceController::class, 'import'])->name('services.import');
-    Route::get('services/download/template', [AdminServiceController::class, 'downloadTemplate'])->name('services.template');
+        Route::resource('services', AdminServiceController::class);
+        Route::delete('services/bulk-delete', [AdminServiceController::class, 'bulkDelete'])->name('services.bulk-delete');
+        Route::post('services/bulk-update-type', [AdminServiceController::class, 'bulkUpdateType'])->name('services.bulk-update-type');
+        Route::post('services/bulk-toggle-status', [AdminServiceController::class, 'bulkToggleStatus'])->name('services.bulk-toggle-status');
+        Route::post('services/{service}/toggle-status', [AdminServiceController::class, 'toggleStatus'])->name('services.toggle-status');
+        Route::get('services/export/excel', [AdminServiceController::class, 'export'])->name('services.export');
+        Route::post('services/import/excel', [AdminServiceController::class, 'import'])->name('services.import');
+        Route::get('services/download/template', [AdminServiceController::class, 'downloadTemplate'])->name('services.template');
 
-    // Service Images Management
-    Route::delete('services/{service}/images/{image}', [AdminServiceController::class, 'deleteImage'])->name('services.images.delete');
-    Route::post('services/{service}/images/{image}/set-thumbnail', [AdminServiceController::class, 'setThumbnail'])->name('services.images.set-thumbnail');
+        // Service Images Management
+        Route::delete('services/{service}/images/{image}', [AdminServiceController::class, 'deleteImage'])->name('services.images.delete');
+        Route::post('services/{service}/images/{image}/set-thumbnail', [AdminServiceController::class, 'setThumbnail'])->name('services.images.set-thumbnail');
 
-    // Attributes Management
-    Route::resource('attributes', AdminAttributeController::class);
-    Route::post('attributes/{attribute}/values', [AdminAttributeController::class, 'storeValue'])->name('attributes.values.store');
-    Route::put('attributes/{attribute}/values/{value}', [AdminAttributeController::class, 'updateValue'])->name('attributes.values.update');
-    Route::delete('attributes/{attribute}/values/{value}', [AdminAttributeController::class, 'destroyValue'])->name('attributes.values.destroy');
+        // Attributes Management
+        Route::resource('attributes', AdminAttributeController::class);
+        Route::post('attributes/{attribute}/values', [AdminAttributeController::class, 'storeValue'])->name('attributes.values.store');
+        Route::put('attributes/{attribute}/values/{value}', [AdminAttributeController::class, 'updateValue'])->name('attributes.values.update');
+        Route::delete('attributes/{attribute}/values/{value}', [AdminAttributeController::class, 'destroyValue'])->name('attributes.values.destroy');
+    });
 
     // Settings Management
     Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
@@ -422,26 +433,28 @@ Route::prefix('ye/admin')->name('admin.')->middleware(['admin'])->group(function
     Route::post('hero-slides/update-order', [\App\Http\Controllers\Admin\HeroSlideController::class, 'updateOrder'])->name('hero-slides.update-order');
     Route::post('hero-slides/{heroSlide}/toggle', [\App\Http\Controllers\Admin\HeroSlideController::class, 'toggleActive'])->name('hero-slides.toggle');
 
-    // Email Test
-    Route::get('email-test', [\App\Http\Controllers\Admin\EmailTestController::class, 'index'])->name('email-test.index');
-    Route::post('email-test/send', [\App\Http\Controllers\Admin\EmailTestController::class, 'send'])->name('email-test.send');
-    Route::get('email-test/config', [\App\Http\Controllers\Admin\EmailTestController::class, 'config'])->name('email-test.config');
+    Route::middleware('admin.permission:manage_emails')->group(function () {
+        // Email Test
+        Route::get('email-test', [\App\Http\Controllers\Admin\EmailTestController::class, 'index'])->name('email-test.index');
+        Route::post('email-test/send', [\App\Http\Controllers\Admin\EmailTestController::class, 'send'])->name('email-test.send');
+        Route::get('email-test/config', [\App\Http\Controllers\Admin\EmailTestController::class, 'config'])->name('email-test.config');
+
+        // Email Templates Management
+        Route::resource('email-templates', \App\Http\Controllers\Admin\EmailTemplateController::class);
+        Route::post('email-templates/{emailTemplate}/toggle', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'toggleActive'])->name('email-templates.toggle');
+        Route::post('email-templates/{emailTemplate}/send-test', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'sendTest'])->name('email-templates.send-test');
+        Route::post('email-templates/{emailTemplate}/duplicate', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'duplicate'])->name('email-templates.duplicate');
+
+        // Email Management (Unified Dashboard)
+        Route::get('email-management', [\App\Http\Controllers\Admin\EmailManagementController::class, 'index'])->name('email-management.index');
+        Route::post('email-management/send-test', [\App\Http\Controllers\Admin\EmailManagementController::class, 'sendTest'])->name('email-management.send-test');
+        Route::get('email-management/statistics', [\App\Http\Controllers\Admin\EmailManagementController::class, 'statistics'])->name('email-management.statistics');
+    });
 
     // Service Requests Management
     Route::resource('service-requests', \App\Http\Controllers\Admin\ServiceRequestController::class);
     Route::post('service-requests/{serviceRequest}/accept', [\App\Http\Controllers\Admin\ServiceRequestController::class, 'accept'])->name('service-requests.accept');
     Route::post('service-requests/{serviceRequest}/reject', [\App\Http\Controllers\Admin\ServiceRequestController::class, 'reject'])->name('service-requests.reject');
-
-    // Email Templates Management
-    Route::resource('email-templates', \App\Http\Controllers\Admin\EmailTemplateController::class);
-    Route::post('email-templates/{emailTemplate}/toggle', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'toggleActive'])->name('email-templates.toggle');
-    Route::post('email-templates/{emailTemplate}/send-test', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'sendTest'])->name('email-templates.send-test');
-    Route::post('email-templates/{emailTemplate}/duplicate', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'duplicate'])->name('email-templates.duplicate');
-
-    // Email Management (Unified Dashboard)
-    Route::get('email-management', [\App\Http\Controllers\Admin\EmailManagementController::class, 'index'])->name('email-management.index');
-    Route::post('email-management/send-test', [\App\Http\Controllers\Admin\EmailManagementController::class, 'sendTest'])->name('email-management.send-test');
-    Route::get('email-management/statistics', [\App\Http\Controllers\Admin\EmailManagementController::class, 'statistics'])->name('email-management.statistics');
 
     // OTP Management Routes
     Route::get('otp', [\App\Http\Controllers\Admin\OtpManagementController::class, 'index'])->name('otp.index');
@@ -459,26 +472,44 @@ Route::prefix('ye/admin')->name('admin.')->middleware(['admin'])->group(function
     Route::get('otp/api/statistics', [\App\Http\Controllers\Admin\OtpManagementController::class, 'statistics'])->name('otp.statistics');
 
     // Service Variations Management
-    Route::get('services/{service}/variations', [AdminServiceVariationController::class, 'index'])->name('services.variations.index');
-    Route::post('services/{service}/variations', [AdminServiceVariationController::class, 'store'])->name('services.variations.store');
-    Route::post('services/{service}/variations/generate', [AdminServiceVariationController::class, 'generate'])->name('services.variations.generate');
-    Route::get('services/{service}/variations/{variation}', [AdminServiceVariationController::class, 'edit'])->name('services.variations.edit');
-    Route::put('services/{service}/variations/{variation}', [AdminServiceVariationController::class, 'update'])->name('services.variations.update');
-    Route::delete('services/{service}/variations/{variation}', [AdminServiceVariationController::class, 'destroy'])->name('services.variations.destroy');
+    Route::middleware('admin.permission:manage_services')->group(function () {
+        Route::get('services/{service}/variations', [AdminServiceVariationController::class, 'index'])->name('services.variations.index');
+        Route::post('services/{service}/variations', [AdminServiceVariationController::class, 'store'])->name('services.variations.store');
+        Route::post('services/{service}/variations/generate', [AdminServiceVariationController::class, 'generate'])->name('services.variations.generate');
+        Route::get('services/{service}/variations/{variation}', [AdminServiceVariationController::class, 'edit'])->name('services.variations.edit');
+        Route::put('services/{service}/variations/{variation}', [AdminServiceVariationController::class, 'update'])->name('services.variations.update');
+        Route::delete('services/{service}/variations/{variation}', [AdminServiceVariationController::class, 'destroy'])->name('services.variations.destroy');
+    });
 
-    // Bookings Management
-    Route::get('bookings', [AdminBookingController::class, 'index'])->name('bookings.index');
-    Route::get('bookings/{booking}', [AdminBookingController::class, 'show'])->name('bookings.show');
-    Route::patch('bookings/{booking}/status', [AdminBookingController::class, 'updateStatus'])->name('bookings.update-status');
-    Route::delete('bookings/{booking}', [AdminBookingController::class, 'destroy'])->name('bookings.destroy');
+    Route::middleware('admin.permission:bookings.view')->group(function () {
+        // Bookings Management
+        Route::get('bookings', [AdminBookingController::class, 'index'])->name('bookings.index');
+        Route::get('bookings/{booking}', [AdminBookingController::class, 'show'])->name('bookings.show');
+    });
 
-    // Quotes Management
-    Route::get('quotes', [\App\Http\Controllers\Admin\QuoteController::class, 'index'])->name('quotes.index');
-    Route::get('quotes/{quote}', [\App\Http\Controllers\Admin\QuoteController::class, 'show'])->name('quotes.show');
-    Route::patch('quotes/{quote}/status', [\App\Http\Controllers\Admin\QuoteController::class, 'updateStatus'])->name('quotes.update-status');
-    Route::post('quotes/{quote}/send-email', [\App\Http\Controllers\Admin\QuoteController::class, 'sendEmail'])->name('quotes.send-email');
-    Route::post('quotes/{quote}/convert-paid', [\App\Http\Controllers\Admin\QuoteController::class, 'convertPaidToBooking'])->name('quotes.convert-paid');
-    Route::delete('quotes/{quote}', [\App\Http\Controllers\Admin\QuoteController::class, 'destroy'])->name('quotes.destroy');
+    Route::middleware('admin.permission:bookings.edit')->group(function () {
+        Route::patch('bookings/{booking}/status', [AdminBookingController::class, 'updateStatus'])->name('bookings.update-status');
+    });
+
+    Route::middleware('admin.permission:bookings.delete')->group(function () {
+        Route::delete('bookings/{booking}', [AdminBookingController::class, 'destroy'])->name('bookings.destroy');
+    });
+
+    Route::middleware('admin.permission:quotes.view')->group(function () {
+        // Quotes Management
+        Route::get('quotes', [\App\Http\Controllers\Admin\QuoteController::class, 'index'])->name('quotes.index');
+        Route::get('quotes/{quote}', [\App\Http\Controllers\Admin\QuoteController::class, 'show'])->name('quotes.show');
+    });
+
+    Route::middleware('admin.permission:quotes.edit')->group(function () {
+        Route::patch('quotes/{quote}/status', [\App\Http\Controllers\Admin\QuoteController::class, 'updateStatus'])->name('quotes.update-status');
+        Route::post('quotes/{quote}/send-email', [\App\Http\Controllers\Admin\QuoteController::class, 'sendEmail'])->name('quotes.send-email');
+        Route::post('quotes/{quote}/convert-paid', [\App\Http\Controllers\Admin\QuoteController::class, 'convertPaidToBooking'])->name('quotes.convert-paid');
+    });
+
+    Route::middleware('admin.permission:quotes.delete')->group(function () {
+        Route::delete('quotes/{quote}', [\App\Http\Controllers\Admin\QuoteController::class, 'destroy'])->name('quotes.destroy');
+    });
 
     // Payments Management
     Route::get('payments', [\App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('payments.index');
@@ -496,7 +527,7 @@ Route::prefix('ye/admin')->name('admin.')->middleware(['admin'])->group(function
     Route::patch('gallery/{gallery}/featured', [AdminGalleryController::class, 'toggleFeatured'])->name('gallery.toggle-featured');
 
     // User Management (Authorized Admin Users)
-    Route::prefix('user-management')->name('user-management.')->group(function () {
+    Route::prefix('user-management')->name('user-management.')->middleware('admin.permission:manage_users')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\Admin\UserManagementController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\Admin\UserManagementController::class, 'store'])->name('store');
@@ -511,19 +542,33 @@ Route::prefix('ye/admin')->name('admin.')->middleware(['admin'])->group(function
         Route::get('/permissions/manage', [\App\Http\Controllers\Admin\UserManagementController::class, 'permissions'])->name('permissions');
     });
 
-    // Customer Management
-    Route::get('customers', [CustomerManagementController::class, 'index'])->name('customers.index');
-    Route::get('customers/{customer}', [CustomerManagementController::class, 'show'])->name('customers.show');
-    Route::get('customers/{customer}/edit', [CustomerManagementController::class, 'edit'])->name('customers.edit');
-    Route::put('customers/{customer}', [CustomerManagementController::class, 'update'])->name('customers.update');
-    Route::delete('customers/{customer}', [CustomerManagementController::class, 'destroy'])->name('customers.destroy');
-    Route::get('customers/{customer}/quotes', [CustomerManagementController::class, 'quotes'])->name('customers.quotes');
-    Route::get('customers/{customer}/payments', [CustomerManagementController::class, 'payments'])->name('customers.payments');
-    Route::post('customers/{customer}/reset-password', [CustomerManagementController::class, 'sendPasswordResetOtp'])->name('customers.reset-password');
-    Route::get('customers/export/all', [CustomerManagementController::class, 'exportCustomers'])->name('customers.export');
-    Route::get('customers/{customer}/export', [CustomerManagementController::class, 'exportCustomerDetail'])->name('customers.export-detail');
-    Route::get('customers/search', [CustomerManagementController::class, 'search'])->name('customers.search');
-    Route::get('customers/analytics', [CustomerManagementController::class, 'analytics'])->name('customers.analytics');
+    Route::middleware('admin.permission:customers.view')->group(function () {
+        // Customer Management
+        Route::get('customers', [CustomerManagementController::class, 'index'])->name('customers.index');
+        Route::get('customers/{customer}', [CustomerManagementController::class, 'show'])->name('customers.show');
+        Route::get('customers/{customer}/quotes', [CustomerManagementController::class, 'quotes'])->name('customers.quotes');
+        Route::get('customers/{customer}/payments', [CustomerManagementController::class, 'payments'])->name('customers.payments');
+        Route::get('customers/search', [CustomerManagementController::class, 'search'])->name('customers.search');
+        Route::get('customers/analytics', [CustomerManagementController::class, 'analytics'])->name('customers.analytics');
+    });
+
+    Route::middleware('admin.permission:customers.edit')->group(function () {
+        Route::get('customers/{customer}/edit', [CustomerManagementController::class, 'edit'])->name('customers.edit');
+        Route::put('customers/{customer}', [CustomerManagementController::class, 'update'])->name('customers.update');
+    });
+
+    Route::middleware('admin.permission:customers.delete')->group(function () {
+        Route::delete('customers/{customer}', [CustomerManagementController::class, 'destroy'])->name('customers.destroy');
+    });
+
+    Route::middleware('admin.permission:customers.reset_password')->group(function () {
+        Route::post('customers/{customer}/reset-password', [CustomerManagementController::class, 'sendPasswordResetOtp'])->name('customers.reset-password');
+    });
+
+    Route::middleware('admin.permission:customers.export')->group(function () {
+        Route::get('customers/export/all', [CustomerManagementController::class, 'exportCustomers'])->name('customers.export');
+        Route::get('customers/{customer}/export', [CustomerManagementController::class, 'exportCustomerDetail'])->name('customers.export-detail');
+    });
 
     // Suppliers Management
     Route::get('suppliers/create', [\App\Http\Controllers\Admin\SupplierController::class, 'create'])->name('suppliers.create');

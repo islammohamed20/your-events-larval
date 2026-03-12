@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class OtpController extends Controller
 {
@@ -242,6 +243,14 @@ class OtpController extends Controller
 
                             Auth::login($user, $remember);
                             $request->session()->regenerate();
+
+                            $newSessionVersion = ((int) ($user->session_version ?: 1)) + 1;
+                            $user->forceFill([
+                                'session_version' => $newSessionVersion,
+                                'remember_token' => Str::random(60),
+                            ])->save();
+                            $request->session()->put('user_session_version', $newSessionVersion);
+
                             try {
                                 DB::table(config('session.table', 'sessions'))
                                     ->where('user_id', $user->getAuthIdentifier())
@@ -300,6 +309,14 @@ class OtpController extends Controller
                         if ($supplier && $supplier->status === 'approved' && $supplier->email_verified_at) {
                             Auth::guard('supplier')->login($supplier, $remember);
                             $request->session()->regenerate();
+
+                            $newSupplierSessionVersion = ((int) ($supplier->session_version ?: 1)) + 1;
+                            $supplier->forceFill([
+                                'session_version' => $newSupplierSessionVersion,
+                                'remember_token' => Str::random(60),
+                            ])->save();
+                            $request->session()->put('supplier_session_version', $newSupplierSessionVersion);
+
                             try {
                                 DB::table(config('session.table', 'sessions'))
                                     ->where('user_id', $supplier->getAuthIdentifier())
@@ -441,6 +458,14 @@ class OtpController extends Controller
 
             // تسجيل الدخول
             Auth::login($user);
+            $request->session()->regenerate();
+
+            $newSessionVersion = ((int) ($user->session_version ?: 1)) + 1;
+            $user->forceFill([
+                'session_version' => $newSessionVersion,
+                'remember_token' => Str::random(60),
+            ])->save();
+            $request->session()->put('user_session_version', $newSessionVersion);
 
             // مسح الجلسة
             $request->session()->forget(['otp_verified', 'otp_email', 'otp_type', 'registration_data']);

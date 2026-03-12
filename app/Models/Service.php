@@ -21,6 +21,7 @@ class Service extends Model
         'meta_description',
         'price',
         'service_type',
+        'supplier_policy',
         'duration',
         'type',
         'features',
