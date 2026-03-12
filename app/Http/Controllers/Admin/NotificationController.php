@@ -4,16 +4,58 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdminNotification;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
+    protected function getVisibleNotificationsQuery(): Builder
+    {
+        $user = auth()->user();
+        $allowedTypes = [];
+
+        if ($user?->hasAdminPermission('manage_users')) {
+            $allowedTypes = array_merge($allowedTypes, ['order', 'payment', 'contact', 'supplier']);
+        }
+
+        if ($user?->hasAdminPermission('manage_bookings') || $user?->hasAdminPermission('bookings.view')) {
+            $allowedTypes[] = 'booking';
+        }
+
+        if ($user?->hasAdminPermission('manage_bookings') || $user?->hasAdminPermission('quotes.view')) {
+            $allowedTypes[] = 'quote';
+        }
+
+        if ($user?->hasAdminPermission('manage_customers') || $user?->hasAdminPermission('customers.view')) {
+            $allowedTypes[] = 'customer';
+        }
+
+        $allowedTypes = array_values(array_unique($allowedTypes));
+
+        $query = AdminNotification::query();
+
+        if (empty($allowedTypes)) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereIn('type', $allowedTypes);
+    }
+
+    protected function successResponse(Request $request, string $message)
+    {
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->route('admin.notifications.index')->with('success', $message);
+    }
+
     /**
      * Get unread notifications count
      */
     public function count()
     {
-        $count = AdminNotification::unread()->count();
+        $count = $this->getVisibleNotificationsQuery()->unread()->count();
 
         return response()->json([
             'count' => $count,
@@ -27,7 +69,9 @@ class NotificationController extends Controller
     {
         $lastCheck = $request->get('last_check');
 
-        $query = AdminNotification::unread()->orderBy('created_at', 'desc');
+        $query = $this->getVisibleNotificationsQuery()
+            ->unread()
+            ->orderBy('created_at', 'desc');
 
         if ($lastCheck) {
             $query->where('created_at', '>', $lastCheck);
@@ -58,7 +102,8 @@ class NotificationController extends Controller
      */
     public function index(Request $request)
     {
-        $notifications = AdminNotification::orderBy('created_at', 'desc')
+        $notifications = $this->getVisibleNotificationsQuery()
+            ->orderBy('created_at', 'desc')
             ->paginate(20);
 
         return view('admin.notifications.index', compact('notifications'));
@@ -67,46 +112,47 @@ class NotificationController extends Controller
     /**
      * Mark notification as read
      */
-    public function markAsRead($id)
+    public function markAsRead(Request $request, $id)
     {
-        $notification = AdminNotification::findOrFail($id);
+        $notification = $this->getVisibleNotificationsQuery()->findOrFail($id);
         $notification->markAsRead();
 
-        return response()->json(['success' => true]);
+        return $this->successResponse($request, 'تم تحديد الإشعار كمقروء.');
     }
 
     /**
      * Mark all notifications as read
      */
-    public function markAllAsRead()
+    public function markAllAsRead(Request $request)
     {
-        AdminNotification::unread()->update([
+        $this->getVisibleNotificationsQuery()->unread()->update([
             'is_read' => true,
             'read_at' => now(),
         ]);
 
-        return response()->json(['success' => true]);
+        return $this->successResponse($request, 'تم تحديد جميع الإشعارات المسموح بها كمقروءة.');
     }
 
     /**
      * Delete notification
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        AdminNotification::findOrFail($id)->delete();
+        $this->getVisibleNotificationsQuery()->findOrFail($id)->delete();
 
-        return response()->json(['success' => true]);
+        return $this->successResponse($request, 'تم حذف الإشعار.');
     }
 
     /**
      * Clear old notifications (older than 30 days)
      */
-    public function clearOld()
+    public function clearOld(Request $request)
     {
-        AdminNotification::where('created_at', '<', now()->subDays(30))
+        $this->getVisibleNotificationsQuery()
+            ->where('created_at', '<', now()->subDays(30))
             ->where('is_read', true)
             ->delete();
 
-        return response()->json(['success' => true]);
+        return $this->successResponse($request, 'تم حذف الإشعارات القديمة المسموح بها.');
     }
 }

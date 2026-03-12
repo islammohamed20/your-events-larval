@@ -653,12 +653,6 @@ Route::prefix('supplier')->name('supplier.')->group(function () {
         // Reports
         Route::get('/reports', [SupplierDashboardController::class, 'reports'])->name('reports.index');
 
-        // Quotes (Supplier-visible quotes that include supplier services)
-        Route::get('/quotes', [SupplierDashboardController::class, 'quotes'])->name('quotes.index');
-        Route::get('/quotes/{quote}', [SupplierDashboardController::class, 'showQuote'])->name('quotes.show');
-        Route::post('/quotes/{quote}/accept', [SupplierDashboardController::class, 'acceptQuote'])->name('quotes.accept');
-        Route::post('/quotes/{quote}/reject', [SupplierDashboardController::class, 'rejectQuote'])->name('quotes.reject');
-
         // Logout
         Route::post('/logout', [SupplierAuthController::class, 'logout'])->name('logout');
     });

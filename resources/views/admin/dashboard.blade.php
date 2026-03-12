@@ -6,8 +6,24 @@
 
 @section('content')
 <div class="container-fluid" id="adminDashboardAutoRefresh">
+    @php
+        $canCustomers = $dashboardPermissions['customers'] ?? true;
+        $canAdmins = $dashboardPermissions['admins'] ?? true;
+        $canServices = $dashboardPermissions['services'] ?? true;
+        $canPackages = $dashboardPermissions['packages'] ?? true;
+        $canBookings = $dashboardPermissions['bookings'] ?? true;
+        $canQuotes = $dashboardPermissions['quotes'] ?? true;
+        $canEmails = $dashboardPermissions['emails'] ?? true;
+        $canTraffic = $dashboardPermissions['traffic'] ?? true;
+        $canOtp = $dashboardPermissions['otp'] ?? true;
+        $canGallery = $dashboardPermissions['gallery'] ?? true;
+        $canReviews = $dashboardPermissions['reviews'] ?? true;
+        $canQuickSummary = $dashboardPermissions['quick_summary'] ?? true;
+    @endphp
+
     <!-- Statistics Cards -->
     <div class="row g-3 mb-4">
+        @if($canCustomers)
         <div class="col-xl-3 col-md-6">
             <div class="card shadow-sm h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
@@ -19,6 +35,8 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if($canAdmins)
         <div class="col-xl-3 col-md-6">
             <div class="card shadow-sm h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
@@ -30,6 +48,8 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if($canServices)
         <div class="col-xl-3 col-md-6">
             <div class="card shadow-sm h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
@@ -41,6 +61,8 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if($canPackages)
         <div class="col-xl-3 col-md-6">
             <div class="card shadow-sm h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
@@ -52,10 +74,12 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 
     <!-- Second Row: Bookings -->
     <div class="row g-3 mb-4">
+        @if($canBookings)
         <div class="col-xl-6 col-md-12">
             <div class="card shadow-sm h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
@@ -68,33 +92,57 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if($canQuickSummary)
         <div class="col-xl-6 col-md-12">
             <div class="card shadow-sm h-100">
                 <div class="card-header">
                     <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>{{ __('common.quick_summary') }}</h5>
                 </div>
                 <div class="card-body">
+                    @php
+                        $summaryItems = [];
+                        if ($canCustomers || $canAdmins) {
+                            $summaryItems[] = [
+                                'value' => $stats['total_users'] ?? 0,
+                                'label' => __('common.total_users'),
+                                'color' => 'text-primary',
+                            ];
+                        }
+                        if ($canServices || $canPackages) {
+                            $summaryItems[] = [
+                                'value' => ($stats['services'] ?? 0) + ($stats['packages'] ?? 0),
+                                'label' => __('common.total_products'),
+                                'color' => 'text-info',
+                            ];
+                        }
+                        if ($canBookings) {
+                            $summaryItems[] = [
+                                'value' => $stats['bookings'] ?? 0,
+                                'label' => __('common.bookings'),
+                                'color' => 'text-success',
+                            ];
+                        }
+
+                        $summaryColClass = count($summaryItems) <= 1 ? 'col-12' : (count($summaryItems) === 2 ? 'col-6' : 'col-4');
+                    @endphp
                     <div class="row text-center">
-                        <div class="col-4">
-                            <h4 class="text-primary">{{ $stats['total_users'] ?? 0 }}</h4>
-                            <small class="text-muted">{{ __('common.total_users') }}</small>
-                        </div>
-                        <div class="col-4">
-                            <h4 class="text-info">{{ $stats['services'] + $stats['packages'] ?? 0 }}</h4>
-                            <small class="text-muted">{{ __('common.total_products') }}</small>
-                        </div>
-                        <div class="col-4">
-                            <h4 class="text-success">{{ $stats['bookings'] ?? 0 }}</h4>
-                            <small class="text-muted">{{ __('common.bookings') }}</small>
-                        </div>
+                        @foreach($summaryItems as $item)
+                            <div class="{{ $summaryColClass }}">
+                                <h4 class="{{ $item['color'] }}">{{ $item['value'] }}</h4>
+                                <small class="text-muted">{{ $item['label'] }}</small>
+                            </div>
+                        @endforeach
                     </div>
                 </div>
             </div>
         </div>
+        @endif
     </div>
 
     <!-- Quotes Statistics -->
     <div class="row g-3 mb-4">
+        @if($canTraffic)
         <div class="col-xl-4 col-md-6">
             <div class="card shadow-sm h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
@@ -107,6 +155,8 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if($canTraffic)
         <div class="col-xl-4 col-md-6">
             <div class="card shadow-sm h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
@@ -119,6 +169,8 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if($canTraffic)
         <div class="col-xl-4 col-md-12">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
@@ -136,6 +188,8 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if($canQuotes)
         <div class="col-xl-3 col-md-6">
             <div class="card shadow-sm h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
@@ -147,6 +201,8 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if($canQuotes)
         <div class="col-xl-3 col-md-6">
             <div class="card shadow-sm h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
@@ -158,6 +214,8 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if($canQuotes)
         <div class="col-xl-3 col-md-6">
             <div class="card shadow-sm h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
@@ -169,6 +227,8 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if($canQuotes)
         <div class="col-xl-3 col-md-6">
             <div class="card shadow-sm h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
@@ -180,6 +240,8 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if($canQuotes)
         <div class="col-xl-3 col-md-6">
             <div class="card shadow-sm h-100">
                 <div class="card-body d-flex align-items-center justify-content-between">
@@ -191,9 +253,11 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 
     <div class="row g-3 mb-4">
+        @if($canGallery)
         <div class="col-xl-6 col-md-12">
             <div class="card shadow-sm h-100">
                 <div class="card-header d-flex align-items-center justify-content-between">
@@ -209,6 +273,8 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if($canReviews)
         <div class="col-xl-6 col-md-12">
             <div class="card shadow-sm h-100">
                 <div class="card-header">
@@ -232,10 +298,12 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 
     <!-- Email & OTP Statistics -->
     <div class="row g-3 mb-4">
+        @if($canEmails)
         <div class="col-xl-4 col-md-6">
             <div class="card shadow-sm h-100">
                 <div class="card-header d-flex align-items-center justify-content-between">
@@ -256,6 +324,8 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if($canOtp)
         <div class="col-xl-4 col-md-6">
             <div class="card shadow-sm h-100">
                 <div class="card-header">
@@ -283,9 +353,11 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 
     <!-- Recent Quotes -->
+    @if($canQuotes)
     <div class="row g-3 mb-4">
         <div class="col-12">
             <div class="card shadow-sm">
@@ -332,8 +404,10 @@
             </div>
         </div>
     </div>
+    @endif
 
     <!-- Recent Bookings -->
+    @if($canBookings)
     <div class="row g-3">
         <div class="col-12">
             <div class="card shadow-sm">
@@ -378,6 +452,7 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
 @endsection
 

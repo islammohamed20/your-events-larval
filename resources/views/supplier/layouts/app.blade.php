@@ -444,33 +444,18 @@
                 <i class="fas fa-calendar-check"></i>
                 <span>{{ __('common.bookings') }}</span>
                 @php
-                    $pendingCount = Auth::guard('supplier')->user()->services()
-                        ->join('bookings', 'services.id', '=', 'bookings.service_id')
-                        ->where('bookings.status', 'pending')
+                    $pendingCount = \App\Models\BookingNotification::query()
+                        ->where('supplier_id', Auth::guard('supplier')->id())
+                        ->pending()
+                        ->whereHas('booking', function ($query) {
+                            $query->where('status', 'awaiting_supplier')
+                                ->whereNull('supplier_id')
+                                ->where('expires_at', '>', now());
+                        })
                         ->count();
                 @endphp
                 @if($pendingCount > 0)
                     <span class="badge bg-danger">{{ $pendingCount }}</span>
-                @endif
-            </a>
-            
-            
-
-            <a href="{{ route('supplier.quotes.index') }}" class="nav-link {{ request()->routeIs('supplier.quotes*') ? 'active' : '' }}">
-                <i class="fas fa-file-invoice-dollar"></i>
-                <span>{{ __('common.quotes') }}</span>
-                @php
-                    try {
-                        $serviceIds = Auth::guard('supplier')->user()->services()->pluck('services.id');
-                        $pendingQuotesCount = \App\Models\Quote::where('status', 'pending')
-                            ->whereHas('items', function($q) use ($serviceIds) { $q->whereIn('service_id', $serviceIds); })
-                            ->count();
-                    } catch (\Throwable $e) {
-                        $pendingQuotesCount = 0;
-                    }
-                @endphp
-                @if(($pendingQuotesCount ?? 0) > 0)
-                    <span class="badge bg-warning text-dark">{{ $pendingQuotesCount }}</span>
                 @endif
             </a>
             
@@ -517,18 +502,19 @@
             <div class="header-actions">
                 @php
                     try {
-                        $supplierHeader = Auth::guard('supplier')->user();
-                        $serviceIdsHeader = $supplierHeader ? $supplierHeader->services()->pluck('services.id') : collect([]);
-                        $pendingBookingsCountHeader = \App\Models\Booking::whereIn('service_id', $serviceIdsHeader)
-                            ->where('status', 'pending')
+                        $pendingBookingsCountHeader = \App\Models\BookingNotification::query()
+                            ->where('supplier_id', Auth::guard('supplier')->id())
+                            ->pending()
+                            ->unviewed()
+                            ->whereHas('booking', function ($query) {
+                                $query->where('status', 'awaiting_supplier')
+                                    ->whereNull('supplier_id')
+                                    ->where('expires_at', '>', now());
+                            })
                             ->count();
-                        $pendingQuotesCountHeader = \App\Models\Quote::where('status', 'pending')
-                            ->whereHas('items', function($q) use ($serviceIdsHeader) { $q->whereIn('service_id', $serviceIdsHeader); })
-                            ->count();
-                        $notificationCountHeader = $pendingBookingsCountHeader + $pendingQuotesCountHeader;
+                        $notificationCountHeader = $pendingBookingsCountHeader;
                     } catch (\Throwable $e) {
                         $pendingBookingsCountHeader = 0;
-                        $pendingQuotesCountHeader = 0;
                         $notificationCountHeader = 0;
                     }
                 @endphp
@@ -547,20 +533,6 @@
                                 <i class="fas fa-calendar-check me-2"></i>
                                 {{ __('common.pending_bookings') }}
                                 <span class="badge bg-danger ms-2">{{ $pendingBookingsCountHeader }}</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('supplier.quotes.index', ['status' => 'pending']) }}">
-                                <i class="fas fa-file-invoice-dollar me-2"></i>
-                                {{ __('common.pending_quotes') }}
-                                <span class="badge bg-warning text-dark ms-2">{{ $pendingQuotesCountHeader }}</span>
-                            </a>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('supplier.quotes.index') }}">
-                                <i class="fas fa-list me-2"></i>
-                                {{ __('common.view_all_quotes') }}
                             </a>
                         </li>
                     </ul>

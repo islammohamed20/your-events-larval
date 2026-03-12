@@ -373,9 +373,10 @@
     $canViewCustomers = $adminUser?->hasAdminPermission('manage_customers') || $adminUser?->hasAdminPermission('customers.view');
     $canViewBookings = $adminUser?->hasAdminPermission('manage_bookings') || $adminUser?->hasAdminPermission('bookings.view');
     $canViewQuotes = $adminUser?->hasAdminPermission('manage_bookings') || $adminUser?->hasAdminPermission('quotes.view');
+        $canAccessNotifications = $canManageUsers || $canViewCustomers || $canViewBookings || $canViewQuotes;
 @endphp
 <body data-confirm-delete="{{ __('common.confirm_delete') }}"
-      data-notifications-enabled="{{ ($notificationSettings['notifications_enabled'] ?? true) ? '1' : '0' }}"
+            data-notifications-enabled="{{ (($notificationSettings['notifications_enabled'] ?? true) && $canAccessNotifications) ? '1' : '0' }}"
       data-notification-sound-enabled="{{ ($notificationSettings['notification_sound_enabled'] ?? true) ? '1' : '0' }}"
       data-notification-refresh-interval="{{ $notificationSettings['notification_refresh_interval'] ?? 3 }}"
       data-notification-auto-dismiss="{{ $notificationSettings['notification_auto_dismiss'] ?? 10 }}">
@@ -606,6 +607,7 @@
                     </button>
 
                     {{-- Notification Bell --}}
+                    @if($canAccessNotifications)
                     <div class="dropdown me-3" id="notificationDropdown">
                         <button class="btn btn-link position-relative p-0 border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:22px;color:#555;" id="notifBellBtn">
                             <i class="fas fa-bell"></i>
@@ -636,6 +638,7 @@
                             </li>
                         </ul>
                     </div>
+                    @endif
 
                     <span class="text-muted">{{ __('common.hello_name', ['name' => auth()->user()->name]) }}</span>
                 </div>
@@ -743,19 +746,20 @@
             });
         }
 
-        // Load notifications when dropdown opens
-        document.getElementById('notifBellBtn').addEventListener('click', loadDropdownNotifications);
+        const notifBellBtn = document.getElementById('notifBellBtn');
+        if (notifBellBtn) {
+            notifBellBtn.addEventListener('click', loadDropdownNotifications);
 
-        // Initial badge count on page load
-        fetch('{{ route("admin.notifications.count") }}', { headers: { 'Accept': 'application/json' } })
-        .then(r => r.json())
-        .then(data => {
-            const badge = document.getElementById('notification-badge');
-            if (badge) {
-                badge.textContent = data.count;
-                badge.style.display = data.count > 0 ? 'inline-block' : 'none';
-            }
-        }).catch(() => {});
+            fetch('{{ route("admin.notifications.count") }}', { headers: { 'Accept': 'application/json' } })
+            .then(r => r.json())
+            .then(data => {
+                const badge = document.getElementById('notification-badge');
+                if (badge) {
+                    badge.textContent = data.count;
+                    badge.style.display = data.count > 0 ? 'inline-block' : 'none';
+                }
+            }).catch(() => {});
+        }
 
         // Auto dismiss alerts
         setTimeout(function() {
