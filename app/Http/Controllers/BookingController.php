@@ -17,6 +17,7 @@ class BookingController extends Controller
     {
         $packages = Package::active()->get();
         $services = Service::active()->whereHas('suppliers')->get();
+        $selectedEventDate = $request->get('event_date');
 
         $selectedPackage = null;
         $selectedService = null;
@@ -29,7 +30,7 @@ class BookingController extends Controller
             $selectedService = Service::whereHas('suppliers')->find($request->service_id);
         }
 
-        return view('booking.create', compact('packages', 'services', 'selectedPackage', 'selectedService'));
+        return view('booking.create', compact('packages', 'services', 'selectedPackage', 'selectedService', 'selectedEventDate'));
     }
 
     public function store(Request $request)
@@ -76,12 +77,19 @@ class BookingController extends Controller
             $totalAmount += $package->price;
         }
         if (isset($validated['service_id']) && $validated['service_id']) {
-            $service = Service::whereHas('suppliers')->find($validated['service_id']);
+            $service = Service::with('category')->whereHas('suppliers')->find($validated['service_id']);
             if (! $service) {
                 return redirect()->back()->withInput()->withErrors([
                     'service_id' => 'هذه الخدمة غير متوفرة حالياً ولا يمكن حجزها.',
                 ]);
             }
+
+            if (optional($service->category)->book_from_service && Booking::isServiceDateUnavailable((int) $service->id, (string) $validated['event_date'])) {
+                return redirect()->back()->withInput()->withErrors([
+                    'event_date' => 'هذه الخدمة غير متاحة في هذا اليوم. يرجى اختيار يوم آخر.',
+                ]);
+            }
+
             $totalAmount += $service->price;
         }
 

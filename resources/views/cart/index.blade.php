@@ -120,6 +120,14 @@
                                     </ul>
                                 </div>
                                 @endif
+                                @if($item->booking_date)
+                                <div class="mt-2">
+                                    <small class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1">
+                                        <i class="fas fa-calendar-check me-1"></i>
+                                        تاريخ الحجز: {{ $item->booking_date->format('Y-m-d') }}
+                                    </small>
+                                </div>
+                                @endif
                                 @if($item->customer_notes)
                                 <div class="mt-3">
                                     <small class="text-muted">

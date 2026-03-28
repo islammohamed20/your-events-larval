@@ -15,9 +15,122 @@ class EmailTemplateController extends Controller
      */
     public function index()
     {
+        $this->syncSystemEmailTemplates();
+
         $templates = EmailTemplate::orderBy('type')->orderBy('name')->get();
 
         return view('admin.email-templates.index', compact('templates'));
+    }
+
+    /**
+     * Ensure all system email blade views are represented in email_templates table.
+     */
+    protected function syncSystemEmailTemplates(): void
+    {
+        $known = [
+            'booking-confirmation' => [
+                'name' => 'تأكيد الحجز',
+                'subject' => 'تأكيد الحجز - {{booking_number}}',
+                'type' => 'booking',
+                'description' => 'قالب تأكيد الحجز للعميل.',
+            ],
+            'quote' => [
+                'name' => 'عرض السعر',
+                'subject' => 'عرض سعر جديد - {{quote_number}}',
+                'type' => 'custom',
+                'description' => 'قالب إرسال عرض السعر للعميل.',
+            ],
+            'quote-payment-confirmation' => [
+                'name' => 'تأكيد دفع عرض السعر',
+                'subject' => 'تم استلام دفعتك - {{quote_number}}',
+                'type' => 'custom',
+                'description' => 'قالب تأكيد الدفع لعرض السعر.',
+            ],
+            'booking-notification' => [
+                'name' => 'إشعار حجز',
+                'subject' => 'طلب حجز جديد - {{booking_number}}',
+                'type' => 'booking',
+                'description' => 'قالب إشعار داخلي/للمورد عند وجود حجز.',
+            ],
+            'booking-accepted-by-supplier' => [
+                'name' => 'قبول الحجز من المورد',
+                'subject' => 'تم قبول الحجز من المورد - {{booking_number}}',
+                'type' => 'custom',
+                'description' => 'قالب إشعار قبول المورد للحجز.',
+            ],
+            'supplier-approval' => [
+                'name' => 'قبول المورد',
+                'subject' => 'تم قبولك كمورد - {{company_name}}',
+                'type' => 'supplier_approval',
+                'description' => 'قالب اعتماد المورد بعد الموافقة.',
+            ],
+            'supplier-created-pending' => [
+                'name' => 'إنشاء مورد (قيد المراجعة)',
+                'subject' => 'تم إنشاء حساب مورد لك - بانتظار المراجعة',
+                'type' => 'custom',
+                'description' => 'قالب إشعار المورد الذي يُنشأ من لوحة الإدارة وحالته pending.',
+            ],
+            'supplier-otp' => [
+                'name' => 'رمز تحقق المورد',
+                'subject' => 'رمز التحقق - منصة فعالياتك',
+                'type' => 'custom',
+                'description' => 'قالب رمز التحقق OTP للمورد.',
+            ],
+            'supplier-quote-approved' => [
+                'name' => 'إشعار مورد بعرض سعر موافق عليه',
+                'subject' => 'فرصة عمل جديدة - عرض سعر موافق عليه',
+                'type' => 'custom',
+                'description' => 'قالب إشعار المورد عند موافقة العميل على عرض السعر.',
+            ],
+            'supplier-accepted-quote' => [
+                'name' => 'إشعار العميل بقبول المورد',
+                'subject' => 'تم قبول عرض السعر من المورد',
+                'type' => 'custom',
+                'description' => 'قالب إشعار العميل بعد قبول المورد للعرض.',
+            ],
+            'admin-supplier-accepted' => [
+                'name' => 'إشعار الإدارة بقبول المورد',
+                'subject' => 'قبول عرض السعر من المورد',
+                'type' => 'custom',
+                'description' => 'قالب إشعار الإدارة عند قبول المورد لعرض سعر.',
+            ],
+            'order-request' => [
+                'name' => 'طلب جديد للمورد',
+                'subject' => 'طلب جديد - {{order_number}}',
+                'type' => 'custom',
+                'description' => 'قالب إشعار المورد بطلب/منافسة جديدة.',
+            ],
+            'competitive-order-notification' => [
+                'name' => 'إشعار طلب تنافسي',
+                'subject' => 'طلب تنافسي جديد - {{order_number}}',
+                'type' => 'custom',
+                'description' => 'قالب إشعار الطلبات التنافسية.',
+            ],
+        ];
+
+        $files = glob(resource_path('views/emails/*.blade.php')) ?: [];
+
+        foreach ($files as $file) {
+            $slug = str_replace('.blade.php', '', basename($file));
+            $meta = $known[$slug] ?? [
+                'name' => 'قالب: '.str_replace('-', ' ', $slug),
+                'subject' => 'قالب بريد: '.$slug,
+                'type' => 'custom',
+                'description' => 'قالب نظام تمت مزامنته تلقائياً من resources/views/emails.',
+            ];
+
+            EmailTemplate::firstOrCreate(
+                ['slug' => $slug],
+                [
+                    'name' => $meta['name'],
+                    'subject' => $meta['subject'],
+                    'body' => '<p>هذا القالب مرتبط بملف Blade: <strong>emails.'.$slug.'</strong></p>',
+                    'type' => $meta['type'],
+                    'description' => $meta['description'],
+                    'is_active' => true,
+                ]
+            );
+        }
     }
 
     /**

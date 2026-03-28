@@ -5,6 +5,15 @@
 @section('content')
 <section class="py-5" style="margin-top: 80px;">
     <div class="container">
+        @push('styles')
+        <style>
+            @media (min-width: 992px) {
+                .package-important-info-card {
+                    margin-top: 150px !important;
+                }
+            }
+        </style>
+        @endpush
         <div class="row">
             <div class="col-lg-8">
                 <div class="mb-4" data-aos="fade-right">
@@ -167,15 +176,15 @@
                                 </a>
                             </div>
                             <div class="col-12 col-md-6">
-                                <a href="{{ route('contact') }}" class="btn btn-outline-primary w-100">
-                                    <i class="fas fa-question-circle me-2"></i>&nbsp;استفسار عن الباقة
+                                <a href="{{ route('contact') }}" class="btn btn-outline-primary w-100" style="font-size:0.85rem;white-space:nowrap;">
+                                    تواصل مع المبيعات
                                 </a>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="card mt-4" data-aos="fade-left" data-aos-delay="100">
+                <div class="card mt-4 package-important-info-card" data-aos="fade-left" data-aos-delay="100">
                     <div class="card-body">
                         <h6 class="card-title mb-3">
                             <i class="fas fa-info-circle me-2 text-primary"></i>

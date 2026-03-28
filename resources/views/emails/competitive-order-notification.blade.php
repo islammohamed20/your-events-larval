@@ -52,7 +52,7 @@
             color: #333333;
             margin-bottom: 20px;
             font-weight: 600;
-            text-align: right;
+            text-align: center;
         }
         .highlight-box {
             background: linear-gradient(135deg, #fff5f7 0%, #ffe0e6 100%);

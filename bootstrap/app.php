@@ -3,6 +3,9 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\PostTooLargeException;
+use Illuminate\Http\Request;
+use Illuminate\Session\TokenMismatchException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -27,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.force-password' => \App\Http\Middleware\EnsureAdminPasswordChange::class,
             'supplier' => \App\Http\Middleware\SupplierMiddleware::class,
             'supplier.guest' => \App\Http\Middleware\RedirectIfSupplier::class,
+            'customer.block_supplier_portal' => \App\Http\Middleware\BlockCustomerFromSupplierPortal::class,
         ]);
 
         // CSRF protection is enabled by default in Laravel 11
@@ -41,5 +45,32 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\App\Http\Middleware\TrackVisit::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (PostTooLargeException $e, Request $request) {
+            $message = 'حجم المرفقات كبير جدا. يرجى تقليل عدد/حجم الملفات ثم المحاولة مرة أخرى.';
+
+            if ($request->is('suppliers/*') || $request->routeIs('suppliers.*')) {
+                return redirect()->route('suppliers.register')
+                    ->withInput($request->except(['password', 'password_confirmation']))
+                    ->with('error', $message);
+            }
+
+            return back()->with('error', $message);
+        });
+
+        $exceptions->render(function (TokenMismatchException $e, Request $request) {
+            $message = 'انتهت الجلسة الأمنية. يرجى تسجيل الدخول مرة أخرى.';
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $message,
+                ], 419);
+            }
+
+            if ($request->is('ye/admin/*') || $request->routeIs('admin.*')) {
+                return redirect()->route('admin.login')
+                    ->withErrors(['email' => $message]);
+            }
+
+            return redirect()->route('login')->with('error', $message);
+        });
     })->create();

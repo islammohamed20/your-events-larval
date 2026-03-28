@@ -11,6 +11,15 @@
 @section('content')
 <section class="py-5">
     <div class="container">
+        @push('styles')
+        <style>
+            @media (min-width: 992px) {
+                .service-contact-card {
+                    margin-top: 150px !important;
+                }
+            }
+        </style>
+        @endpush
         <div class="row">
             <div class="col-lg-8">
                 <!-- معرض الصور -->
@@ -23,9 +32,9 @@
                         @endphp
                         <img id="mainImage" 
                              src="{{ $mainImage->image_url }}" 
-                             class="img-fluid rounded shadow service-main-image service-image" 
+                                class="img-fluid shadow service-main-image service-image" 
                              alt="{{ $service->name }}"
-                             style="width: 100%; height: 500px; object-fit: cover; cursor: pointer;">
+                                style="width: 100%; height: auto; max-height: 75vh; object-fit: contain; border-radius: 12px; cursor: pointer;">
                     </div>
                     
                     <!-- صور مصغرة -->
@@ -45,12 +54,12 @@
                 </div>
                 @elseif($service->image)
                 <div class="mb-4" data-aos="fade-right">
-                    <img src="{{ Storage::url($service->image) }}" class="img-fluid rounded shadow service-main-image service-image" alt="{{ $service->name }}" style="width: 100%; height: 500px; object-fit: cover;">
+                    <img src="{{ Storage::url($service->image) }}" class="img-fluid shadow service-main-image service-image" alt="{{ $service->name }}" style="width: 100%; height: auto; max-height: 75vh; object-fit: contain; border-radius: 12px;">
                 </div>
                 @else
                 <div class="mb-4" data-aos="fade-right">
                     <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
-                         class="img-fluid rounded shadow service-main-image service-image" alt="{{ $service->name }}" style="width: 100%; height: 500px; object-fit: cover;">
+                         class="img-fluid shadow service-main-image service-image" alt="{{ $service->name }}" style="width: 100%; height: auto; max-height: 75vh; object-fit: contain; border-radius: 12px;">
                 </div>
                 @endif
                 
@@ -91,22 +100,17 @@
                                 التفاصيل
                             </button>
                         </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="suppliers-tab" data-bs-toggle="tab" data-bs-target="#service-suppliers" type="button" role="tab">
-                                الموردون
-                            </button>
-                        </li>
                     </ul>
                     
                     <div class="tab-content">
                         <div class="tab-pane fade show active" id="service-details" role="tabpanel" aria-labelledby="details-tab">
-                            @if($service->description || $service->marketing_description)
+                            @if($service->marketing_description)
                             <div class="mb-4">
                                 <h5 class="mb-3">
                                     <i class="fas fa-align-left text-primary me-2"></i>&nbsp;{{ __('common.description') }}
                                 </h5>
                                 <div class="text-muted" style="line-height: 1.8;">
-                                    {!! nl2br(e($service->description ?: $service->marketing_description)) !!}
+                                    {!! nl2br(e($service->marketing_description)) !!}
                                 </div>
                             </div>
                             @endif
@@ -182,38 +186,6 @@
                             </div>
                             @endif
                         </div>
-                        
-                        <div class="tab-pane fade" id="service-suppliers" role="tabpanel" aria-labelledby="suppliers-tab">
-                            @php $suppliers = $service->suppliers; @endphp
-                            @if($suppliers && $suppliers->count() > 0)
-                                <div class="table-responsive">
-                                    <table class="table table-hover align-middle">
-                                        <thead>
-                                            <tr>
-                                                <th>المورد</th>
-                                                <th>الحالة</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($suppliers as $supplier)
-                                            <tr>
-                                                <td>{{ $supplier->name }}</td>
-                                                <td>
-                                                    @if($supplier->pivot && $supplier->pivot->is_available)
-                                                        <span class="badge bg-success">متاحة</span>
-                                                    @else
-                                                        <span class="badge bg-secondary">غير متاحة</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            @else
-                                <p class="text-muted mb-0">لا يوجد موردون مرتبطون بهذه الخدمة حالياً.</p>
-                            @endif
-                        </div>
                     </div>
                 </div>
             </div>
@@ -244,6 +216,10 @@
                             {{ __('common.ready_to_start') }}<br>
                             {{ __('common.ready_to_start_hint') }}
                         </p>
+
+                        @php
+                            $bookFromService = (bool) optional($service->category)->book_from_service;
+                        @endphp
                         
                         @php $unavailable = $service->suppliers && $service->suppliers->count() === 0; @endphp
                         
@@ -261,7 +237,8 @@
                                           data-attr-count="{{ $service->attributes->count() }}"
                                           data-variation-url="{{ route('services.get-variation', $service) }}"
                                           data-add-url="{{ route('cart.add', $service) }}"
-                                          data-price-fallback="{{ $service->isVariable() ? $service->price_range : ( ($service->price ? number_format((float) $service->price) . ' ' . __('common.currency') : '—') ) }}">
+                                          data-price-fallback="{{ $service->isVariable() ? $service->price_range : ( ($service->price ? number_format((float) $service->price) . ' ' . __('common.currency') : '—') ) }}"
+                                          data-requires-booking-date="{{ $bookFromService ? '1' : '0' }}">
                                     @csrf
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
@@ -269,6 +246,16 @@
                                             <input type="number" name="quantity" class="form-control" 
                                                    value="1" min="1" max="100" required>
                                         </div>
+                                        @if($bookFromService)
+                                        <div class="col-12 mb-3">
+                                            <label for="serviceBookingDate" class="form-label fw-bold">
+                                                <i class="fas fa-calendar-alt me-1 text-primary"></i>اختر اليوم المتاح <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" id="serviceBookingDate" name="booking_date" class="form-control" placeholder="اختر تاريخ المناسبة" readonly>
+                                            <div id="serviceBookingDateRequired" class="small text-danger d-none mt-1"><i class="fas fa-exclamation-circle me-1"></i>يرجى اختيار تاريخ الفعالية أولاً قبل الإضافة للسلة.</div>
+                                            <div id="serviceBookingDateMessage" class="small text-danger d-none mt-1"><i class="fas fa-ban me-1"></i>هذا اليوم غير متاح لهذه الخدمة.</div>
+                                        </div>
+                                        @endif
                                         <div class="col-12 mb-3">
                                             <label class="form-label">{{ __('common.special_notes_optional') }}</label>
                                             <textarea name="customer_notes" class="form-control" rows="3" 
@@ -283,8 +270,47 @@
                                             <i class="fas fa-sliders-h me-2"></i>{{ __('common.customize_service_options') }}
                                         </label>
                                         <div class="border rounded p-3">
-                                            @foreach($service->attributes as $attribute)
-                                                @php $values = $attribute->values()->active()->get(); @endphp
+                                            @php
+                                                $activeVariationValueIds = collect($service->variations)
+                                                    ->pluck('attribute_value_ids')
+                                                    ->filter()
+                                                    ->flatten()
+                                                    ->map(fn ($id) => (int) $id)
+                                                    ->unique()
+                                                    ->values();
+
+                                                $displayAttributes = collect();
+                                                if ($activeVariationValueIds->isNotEmpty()) {
+                                                    $variationValues = \App\Models\AttributeValue::with('attribute')
+                                                        ->whereIn('id', $activeVariationValueIds)
+                                                        ->get();
+
+                                                    $displayAttributes = $variationValues
+                                                        ->groupBy('attribute_id')
+                                                        ->map(function ($group) {
+                                                            $first = $group->first();
+
+                                                            return (object) [
+                                                                'id' => (int) $first->attribute_id,
+                                                                'name' => optional($first->attribute)->name ?? 'خيار',
+                                                                'type' => optional($first->attribute)->type ?? 'select',
+                                                                'values' => $group->sortBy('order')->values(),
+                                                            ];
+                                                        })
+                                                        ->values();
+                                                }
+
+                                                if ($displayAttributes->isEmpty()) {
+                                                    $displayAttributes = $service->attributes;
+                                                }
+                                            @endphp
+                                            @foreach($displayAttributes as $attribute)
+                                                @php
+                                                    $values = collect($attribute->values ?? []);
+                                                    if ($activeVariationValueIds->isNotEmpty()) {
+                                                        $values = $values->filter(fn ($val) => $activeVariationValueIds->contains((int) $val->id));
+                                                    }
+                                                @endphp
                                                 @if($values->count() > 0)
                                                 <div class="mb-3">
                                                     <div class="fw-bold mb-2">{{ $attribute->name }}</div>
@@ -361,29 +387,24 @@
                                     @endif
                                     
                                     <div class="row g-2">
-                                        <div class="col-12 col-md-6">
-                                            <button type="submit" class="btn btn-primary w-100 mb-2 d-flex align-items-center justify-content-center gap-2 text-center">
+                                        <div class="col-12">
+                                            <button type="submit" id="addToCartBtn" class="btn btn-primary w-100 mb-2 d-flex align-items-center justify-content-center gap-2 text-center">
                                                 <i class="fas fa-cart-plus"></i>
                                                 <span>{{ __('common.add_to_cart') }}</span>
                                             </button>
-                                        </div>
-                                        <div class="col-12 col-md-6">
-                                            <a href="{{ route('booking.create', ['service_id' => $service->id]) }}" 
-                                               class="btn btn-success btn-lg w-100 mb-2">
-                                                <i class="fas fa-calendar-check me-2"></i>{{ __('common.direct_booking') }}
-                                            </a>
                                         </div>
                                     </div>
                                 </form>
                             </div>
                         </div>
+
                         @endif
                         
                         <div class="row g-2">
-                            <div class="col-12 col-md-6">
+                            <div class="col-12">
                                 @auth
                                 <button type="button" 
-                                        class="btn btn-outline-danger w-100 mb-3 wishlist-toggle-btn" 
+                                        class="btn btn-outline-danger w-100 wishlist-toggle-btn" 
                                         data-service-id="{{ $service->id }}">
                                     <i class="fas fa-heart me-2 {{ auth()->user()->hasInWishlist($service->id) ? '' : 'text-muted' }}"></i>
                                     <span class="wishlist-text">
@@ -413,7 +434,7 @@
                     </div>
                 </div>
                 
-                <div class="card mt-4" data-aos="fade-left" data-aos-delay="100">
+                <div class="card mt-4 service-contact-card" data-aos="fade-left" data-aos-delay="100">
                     <div class="card-body">
                         <h6 class="card-title">{{ __('contact.contact_info') }}</h6>
                         <ul class="list-unstyled mb-0">
@@ -660,22 +681,22 @@
 </style>
 
 <style>
-/* تحسين عرض الصور على الموبايل: مربعة وتملأ الحاوية */
+/* عرض صورة الخدمة بالحجم الطبيعي دون اقتصاص */
 @media (max-width: 768px) {
-    /* اجعل الحاوية الرئيسية مربعة */
-    #mainImageContainer { width: 100%; aspect-ratio: 1 / 1; }
-    /* اجعل الصورة تملأ المربع بالكامل */
+    #mainImageContainer { width: 100%; }
     .service-main-image,
     .service-image {
         width: 100% !important;
-        height: 100% !important;
-        object-fit: cover !important;
+        height: auto !important;
+        max-height: 65vh;
+        object-fit: contain !important;
+        border-radius: 12px !important;
         display: block;
     }
 }
 @media (max-width: 576px) {
     .service-image {
-        aspect-ratio: 1 / 1;
+        max-height: 55vh;
     }
 }
 </style>
@@ -831,6 +852,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     form.addEventListener('submit', function(e) {
         e.preventDefault();
+        if (form.dataset.requiresBookingDate === '1') {
+            const bookingDateInput = document.getElementById('serviceBookingDate');
+            const bookingRequiredMsg = document.getElementById('serviceBookingDateRequired');
+            if (!bookingDateInput || !bookingDateInput.value) {
+                if (bookingRequiredMsg) { bookingRequiredMsg.classList.remove('d-none'); }
+                if (bookingDateInput) {
+                    bookingDateInput.classList.add('is-invalid');
+                    bookingDateInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            } else {
+                if (bookingRequiredMsg) { bookingRequiredMsg.classList.add('d-none'); }
+                if (bookingDateInput) { bookingDateInput.classList.remove('is-invalid'); }
+            }
+        }
         const formData = new FormData(form);
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
@@ -906,3 +942,87 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 @endpush
 @endsection
+
+@push('styles')
+@if((bool) optional($service->category)->book_from_service)
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+.flatpickr-day.unavailable-day {
+    border: 2px solid #dc3545;
+    color: #dc3545;
+    border-radius: 50%;
+}
+
+.flatpickr-day.unavailable-day.flatpickr-disabled,
+.flatpickr-day.unavailable-day.flatpickr-disabled:hover {
+    color: #dc3545;
+    opacity: 1;
+    cursor: not-allowed;
+    background: rgba(220, 53, 69, 0.08);
+}
+</style>
+@endif
+@endpush
+
+@push('scripts')
+@if((bool) optional($service->category)->book_from_service)
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const dateInput = document.getElementById('serviceBookingDate');
+    const errorMsg = document.getElementById('serviceBookingDateMessage');
+    const cartForm = document.getElementById('add-to-cart-form');
+    const cartBtn = document.getElementById('addToCartBtn');
+    if (!dateInput || typeof flatpickr === 'undefined') {
+        return;
+    }
+
+    const unavailableUrl = '{{ route('services.unavailable-dates', ['id' => $service->id]) }}';
+    const unavailableDates = new Set();
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    function toISODate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return year + '-' + month + '-' + day;
+    }
+
+    fetch(unavailableUrl, { headers: { 'Accept': 'application/json' } })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            (data.dates || []).forEach(function (d) { unavailableDates.add(d); });
+
+            flatpickr(dateInput, {
+                dateFormat: 'Y-m-d',
+                minDate: tomorrow,
+                disable: [function(date) {
+                    return unavailableDates.has(toISODate(date));
+                }],
+                onDayCreate: function(_dObj, _dStr, _fp, dayElem) {
+                    const date = dayElem.dateObj;
+                    if (!date) return;
+                    if (unavailableDates.has(toISODate(date))) {
+                        dayElem.classList.add('unavailable-day');
+                    }
+                },
+                onChange: function(selectedDates, dateStr) {
+                    const requiredMsg = document.getElementById('serviceBookingDateRequired');
+                    if (dateStr && unavailableDates.has(dateStr)) {
+                        errorMsg.classList.remove('d-none');
+                        dateInput.value = '';
+                        return;
+                    }
+                    errorMsg.classList.add('d-none');
+                    if (requiredMsg) { requiredMsg.classList.add('d-none'); }
+                    dateInput.classList.remove('is-invalid');
+                }
+            });
+        })
+        .catch(function () {});
+
+});
+</script>
+@endif
+@endpush

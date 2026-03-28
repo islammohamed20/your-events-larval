@@ -11,7 +11,7 @@
             margin: 0;
             padding: 40px 20px;
             direction: rtl;
-            text-align: right;
+            text-align: center;
         }
         .email-container {
             max-width: 600px;
@@ -44,14 +44,14 @@
             color: #1f2937;
             margin-bottom: 20px;
             font-weight: 600;
-            text-align: right;
+            text-align: center;
         }
         .message {
             color: #4b5563;
             line-height: 1.8;
             margin-bottom: 30px;
             font-size: 16px;
-            text-align: right;
+            text-align: center;
         }
         .success-box {
             background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
@@ -82,14 +82,15 @@
             color: #5B21B6;
             margin: 0 0 20px 0;
             font-size: 20px;
-            text-align: right;
+            text-align: center;
         }
         .detail-row {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             padding: 12px 0;
             border-bottom: 1px solid #e5e7eb;
-            text-align: right;
+            text-align: center;
+            flex-wrap: wrap;
         }
         .detail-row:last-child {
             border-bottom: none;
@@ -97,12 +98,12 @@
         .detail-label {
             font-weight: 600;
             color: #6b7280;
-            text-align: right;
+            text-align: center;
         }
         .detail-value {
             color: #1f2937;
             font-weight: 500;
-            text-align: left;
+            text-align: center;
         }
         .next-steps {
             background-color: #dbeafe;
@@ -110,7 +111,7 @@
             border-radius: 10px;
             padding: 20px;
             margin: 25px 0;
-            text-align: right;
+            text-align: center;
         }
         .next-steps h4 {
             color: #1e40af;

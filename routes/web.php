@@ -29,6 +29,15 @@ use Illuminate\Support\Facades\URL;
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+Route::get('/favicon.ico', function () {
+    $path = public_path('images/logo/logo.png');
+    if (is_file($path)) {
+        return response()->file($path, ['Content-Type' => 'image/png']);
+    }
+
+    abort(404);
+})->name('favicon');
+
 // SEO: Sitemap & Robots
 Route::get('/robots.txt', function () {
     $lines = [];
@@ -163,8 +172,8 @@ use App\Http\Controllers\Supplier\SupplierBookingController;
 use App\Http\Controllers\Supplier\SupplierDashboardController;
 use App\Http\Controllers\SupplierController;
 
-Route::get('/suppliers/register', [SupplierController::class, 'create'])->name('suppliers.register');
-Route::post('/suppliers/register', [SupplierController::class, 'store'])->name('suppliers.store');
+Route::get('/suppliers/register', [SupplierController::class, 'create'])->name('suppliers.register')->middleware('customer.block_supplier_portal');
+Route::post('/suppliers/register', [SupplierController::class, 'store'])->name('suppliers.store')->middleware('customer.block_supplier_portal');
 Route::get('/suppliers/verify-otp', [SupplierController::class, 'showVerifyOtp'])->name('suppliers.verify-otp');
 Route::post('/suppliers/verify-otp', [SupplierController::class, 'verifyOtp'])->name('suppliers.verify-otp.post');
 Route::get('/suppliers/success', [SupplierController::class, 'success'])->name('suppliers.success');
@@ -175,6 +184,7 @@ Route::post('/suppliers/resend-otp', [SupplierController::class, 'resendOtp'])
 // Services Routes
 Route::get('/services', [ServicesController::class, 'index'])->name('services.index');
 Route::get('/services/{id}', [ServicesController::class, 'show'])->name('services.show');
+Route::get('/services/{id}/unavailable-dates', [ServicesController::class, 'unavailableDates'])->name('services.unavailable-dates');
 
 // AJAX endpoint to get variation price by selected value ids
 Route::post('/services/{service}/get-variation', function (\Illuminate\Http\Request $request, \App\Models\Service $service) {
@@ -191,7 +201,13 @@ Route::post('/services/{service}/get-variation', function (\Illuminate\Http\Requ
         return $existing === $ids;
     });
     if ($variation) {
-        return response()->json(['success' => true, 'price' => (float) $variation->price, 'variation_id' => $variation->id]);
+        return response()->json([
+            'success' => true,
+            'price' => (float) $variation->active_price,
+            'regular_price' => (float) $variation->price,
+            'sale_price' => $variation->sale_price !== null ? (float) $variation->sale_price : null,
+            'variation_id' => $variation->id,
+        ]);
     }
 
     return response()->json(['success' => false, 'message' => 'لا يوجد سعر لهذه التركيبة'], 404);
@@ -210,6 +226,14 @@ Route::get('/contact', function () {
 })->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])
     ->name('contact.store')
+    ->middleware('throttle:5,1');
+
+// Newsletter Routes
+Route::post('/newsletter/subscribe', [\App\Http\Controllers\NewsletterController::class, 'subscribe'])
+    ->name('newsletter.subscribe')
+    ->middleware('throttle:3,1');
+Route::post('/newsletter/unsubscribe', [\App\Http\Controllers\NewsletterController::class, 'unsubscribe'])
+    ->name('newsletter.unsubscribe')
     ->middleware('throttle:5,1');
 
 // Terms and Conditions Route
@@ -586,7 +610,9 @@ Route::prefix('ye/admin')->name('admin.')->middleware(['admin', 'admin.session.v
     Route::get('suppliers/{supplier}/download/{type}', [\App\Http\Controllers\Admin\SupplierController::class, 'downloadDocument'])->name('suppliers.download');
     Route::post('suppliers/{supplier}/add-service', [\App\Http\Controllers\Admin\SupplierController::class, 'addService'])->name('suppliers.add-service');
     Route::delete('suppliers/{supplier}/services/{serviceId}', [\App\Http\Controllers\Admin\SupplierController::class, 'removeService'])->name('suppliers.remove-service');
+    Route::post('suppliers/{supplier}/resend-email', [\App\Http\Controllers\Admin\SupplierController::class, 'resendLastEmail'])->name('suppliers.resend-email');
 });
+// ===============================
 
 // ===============================
 // Lightweight API: Services by Category
@@ -611,7 +637,7 @@ Route::get('/api/services', function (\Illuminate\Http\Request $request) {
 // ====================================
 Route::prefix('supplier')->name('supplier.')->group(function () {
     // Guest routes (login) - redirect to dashboard if already logged in
-    Route::middleware('supplier.guest')->group(function () {
+    Route::middleware(['supplier.guest', 'customer.block_supplier_portal'])->group(function () {
         Route::get('/login', [SupplierAuthController::class, 'showLoginForm'])->name('login');
         Route::post('/login', [SupplierAuthController::class, 'login'])->name('login.post');
         Route::get('/forgot-password', [SupplierAuthController::class, 'showForgotPasswordForm'])->name('forgot-password');

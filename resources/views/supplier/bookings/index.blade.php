@@ -3,6 +3,18 @@
 @section('title', __('common.bookings'))
 @section('page-title', __('common.bookings'))
 
+@push('styles')
+<style>
+    .nav-tabs .nav-link {
+        color: #000 !important;
+    }
+    .nav-tabs .nav-link.active,
+    .nav-tabs .nav-item.show .nav-link {
+        color: #000 !important;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container-fluid">
     <!-- Navigation Tabs -->

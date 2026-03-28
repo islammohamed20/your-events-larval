@@ -318,7 +318,7 @@
                         @if($supplier->social_media)
                             <div class="col-12">
                                 <label class="text-muted small mb-2">وسائل التواصل الاجتماعي</label>
-                                <div class="d-flex gap-2">
+                                <div class="d-flex flex-wrap gap-2">
                                     @if(isset($supplier->social_media['twitter']))
                                         <a href="{{ $supplier->social_media['twitter'] }}" target="_blank" class="btn btn-sm btn-outline-info">
                                             <i class="fab fa-twitter"></i> تويتر
@@ -399,6 +399,14 @@
                             @method('DELETE')
                             <button type="submit" class="btn btn-outline-danger w-100" onclick="return confirm('هل أنت متأكد من حذف هذا المورد نهائياً؟ لا يمكن التراجع عن هذا الإجراء.')">
                                 <i class="fas fa-trash me-1"></i>حذف نهائياً
+                            </button>
+                        </form>
+
+                        <!-- Resend Email Button -->
+                        <form action="{{ route('admin.suppliers.resend-email', $supplier) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-info w-100">
+                                <i class="fas fa-paper-plane me-1"></i>إعادة إرسال آخر بريد
                             </button>
                         </form>
                     </div>
@@ -508,6 +516,38 @@
 .portfolio-item:hover img {
     transform: scale(1.05);
     filter: brightness(1.1);
+}
+
+@media (max-width: 991.98px) {
+    .container-fluid > .d-flex.justify-content-between {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+
+    .container-fluid > .d-flex.justify-content-between .btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .card-body {
+        padding: 1rem;
+    }
+
+    .timeline-item {
+        padding-left: 34px;
+    }
+
+    .timeline-item i {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+    }
+
+    .timeline-item:not(:last-child)::before {
+        left: 11px;
+    }
 }
 </style>
 <script>

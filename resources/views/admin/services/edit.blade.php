@@ -208,12 +208,12 @@
                             </div>
                             
                             <div class="mb-3" id="description-field">
-                                <label for="description" class="form-label">وصف الخدمة</label>
+                                <label for="description" class="form-label">وصف قصير للخدمة</label>
                                 <textarea class="form-control @error('description') is-invalid @enderror" 
                                           id="description" 
                                           name="description" 
                                           rows="3">{{ old('description', $service->description) }}</textarea>
-                                <small class="form-text text-muted">وصف قصير للخدمة (للاستخدام الداخلي)</small>
+                                <small class="form-text text-muted">وصف قصير للخدمة يظهر اسفل اسم الخدمة</small>
                                 @error('description')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -623,6 +623,48 @@
                         <div class="tab-pane fade" id="suppliers" role="tabpanel">
                             <div class="mb-4">
                                 <h5 class="mb-3">
+                                    <i class="fas fa-users me-2"></i>سياسة الموردين لهذه الخدمة
+                                </h5>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <div class="card border-warning h-100">
+                                            <div class="card-body">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input"
+                                                           type="radio"
+                                                           name="supplier_policy"
+                                                           id="supplier_policy_multiple"
+                                                           value="multiple"
+                                                           {{ old('supplier_policy', $service->supplier_policy ?? 'multiple') === 'multiple' ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="supplier_policy_multiple">
+                                                        <strong>موردين متعدد</strong>
+                                                    </label>
+                                                </div>
+                                                <p class="text-muted small mb-0">يمكن ربط الخدمة بأكثر من مورد.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card border-warning h-100">
+                                            <div class="card-body">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input"
+                                                           type="radio"
+                                                           name="supplier_policy"
+                                                           id="supplier_policy_single"
+                                                           value="single"
+                                                           {{ old('supplier_policy', $service->supplier_policy ?? 'multiple') === 'single' ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="supplier_policy_single">
+                                                        <strong>مورد واحد فقط</strong>
+                                                    </label>
+                                                </div>
+                                                <p class="text-muted small mb-0">للبراندات: لا يمكن ربط الخدمة إلا بمورد واحد.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h5 class="mb-3">
                                     <i class="fas fa-handshake me-2"></i>الموردون المرتبطون بهذه الخدمة
                                 </h5>
                                 @php $suppliers = $service->suppliers; @endphp
@@ -718,6 +760,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    const deleteImageUrlTemplate = @json(route('admin.services.images.delete', ['service' => '__SERVICE__', 'image' => '__IMAGE__']));
+    const setThumbnailUrlTemplate = @json(route('admin.services.images.set-thumbnail', ['service' => '__SERVICE__', 'image' => '__IMAGE__']));
+
     // Category-based field toggle (الألعاب category)
     const categorySelect = document.getElementById('category_id');
     const subtitleField = document.getElementById('subtitle-field');
@@ -917,8 +962,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('معرّف الخدمة غير متوفر');
                 return;
             }
-            
-            fetch(`/admin/services/${serviceId}/images/${imageId}`, {
+
+            const deleteImageUrl = deleteImageUrlTemplate
+                .replace('__SERVICE__', serviceId)
+                .replace('__IMAGE__', imageId);
+
+            fetch(deleteImageUrl, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -951,8 +1000,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('معرّف الخدمة غير متوفر');
                 return;
             }
-            
-            fetch(`/admin/services/${serviceId}/images/${imageId}/set-thumbnail`, {
+
+            const setThumbnailUrl = setThumbnailUrlTemplate
+                .replace('__SERVICE__', serviceId)
+                .replace('__IMAGE__', imageId);
+
+            fetch(setThumbnailUrl, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,

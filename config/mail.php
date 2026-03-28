@@ -48,6 +48,34 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN'),
         ],
 
+        'sales' => [
+            'transport' => 'smtp',
+            'host' => env('SALES_MAIL_HOST', 'smtp.office365.com'),
+            'port' => env('SALES_MAIL_PORT', 587),
+            'encryption' => env('SALES_MAIL_ENCRYPTION', 'tls'),
+            'username' => env('SALES_MAIL_USERNAME'),
+            'password' => env('SALES_MAIL_PASSWORD'),
+            'timeout' => null,
+            'from' => [
+                'address' => env('SALES_MAIL_FROM_ADDRESS', 'sales@yourevents.sa'),
+                'name' => env('SALES_MAIL_FROM_NAME', 'Sales Team'),
+            ],
+        ],
+
+        'hello' => [
+            'transport' => 'smtp',
+            'host' => env('HELLO_MAIL_HOST', 'smtp.office365.com'),
+            'port' => env('HELLO_MAIL_PORT', 587),
+            'encryption' => env('HELLO_MAIL_ENCRYPTION', 'tls'),
+            'username' => env('HELLO_MAIL_USERNAME'),
+            'password' => env('HELLO_MAIL_PASSWORD'),
+            'timeout' => null,
+            'from' => [
+                'address' => env('HELLO_MAIL_FROM_ADDRESS', 'hello@yourevents.sa'),
+                'name' => env('HELLO_MAIL_FROM_NAME', 'Your Events'),
+            ],
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],
@@ -114,8 +142,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => env('MAIL_FROM_ADDRESS', 'hello@yourevents.sa'),
+        'name' => env('MAIL_FROM_NAME', 'Your Events'),
     ],
 
     /*

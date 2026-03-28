@@ -19,6 +19,11 @@
             <div class="item-details">
                 <h6 class="item-name">{{ Str::limit($item->service->name, 30) }}</h6>
                 <p class="item-quantity">الكمية: {{ $item->quantity }}</p>
+                @if($item->booking_date)
+                <p class="item-quantity text-success" style="font-size:0.75rem;">
+                    <i class="fas fa-calendar-check me-1"></i>تاريخ: {{ $item->booking_date->format('Y-m-d') }}
+                </p>
+                @endif
                 @if($item->variation)
                     <p class="item-variation">
                         @foreach($item->variation->attributeValuesList as $value)

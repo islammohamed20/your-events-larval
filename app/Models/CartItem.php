@@ -19,12 +19,14 @@ class CartItem extends Model
         'customer_notes',
         'selections',
         'selected_variation_id',
+        'booking_date',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'quantity' => 'integer',
         'selections' => 'array',
+        'booking_date' => 'date',
     ];
 
     /**

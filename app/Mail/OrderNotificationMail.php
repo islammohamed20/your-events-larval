@@ -28,6 +28,7 @@ class OrderNotificationMail extends Mailable
     {
         return new Envelope(
             subject: '🔥 فرصة عمل جديدة - طلب عاجل #'.$this->order->order_number,
+            mailer: 'sales',
         );
     }
 

@@ -335,7 +335,7 @@ function generateAllVariations() {
 
 function editVariation(id) {
     // Load variation data and show modal
-    fetch(`{{ route('admin.services.variations.index', $service) }}/${id}/edit`)
+    fetch(`{{ route('admin.services.variations.index', $service) }}/${id}`)
         .then(response => response.json())
         .then(data => {
             if (!data.success) {

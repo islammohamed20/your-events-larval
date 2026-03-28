@@ -121,7 +121,7 @@
                                 <div class="col-md-6 mb-3">
                                     <label for="event_date" class="form-label">تاريخ المناسبة *</label>
                                     <input type="date" class="form-control" name="event_date" id="event_date" 
-                                           value="{{ old('event_date') }}" min="{{ date('Y-m-d', strtotime('+1 day')) }}" required>
+                                           value="{{ old('event_date', $selectedEventDate ?? '') }}" min="{{ date('Y-m-d', strtotime('+1 day')) }}" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="guests_count" class="form-label">عدد الضيوف المتوقع *</label>

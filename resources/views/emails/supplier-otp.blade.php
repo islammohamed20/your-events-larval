@@ -84,7 +84,7 @@
             border-right: 4px solid #ffc107;
             padding: 15px 20px;
             margin: 30px 0;
-            text-align: right;
+            text-align: center;
             border-radius: 8px;
             direction: rtl;
         }
@@ -98,7 +98,7 @@
             color: #856404;
             font-size: 14px;
             line-height: 1.5;
-            text-align: right;
+            text-align: center;
             direction: rtl;
         }
         .footer {

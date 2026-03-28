@@ -8,7 +8,7 @@
         body {
             font-family: 'Tajawal', Arial, sans-serif;
             direction: rtl;
-            text-align: right;
+            text-align: center;
             background-color: #f8f9fa;
             margin: 0;
             padding: 0;
@@ -40,6 +40,7 @@
         }
         .content {
             padding: 30px 20px;
+            text-align: center;
         }
         .section {
             margin-bottom: 25px;
@@ -51,14 +52,16 @@
             margin: 30px 0 15px 0;
             border-bottom: 2px solid #7C3AED;
             padding-bottom: 10px;
+            text-align: center;
         }
         .detail-row {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             margin-bottom: 12px;
             padding: 10px;
             background-color: #f8f9fa;
             border-radius: 5px;
+            flex-wrap: wrap;
         }
         .detail-label {
             font-weight: bold;
@@ -67,8 +70,7 @@
         }
         .detail-value {
             color: #666;
-            width: 60%;
-            text-align: left;
+            text-align: center;
         }
         .note {
             background-color: #f0f7ff;

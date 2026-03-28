@@ -106,7 +106,7 @@
             letter-spacing: 1px;
         }
         
-        .nav-link {
+        .supplier-sidebar .nav-link {
             display: flex;
             align-items: center;
             padding: 12px 20px;
@@ -116,24 +116,24 @@
             border-right: 3px solid transparent;
         }
         
-        .nav-link:hover {
+        .supplier-sidebar .nav-link:hover {
             background: rgba(255,255,255,0.1);
             color: #fff;
         }
         
-        .nav-link.active {
+        .supplier-sidebar .nav-link.active {
             background: rgba(255,255,255,0.1);
             color: var(--gold-color);
             border-right-color: var(--gold-color);
         }
         
-        .nav-link i {
+        .supplier-sidebar .nav-link i {
             width: 24px;
             margin-left: 12px;
             font-size: 1.1rem;
         }
         
-        .nav-link .badge {
+        .supplier-sidebar .nav-link .badge {
             margin-right: auto;
             margin-left: 0;
         }

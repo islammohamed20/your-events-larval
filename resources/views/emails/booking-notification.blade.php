@@ -11,7 +11,7 @@
             margin: 0;
             padding: 40px 20px;
             direction: rtl;
-            text-align: right;
+            text-align: center;
         }
         .email-container {
             max-width: 600px;
@@ -69,20 +69,21 @@
         }
         .content {
             padding: 40px 30px;
+            text-align: center;
         }
         .greeting {
             font-size: 20px;
             color: #1f2937;
             margin-bottom: 20px;
             font-weight: 600;
-            text-align: right;
+            text-align: center;
         }
         .message {
             color: #4b5563;
             line-height: 1.8;
             margin-bottom: 30px;
             font-size: 16px;
-            text-align: right;
+            text-align: center;
         }
         .countdown-box {
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);

@@ -2595,8 +2595,10 @@
                                 <li class="mb-2"><a href="{{ route('gallery.index') }}" class="text-white text-decoration-none">{{ __('common.quick_links_gallery') }}</a></li>
                                 @endif
                                 <li class="mb-2"><a href="{{ route('contact') }}" class="text-white text-decoration-none">{{ __('common.quick_links_contact') }}</a></li>
+                                @guest
                                 <li class="mb-2"><a href="{{ route('suppliers.register') }}" class="text-white text-decoration-none">{{ __('common.register_as_supplier') }}</a></li>
                                 <li class="mb-2"><a href="{{ route('supplier.login') }}" class="text-white text-decoration-none">{{ __('common.supplier_login') }}</a></li>
+                                @endguest
                                 <li class="mb-2">
                                     <a href="{{ route('terms') }}" class="text-white text-decoration-none">
                                         {{ __('common.quick_links_terms') }}
@@ -2632,12 +2634,23 @@
                 <div class="col-lg-3 mb-4">
                     <h6 class="mb-3 text-white">{{ __('common.newsletter') }}</h6>
                     <p class="text-white mb-3">{{ __('common.newsletter_desc') }}</p>
-                    <form class="d-flex align-items-center gap-2 newsletter-form">
-                        <input type="email" class="form-control newsletter-input" placeholder="{{ __('common.email_placeholder') }}" style="flex: 1; min-width: 0; height: 38px;">
-                        <button class="btn btn-primary newsletter-btn" type="submit" style="height: 38px; padding: 0.375rem 0.75rem; flex-shrink: 0;">
+                    <form class="d-flex align-items-center gap-2 newsletter-form" 
+                      action="{{ route('newsletter.subscribe') }}" 
+                      method="POST">
+                        @csrf
+                        <input type="email" 
+                               name="email" 
+                               class="form-control newsletter-input" 
+                               placeholder="{{ __('common.email_placeholder') }}" 
+                               style="flex: 1; min-width: 0; height: 38px;" 
+                               required>
+                        <button class="btn btn-primary newsletter-btn" 
+                                type="submit" 
+                                style="height: 38px; padding: 0.375rem 0.75rem; flex-shrink: 0;">
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </form>
+                    <div id="newsletter-message" class="mt-2 small"></div>
                 </div>
             </div>
             
@@ -3444,6 +3457,57 @@
             });
             document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
             document.body.classList.remove('modal-open');
+        });
+
+        // Newsletter Form Handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const newsletterForm = document.querySelector('.newsletter-form');
+            const messageDiv = document.getElementById('newsletter-message');
+            
+            if (newsletterForm && messageDiv) {
+                newsletterForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const submitBtn = this.querySelector('.newsletter-btn');
+                    const originalHtml = submitBtn.innerHTML;
+                    
+                    // Show loading state
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    messageDiv.textContent = '';
+                    messageDiv.className = 'mt-2 small';
+                    
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            messageDiv.textContent = data.message;
+                            messageDiv.className = 'mt-2 small text-success';
+                            this.reset();
+                        } else {
+                            messageDiv.textContent = data.message;
+                            messageDiv.className = 'mt-2 small text-danger';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Newsletter error:', error);
+                        messageDiv.textContent = 'حدث خطأ. يرجى المحاولة مرة أخرى';
+                        messageDiv.className = 'mt-2 small text-danger';
+                    })
+                    .finally(() => {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalHtml;
+                    });
+                });
+            }
         });
     </script>
 </body>

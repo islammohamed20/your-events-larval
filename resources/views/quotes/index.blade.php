@@ -80,7 +80,7 @@
                                             <button type="button" class="btn btn-outline-success btn-sm w-100 mb-2" disabled>
                                                 <i class="fas fa-check-circle me-1"></i>تم الدفع
                                             </button>
-                                        @elseif($quote->status === 'approved')
+                                        @elseif(in_array($quote->status, ['approved', 'under_review', 'pending'], true))
                                             <a href="{{ route('quotes.complete-booking', $quote, false) }}" class="btn btn-success btn-sm w-100 mb-2">
                                                 <i class="fas fa-credit-card me-1"></i>استكمال بيانات الحجز والدفع
                                             </a>

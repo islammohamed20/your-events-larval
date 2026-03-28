@@ -23,8 +23,8 @@ class ServiceController extends Controller
         $search = trim((string) $request->get('q', ''));
         $filterType = trim((string) $request->get('type', ''));
 
-        // Eager-load category لإظهارها بدون N+1، مع فلترة حسب البحث
-        $query = Service::with('category')->latest();
+        // Eager-load category + images/thumbnail لعرض صورة الخدمة المختارة بدون N+1
+        $query = Service::with(['category', 'thumbnailImage', 'images'])->latest();
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -95,6 +95,7 @@ class ServiceController extends Controller
             'why_choose_us' => 'nullable|string',
             'meta_description' => 'nullable|string',
             'service_type' => 'nullable|in:simple,variable',
+            'supplier_policy' => 'nullable|in:single,multiple',
             'price' => 'nullable|numeric|min:0',
             'duration' => 'nullable|integer|min:0',
             'type' => 'nullable|string|max:255',
@@ -115,6 +116,7 @@ class ServiceController extends Controller
         // Default service_type to 'simple' if not provided
         $validated['service_type'] = $validated['service_type'] ?? 'simple';
         $validated['has_variations'] = ($validated['service_type'] === 'variable') ? 1 : 0;
+        $validated['supplier_policy'] = $validated['supplier_policy'] ?? 'multiple';
         $validated['custom_fields'] = $this->normalizeCustomFields($request->input('custom_fields', []));
 
         // Ensure description is not null (DB column may be NOT NULL)
@@ -182,6 +184,7 @@ class ServiceController extends Controller
                 'why_choose_us' => 'nullable|string',
                 'meta_description' => 'nullable|string',
                 'service_type' => 'required|in:simple,variable',
+                'supplier_policy' => 'nullable|in:single,multiple',
                 'price' => 'required_if:service_type,simple|nullable|numeric|min:0',
                 'duration' => 'nullable|integer|min:0',
                 'type' => 'nullable|string|max:255',
@@ -214,6 +217,9 @@ class ServiceController extends Controller
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
         $validated['has_variations'] = ($request->input('service_type') === 'variable') ? 1 : 0;
         $validated['custom_fields'] = $this->normalizeCustomFields($request->input('custom_fields', []));
+        if (! array_key_exists('supplier_policy', $validated)) {
+            $validated['supplier_policy'] = $service->supplier_policy ?? 'multiple';
+        }
 
         // Ensure description is not null (DB column may be NOT NULL)
         if (array_key_exists('description', $validated)) {

@@ -48,7 +48,7 @@ class OrderController extends Controller
             // إرسال الإيميل للمورد
             $supplier = Supplier::find($supplierId);
             if ($supplier) {
-                Mail::send('emails.order-request', [
+                Mail::mailer('hello')->send('emails.order-request', [
                     'order' => $order,
                     'supplier' => $supplier,
                 ], function ($message) use ($supplier, $order) {

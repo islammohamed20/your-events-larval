@@ -83,10 +83,22 @@
                                         @enderror
                                     </div>
 
+                                    @php
+                                        $prefillDate = old('event_date', $bookingData['event_date'] ?? $suggestedEventDate ?? '');
+                                        $dateIsLocked = !old('event_date') && empty($bookingData['event_date']) && !empty($suggestedEventDate);
+                                    @endphp
                                     <div class="col-md-6">
                                         <label class="form-label">تاريخ الحدث <span class="text-danger">*</span></label>
                                         <input type="date" name="event_date" class="form-control @error('event_date') is-invalid @enderror"
-                                               value="{{ old('event_date', $bookingData['event_date'] ?? '') }}" min="{{ date('Y-m-d', strtotime('+1 day')) }}" required>
+                                               value="{{ $prefillDate }}"
+                                               min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                                               {{ $dateIsLocked ? 'readonly' : '' }}
+                                               required>
+                                        @if($dateIsLocked)
+                                        <div class="form-text text-success">
+                                            <i class="fas fa-calendar-check me-1"></i>تم تحديد التاريخ تلقائياً بناءً على اختيارك في صفحة الخدمة.
+                                        </div>
+                                        @endif
                                         @error('event_date')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror

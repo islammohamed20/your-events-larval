@@ -45,10 +45,12 @@ class CartController extends Controller
                 'customer_notes' => 'nullable|string|max:1000',
                 'selections' => 'nullable|array',
                 'selected_variation_id' => 'nullable|integer',
+                'booking_date' => 'nullable|date|after:today',
             ]);
 
             $quantity = $validated['quantity'] ?? 1;
             $selections = $validated['selections'] ?? null;
+            $bookingDate = $validated['booking_date'] ?? null;
 
             // Variation requirement and price determination
             $itemPrice = $service->price ?? 0;
@@ -112,12 +114,14 @@ class CartController extends Controller
                     }
                 });
 
-            // Find an existing item with EXACT same selections
+            // Find an existing item with EXACT same selections AND same booking_date
             $existingItems = $cartItemQuery->get();
             $cartItem = null;
             foreach ($existingItems as $item) {
-                // Null == Null OR strict value equality (arrays/strings)
-                if ($item->selections == $selections) {
+                $sameDateRaw = $item->getRawOriginal('booking_date');
+                $incomingDate = $bookingDate ? date('Y-m-d', strtotime($bookingDate)) : null;
+                $sameDate = $sameDateRaw === $incomingDate;
+                if ($item->selections == $selections && $sameDate) {
                     $cartItem = $item;
                     break;
                 }
@@ -140,6 +144,7 @@ class CartController extends Controller
                     'price' => $itemPrice,
                     'customer_notes' => $validated['customer_notes'] ?? null,
                     'selections' => $selections,
+                    'booking_date' => $bookingDate,
                 ]);
             }
 

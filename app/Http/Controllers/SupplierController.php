@@ -8,6 +8,8 @@ use App\Models\Service;
 use App\Models\Supplier;
 use App\Models\SupplierService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -19,9 +21,17 @@ class SupplierController extends Controller
      */
     public function create()
     {
+        if (Auth::guard('supplier')->check()) {
+            return redirect()->route('supplier.services.index');
+        }
+
         $categories = Category::active()->ordered()->get();
         // احصل على جميع الخدمات مع معلومات الفئة
         $allServices = Service::where('is_active', true)
+            ->where(function ($q) {
+                $q->where('supplier_policy', '!=', 'single')
+                    ->orWhereDoesntHave('suppliers');
+            })
             ->with('category')
             ->get()
             ->map(function ($service) {
@@ -56,9 +66,14 @@ class SupplierController extends Controller
             'custom_services' => 'nullable|array',
             'custom_services.*.category_id' => 'required|exists:categories,id',
             'custom_services.*.name' => 'required|string|max:255',
-            'primary_phone' => 'required|string|max:20',
-            'secondary_phone' => 'nullable|string|max:20',
-            'email' => 'required|email|unique:suppliers,email|unique:users,email',
+            'primary_phone' => ['required', 'string', 'max:20', 'regex:/^\\+?[0-9]+$/'],
+            'secondary_phone' => ['nullable', 'string', 'max:20', 'regex:/^\\+?[0-9]+$/'],
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('suppliers', 'email')->where('deleted_at', null),
+                'unique:users,email',
+            ],
             'password' => 'required|string|min:8|confirmed',
             'address' => 'nullable|string|max:500',
             'social_media' => 'nullable|array',
@@ -195,6 +210,33 @@ class SupplierController extends Controller
 
             return $supplier;
         });
+
+        // إرسال إشعار إنشاء الحساب (قيد المراجعة) بعد حفظ كل البيانات بنجاح
+        try {
+            $variables = [
+                'supplierName' => $supplier->name,
+                'supplierEmail' => $supplier->email,
+                'createdAt' => now()->format('Y/m/d H:i'),
+                'supplierLoginUrl' => route('supplier.login'),
+                'companyName' => config('app.name', 'Your Events'),
+                'supportEmail' => config('mail.from.address', 'hello@yourevents.sa'),
+            ];
+
+            \Illuminate\Support\Facades\Mail::mailer('hello')->send('emails.supplier-created-pending', $variables, function ($message) use ($supplier) {
+                $message->to($supplier->email)
+                    ->subject('تم إنشاء حساب مورد لك - بانتظار المراجعة');
+            });
+
+            Log::info('Supplier pending email sent successfully (public register)', [
+                'supplier_id' => $supplier->id,
+                'supplier_email' => $supplier->email,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send supplier pending email (public register): '.$e->getMessage(), [
+                'supplier_id' => $supplier->id,
+                'supplier_email' => $supplier->email,
+            ]);
+        }
 
         // إرسال OTP للبريد الإلكتروني باستخدام القالب الموحد عبر OtpVerification
         try {

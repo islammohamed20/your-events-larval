@@ -34,6 +34,7 @@ class SupplierQuoteApprovedNotification extends Mailable
     {
         return new Envelope(
             subject: '🔥 فرصة عمل جديدة - عرض سعر موافق عليه',
+            mailer: 'sales',
         );
     }
 

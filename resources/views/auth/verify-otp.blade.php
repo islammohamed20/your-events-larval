@@ -52,12 +52,12 @@
                                 <i class="fas fa-key text-primary"></i> كود التحقق
                             </label>
                             <div class="otp-input-group d-flex justify-content-between" dir="ltr">
-                                <input type="tel" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="1" class="otp-input form-control text-center" data-index="0">
-                                <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input form-control text-center" data-index="1">
-                                <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input form-control text-center" data-index="2">
-                                <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input form-control text-center" data-index="3">
-                                <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input form-control text-center" data-index="4">
-                                <input type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input form-control text-center" data-index="5">
+                                <input type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="1" class="otp-input form-control text-center" data-index="0">
+                                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input form-control text-center" data-index="1">
+                                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input form-control text-center" data-index="2">
+                                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input form-control text-center" data-index="3">
+                                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input form-control text-center" data-index="4">
+                                <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="otp-input form-control text-center" data-index="5">
                             </div>
                             <input type="hidden" id="otpValue" name="otp">
                             <div class="invalid-feedback d-block" id="otpError"></div>

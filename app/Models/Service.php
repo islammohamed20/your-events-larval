@@ -97,7 +97,9 @@ class Service extends Model
         }
 
         // ثانياً: جرب أول صورة في المعرض
-        $firstImage = $this->images()->first();
+        $firstImage = $this->relationLoaded('images')
+            ? $this->images->first()
+            : $this->images()->first();
         if ($firstImage) {
             return $firstImage->image_url;
         }

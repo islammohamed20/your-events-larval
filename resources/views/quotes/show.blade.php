@@ -4,6 +4,15 @@
 
 @section('content')
 <div class="container py-5" style="margin-top: 100px;">
+    @push('styles')
+    <style>
+        @media (min-width: 992px) {
+            .quote-important-info-card {
+                margin-top: 150px !important;
+            }
+        }
+    </style>
+    @endpush
     <div class="row">
         <div class="col-lg-8">
             <div class="card shadow-lg border-0 rounded-4 mb-4">
@@ -195,7 +204,7 @@
                             <i class="fas fa-check-circle me-2"></i>
                             تم الدفع
                         </button>
-                        @elseif($quote->status === 'approved')
+                        @elseif(in_array($quote->status, ['approved', 'under_review', 'pending'], true))
                         <a href="{{ route('quotes.complete-booking', $quote) }}" class="btn btn-success btn-lg">
                             <i class="fas fa-credit-card me-2"></i>
                             استكمال بيانات الحجز والدفع
@@ -229,7 +238,7 @@
                 </div>
             </div>
             
-            <div class="card shadow border-0 rounded-4">
+            <div class="card shadow border-0 rounded-4 quote-important-info-card">
                 <div class="card-body p-4">
                     <h6 class="mb-3"><i class="fas fa-info-circle me-2 text-info"></i>معلومات مهمة</h6>
                     <ul class="list-unstyled small text-muted">

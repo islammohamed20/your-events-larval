@@ -32,6 +32,7 @@ class BookingNotificationMail extends Mailable
     {
         return new \Illuminate\Mail\Mailables\Envelope(
             subject: '🔥 حجز جديد متاح للتنافس - '.$this->booking->booking_reference,
+            mailer: 'sales',
         );
     }
 

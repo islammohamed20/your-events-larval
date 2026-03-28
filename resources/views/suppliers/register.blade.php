@@ -24,6 +24,12 @@
                         <form method="POST" action="{{ route('suppliers.store') }}" enctype="multipart/form-data" id="supplierRegisterForm">
                             @csrf
 
+                            @if(session('error'))
+                                <div class="alert alert-danger mb-4">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
+                                </div>
+                            @endif
+
                             <!-- Section 1: معلومات المنشأة -->
                             <div class="mb-5">
                                 <h3 class="h4 fw-bold text-dark mb-4 pb-2 border-bottom border-warning border-3">
@@ -139,6 +145,9 @@
                                                         </div>
                                                         <div>
                                                             <h5 class="mb-1">{{ $category->name }}</h5>
+                                                            @if($category->supplier_form_name)
+                                                                <div class="text-muted small mb-1">({{ $category->supplier_form_name }})</div>
+                                                            @endif
                                                             <p class="text-muted small mb-0">{{ $category->description }}</p>
                                                         </div>
                                                     </div>
@@ -263,6 +272,11 @@
                                         @enderror
                                     </div>
                                 </div>
+
+                                <div class="alert alert-warning mt-3 mb-0 small">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    الحد الآمن لإجمالي كل المرفقات في الطلب الواحد: <strong>25MB</strong>.
+                                </div>
                             </div>
 
                             <!-- Section 4: معلومات التواصل -->
@@ -285,7 +299,7 @@
                                     <!-- Primary Phone -->
                                     <div class="col-md-6">
                                         <label for="primary_phone" class="form-label fw-semibold text-dark">رقم الجوال الأساسي <span class="text-danger">*</span></label>
-                                        <input type="tel" class="form-control form-control-lg @error('primary_phone') is-invalid @enderror" id="primary_phone" name="primary_phone" value="{{ old('primary_phone') }}" required>
+                                        <input type="tel" inputmode="numeric" pattern="[+0-9]*" class="form-control form-control-lg @error('primary_phone') is-invalid @enderror" id="primary_phone" name="primary_phone" value="{{ old('primary_phone') ?: '+966' }}" required placeholder="+966XXXXXXXXX" dir="ltr">
                                         @error('primary_phone')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -304,7 +318,7 @@
                                     <!-- Secondary Phone -->
                                     <div class="col-md-6">
                                         <label for="secondary_phone" class="form-label fw-semibold text-dark">رقم جوال إضافي</label>
-                                        <input type="tel" class="form-control form-control-lg @error('secondary_phone') is-invalid @enderror" id="secondary_phone" name="secondary_phone" value="{{ old('secondary_phone') }}">
+                                        <input type="tel" inputmode="numeric" pattern="[+0-9]*" class="form-control form-control-lg @error('secondary_phone') is-invalid @enderror" id="secondary_phone" name="secondary_phone" value="{{ old('secondary_phone') ?: '+966' }}" placeholder="+966XXXXXXXXX" dir="ltr">
                                         @error('secondary_phone')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -519,6 +533,54 @@ document.addEventListener('DOMContentLoaded', function() {
     const commercialRegisterFileField = document.getElementById('commercial_register_file_field');
     const commercialRegisterInput = document.getElementById('commercial_register');
     const commercialRegisterFileInput = document.getElementById('commercial_register_file');
+    const primaryPhoneInput = document.getElementById('primary_phone');
+    const secondaryPhoneInput = document.getElementById('secondary_phone');
+    const maxTotalUploadBytes = 25 * 1024 * 1024;
+
+    function sanitizePhoneValue(value) {
+        if (typeof value !== 'string') return '';
+        let v = value.replace(/[^0-9+]/g, '');
+        const plus = v.startsWith('+') ? '+' : '';
+        v = v.replace(/\+/g, '');
+        return plus + v;
+    }
+
+    function attachPhoneSanitizer(input) {
+        if (!input) return;
+        input.value = sanitizePhoneValue(input.value);
+        input.addEventListener('input', function() {
+            const next = sanitizePhoneValue(input.value);
+            if (next !== input.value) input.value = next;
+        });
+        input.addEventListener('paste', function() {
+            setTimeout(function() {
+                input.value = sanitizePhoneValue(input.value);
+            }, 0);
+        });
+    }
+
+    attachPhoneSanitizer(primaryPhoneInput);
+    attachPhoneSanitizer(secondaryPhoneInput);
+
+    // File size guard to avoid HTTP 413 before request is sent.
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+
+    function getTotalSelectedFilesSize() {
+        let total = 0;
+        fileInputs.forEach((input) => {
+            if (!input.files || input.files.length === 0) {
+                return;
+            }
+            Array.from(input.files).forEach((file) => {
+                total += (file.size || 0);
+            });
+        });
+        return total;
+    }
+
+    function formatBytes(bytes) {
+        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
 
     // ===== إدارة الفئات والخدمات الديناميكية =====
     const categoryCheckboxes = document.querySelectorAll('.category-checkbox-input');
@@ -716,6 +778,13 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
 
+        const totalUploadSize = getTotalSelectedFilesSize();
+        if (totalUploadSize > maxTotalUploadBytes) {
+            e.preventDefault();
+            alert(`إجمالي المرفقات كبير (${formatBytes(totalUploadSize)}). الحد الأقصى ${formatBytes(maxTotalUploadBytes)}. يرجى تقليل عدد/حجم الملفات.`);
+            return false;
+        }
+
         const spinner = submitBtn.querySelector('.spinner-border');
         submitBtn.disabled = true;
         spinner.classList.remove('d-none');
@@ -747,8 +816,6 @@ document.addEventListener('DOMContentLoaded', function() {
     toggleCommercialRegister();
 
     // File upload preview
-    const fileInputs = document.querySelectorAll('input[type="file"]');
-    
     fileInputs.forEach(input => {
         input.addEventListener('change', function(e) {
             const fileNameDiv = this.parentElement.querySelector('.file-name');
@@ -758,6 +825,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     fileNameDiv.textContent = `تم اختيار ${this.files.length} ملف`;
                 } else {
                     fileNameDiv.textContent = `✓ ${this.files[0].name}`;
+                }
+                const totalUploadSize = getTotalSelectedFilesSize();
+                if (totalUploadSize > maxTotalUploadBytes) {
+                    fileNameDiv.classList.remove('text-success');
+                    fileNameDiv.classList.add('text-danger');
+                    fileNameDiv.textContent += ` — إجمالي المرفقات ${formatBytes(totalUploadSize)} (تجاوز الحد)`;
+                } else {
+                    fileNameDiv.classList.remove('text-danger');
+                    fileNameDiv.classList.add('text-success');
                 }
                 fileNameDiv.classList.remove('d-none');
             } else {

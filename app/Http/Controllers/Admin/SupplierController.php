@@ -10,6 +10,7 @@ use App\Models\SupplierService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class SupplierController extends Controller
 {
@@ -62,7 +63,11 @@ class SupplierController extends Controller
         $validated = $request->validate([
             'supplier_type' => 'required|in:company,individual',
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:suppliers,email',
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('suppliers', 'email')->where('deleted_at', null),
+            ],
             'password' => 'required|string|min:6',
             'primary_phone' => 'required|string|max:255',
             'secondary_phone' => 'nullable|string|max:255',
@@ -118,6 +123,33 @@ class SupplierController extends Controller
             'status' => 'pending',
         ]);
 
+        // إشعار المورد بأنه تم إنشاء حسابه من قبل الإدارة وهو حالياً قيد المراجعة
+        try {
+            $variables = [
+                'supplierName' => $supplier->name,
+                'supplierEmail' => $supplier->email,
+                'createdAt' => now()->format('Y/m/d H:i'),
+                'supplierLoginUrl' => route('supplier.login'),
+                'companyName' => config('app.name', 'Your Events'),
+                'supportEmail' => config('mail.from.address', 'hello@yourevents.sa'),
+            ];
+
+            \Illuminate\Support\Facades\Mail::mailer('hello')->send('emails.supplier-created-pending', $variables, function ($message) use ($supplier) {
+                $message->to($supplier->email)
+                    ->subject('تم إنشاء حساب مورد لك لدى '.config('app.name', 'Your Events').' - بانتظار المراجعة');
+            });
+
+            \Illuminate\Support\Facades\Log::info('Supplier pending email sent successfully (admin create)', [
+                'supplier_id' => $supplier->id,
+                'supplier_email' => $supplier->email,
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send supplier pending email (admin create): '.$e->getMessage(), [
+                'supplier_id' => $supplier->id,
+                'supplier_email' => $supplier->email,
+            ]);
+        }
+
         return redirect()->route('admin.suppliers.show', $supplier)->with('success', 'تم إضافة المورد بنجاح');
     }
 
@@ -154,7 +186,11 @@ class SupplierController extends Controller
         $validated = $request->validate([
             'supplier_type' => 'required|in:company,individual',
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:suppliers,email,'.$supplier->id,
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('suppliers', 'email')->ignore($supplier->id)->where('deleted_at', null),
+            ],
             'password' => 'nullable|string|min:6',
             'primary_phone' => 'required|string|max:255',
             'secondary_phone' => 'nullable|string|max:255',
@@ -301,29 +337,33 @@ class SupplierController extends Controller
                 ]
             );
 
-            // إرسال بريد قبول المورد
-            try {
-                $variables = [
-                    'supplierName' => $supplier->name,
-                    'supplierEmail' => $supplier->email,
-                    'approvalDate' => now()->format('Y/m/d H:i'),
-                    'dashboardUrl' => url('/supplier/dashboard'),
-                    'companyName' => config('app.name', 'Your Events'),
-                    'supportEmail' => config('mail.from.address', 'hello@yourevents.sa'),
-                ];
+            // إرسال بريد القبول الترحيبي عند التحويل من قيد المراجعة فقط
+            if ($prev === 'pending') {
+                try {
+                    $variables = [
+                        'supplierName' => $supplier->name,
+                        'supplierEmail' => $supplier->email,
+                        'approvalDate' => now()->format('Y/m/d H:i'),
+                        'dashboardUrl' => url('/supplier/dashboard'),
+                        'termsUrl' => route('terms'),
+                        'privacyUrl' => route('privacy'),
+                        'companyName' => config('app.name', 'Your Events'),
+                        'supportEmail' => config('mail.from.address', 'hello@yourevents.sa'),
+                    ];
 
-                \Illuminate\Support\Facades\Mail::send('emails.supplier-approval', $variables, function ($message) use ($supplier) {
-                    $message->to($supplier->email)
-                        ->subject('🎉 تم قبولك كمورد لدى '.config('app.name', 'Your Events').' – ابدأ الآن');
-                });
+                    \Illuminate\Support\Facades\Mail::mailer('hello')->send('emails.supplier-approval', $variables, function ($message) use ($supplier) {
+                        $message->to($supplier->email)
+                            ->subject('🎉 تم قبولك كمورد لدى '.config('app.name', 'Your Events').' – ابدأ الآن');
+                    });
 
-                \Illuminate\Support\Facades\Log::info('Supplier approval email sent successfully', [
-                    'supplier_id' => $supplier->id,
-                    'supplier_email' => $supplier->email,
-                ]);
-            } catch (\Throwable $e) {
-                // لا نمنع الموافقة في حال فشل البريد، فقط نعرض إشعاراً
-                \Illuminate\Support\Facades\Log::error('Failed to send supplier approval email: '.$e->getMessage());
+                    \Illuminate\Support\Facades\Log::info('Supplier approval email sent successfully', [
+                        'supplier_id' => $supplier->id,
+                        'supplier_email' => $supplier->email,
+                    ]);
+                } catch (\Throwable $e) {
+                    // لا نمنع الموافقة في حال فشل البريد، فقط نعرض إشعاراً
+                    \Illuminate\Support\Facades\Log::error('Failed to send supplier approval email: '.$e->getMessage());
+                }
             }
         }
 
@@ -486,5 +526,66 @@ class SupplierController extends Controller
             ->delete();
 
         return back()->with('success', 'تم إزالة الخدمة من المورد');
+    }
+    /**
+     * إعادة إرسال آخر بريد تم إرساله للمورد
+     */
+    public function resendLastEmail(Request $request, Supplier $supplier)
+    {
+        try {
+            $variables = [
+                'supplierName' => $supplier->name,
+                'supplierEmail' => $supplier->email,
+                'companyName' => config('app.name', 'Your Events'),
+                'supportEmail' => config('mail.from.address', 'hello@yourevents.sa'),
+            ];
+
+            // تحديد نوع البريد بناءً على حالة المورد
+            if ($supplier->status === 'approved') {
+                // إرسال بريد الموافقة
+                $variables['approvalDate'] = now()->format('Y/m/d H:i');
+                $variables['dashboardUrl'] = url('/supplier/dashboard');
+                $variables['termsUrl'] = route('terms');
+                $variables['privacyUrl'] = route('privacy');
+
+                \Illuminate\Support\Facades\Mail::mailer('hello')->send('emails.supplier-approval', $variables, function ($message) use ($supplier) {
+                    $message->to($supplier->email)
+                        ->subject('🎉 تم قبولك كمورد لدى '.config('app.name', 'Your Events').' – ابدأ الآن');
+                });
+            } else {
+                // إرسال بريد قيد المراجعة للحالات الأخرى (pending وغيرها)
+                $variables['createdAt'] = now()->format('Y/m/d H:i');
+                $variables['supplierLoginUrl'] = route('supplier.login');
+
+                \Illuminate\Support\Facades\Mail::mailer('hello')->send('emails.supplier-created-pending', $variables, function ($message) use ($supplier) {
+                    $message->to($supplier->email)
+                        ->subject('تم إنشاء حساب مورد لك لدى '.config('app.name', 'Your Events').' - بانتظار المراجعة');
+                });
+            }
+
+            \Illuminate\Support\Facades\Log::info('Supplier last email resent successfully', [
+                'supplier_id' => $supplier->id,
+                'supplier_email' => $supplier->email,
+                'supplier_status' => $supplier->status,
+            ]);
+
+            ActivityLog::record(
+                $supplier,
+                'email_resent',
+                'تم إعادة إرسال آخر بريد للمورد',
+                ['status' => $supplier->status]
+            );
+
+            return redirect()->route('admin.suppliers.show', $supplier)
+                ->with('success', '✅ تم إعادة إرسال البريد بنجاح إلى '.$supplier->email);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to resend supplier email: '.$e->getMessage(), [
+                'supplier_id' => $supplier->id,
+                'supplier_email' => $supplier->email,
+            ]);
+
+            return redirect()->route('admin.suppliers.show', $supplier)
+                ->with('error', '❌ حدث خطأ أثناء إرسال البريد: '.$e->getMessage());
+        }
     }
 }

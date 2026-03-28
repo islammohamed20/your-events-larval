@@ -112,6 +112,7 @@ class QuoteController extends Controller
                     'subtotal' => $cartItem->price * $cartItem->quantity,
                     'customer_notes' => $cartItem->customer_notes,
                     'selections' => $cartItem->selections,
+                    'booking_date' => $cartItem->booking_date,
                 ]);
                 $itemsCreated++;
             } catch (\Exception $e) {
@@ -247,6 +248,14 @@ class QuoteController extends Controller
             abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
         }
 
+        if (in_array($quote->status, ['under_review', 'pending'], true)) {
+            $quote->update([
+                'status' => 'approved',
+                'approved_at' => $quote->approved_at ?? now(),
+            ]);
+            $quote->refresh();
+        }
+
         if ($quote->status !== 'approved') {
             return redirect()->route('quotes.show', $quote)
                 ->with('error', 'يجب أن يتم الموافقة على عرض السعر أولاً قبل استكمال بيانات الحجز');
@@ -260,7 +269,11 @@ class QuoteController extends Controller
         $quote->load('items.service', 'user');
         $bookingData = session('quotes.complete_booking.'.$quote->id, []);
 
-        return view('quotes.complete-booking-payment', compact('quote', 'bookingData'));
+        $suggestedEventDate = $quote->items
+            ->whereNotNull('booking_date')
+            ->first()?->booking_date?->format('Y-m-d');
+
+        return view('quotes.complete-booking-payment', compact('quote', 'bookingData', 'suggestedEventDate'));
     }
 
     public function processCompleteBookingPayment(Request $request, Quote $quote)
@@ -269,8 +282,16 @@ class QuoteController extends Controller
             abort(403);
         }
 
+        if (in_array($quote->status, ['under_review', 'pending'], true)) {
+            $quote->update([
+                'status' => 'approved',
+                'approved_at' => $quote->approved_at ?? now(),
+            ]);
+            $quote->refresh();
+        }
+
         if ($quote->status !== 'approved') {
-            return back()->with('error', 'يجب أن يتم الموافقة على عرض السعر أولاً');
+            return back()->with('error', 'لا يمكن استكمال هذا العرض في حالته الحالية.');
         }
 
         if ($quote->items()->count() === 0) {
@@ -288,6 +309,16 @@ class QuoteController extends Controller
             'special_requests' => 'nullable|string',
             'payment_method' => 'required|in:mada,visa,mastercard,applepay,stcpay',
         ]);
+
+        $firstServiceId = (int) ($quote->items()->value('service_id') ?: 0);
+        if ($firstServiceId > 0) {
+            $serviceForDateCheck = \App\Models\Service::with('category')->find($firstServiceId);
+            if ($serviceForDateCheck && optional($serviceForDateCheck->category)->book_from_service) {
+                if (Booking::isServiceDateUnavailable($firstServiceId, (string) $validated['event_date'])) {
+                    return back()->withInput()->with('error', 'هذه الخدمة غير متاحة في اليوم المحدد. يرجى اختيار يوم آخر.');
+                }
+            }
+        }
 
         // Store booking data in session for payment processing
         $request->session()->put('quotes.complete_booking.'.$quote->id, $validated);
@@ -508,7 +539,11 @@ class QuoteController extends Controller
             $bookingId = (int) (($payment->metadata['booking_id'] ?? 0) ?: 0);
             $booking = $bookingId ? Booking::find($bookingId) : null;
             if ($booking && $booking->payment_status === 'pending') {
-                $booking->delete();
+                $booking->update([
+                    'payment_status' => 'failed',
+                    'payment_notes' => $payment->failure_reason ?: $booking->payment_notes,
+                    'status' => 'cancelled',
+                ]);
             }
         }
 
@@ -665,7 +700,11 @@ class QuoteController extends Controller
             $bookingId = (int) (($payment->metadata['booking_id'] ?? 0) ?: 0);
             $booking = $bookingId ? Booking::find($bookingId) : null;
             if ($booking && $booking->payment_status === 'pending') {
-                $booking->delete();
+                $booking->update([
+                    'payment_status' => 'failed',
+                    'payment_notes' => $payment->failure_reason ?: $booking->payment_notes,
+                    'status' => 'cancelled',
+                ]);
             }
         }
 
@@ -682,6 +721,13 @@ class QuoteController extends Controller
         }
 
         $quote->load('items.service', 'user');
+
+        $firstService = $quote->items->first()?->service;
+        if ($firstService && optional($firstService->category)->book_from_service) {
+            if (Booking::isServiceDateUnavailable((int) $firstService->id, (string) $validated['event_date'])) {
+                return back()->withInput()->with('error', 'هذه الخدمة غير متاحة في اليوم المحدد. يرجى اختيار يوم آخر.');
+            }
+        }
 
         $booking = Booking::create([
             'user_id' => Auth::id(),
@@ -774,6 +820,12 @@ class QuoteController extends Controller
                 ]),
             ]);
 
+            $booking->update([
+                'payment_status' => 'failed',
+                'payment_notes' => $payment->failure_reason ?: $booking->payment_notes,
+                'status' => 'cancelled',
+            ]);
+
             return back()->with('error', 'تعذر إنشاء عملية الدفع عبر Tap. يرجى المحاولة لاحقاً.');
         }
 
@@ -787,6 +839,12 @@ class QuoteController extends Controller
                 'failure_reason' => 'Tap returned invalid response',
                 'failed_at' => now(),
                 'metadata' => array_merge((array) ($payment->metadata ?? []), ['tap_charge' => $charge]),
+            ]);
+
+            $booking->update([
+                'payment_status' => 'failed',
+                'payment_notes' => $payment->failure_reason ?: $booking->payment_notes,
+                'status' => 'cancelled',
             ]);
 
             return back()->with('error', 'تعذر بدء عملية الدفع عبر Tap بسبب استجابة غير مكتملة.');

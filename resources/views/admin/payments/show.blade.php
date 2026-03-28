@@ -88,6 +88,18 @@
                         <p class="mb-0">{{ $payment->notes ?? '-' }}</p>
                     </div>
                     <div class="mb-3">
+                        <label class="text-muted small mb-1">سبب الفشل</label>
+                        <p class="mb-0">{{ $payment->failure_reason ?? '-' }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted small mb-1">فاتورة</label>
+                        @if($payment->invoice_url)
+                            <a href="{{ $payment->invoice_url }}" target="_blank" rel="noopener noreferrer">{{ $payment->invoice_url }}</a>
+                        @else
+                            <div>-</div>
+                        @endif
+                    </div>
+                    <div class="mb-3">
                         <label class="text-muted small mb-1">البيانات (JSON)</label>
                         <pre class="bg-light p-3 rounded">{{ json_encode($payment->metadata ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
                     </div>

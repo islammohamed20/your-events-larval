@@ -44,6 +44,32 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="supplier_form_name" class="form-label">اسم الفئة (الاسم الذي يظهر في فورم المورد)</label>
+                            <input type="text"
+                                   class="form-control @error('supplier_form_name') is-invalid @enderror"
+                                   id="supplier_form_name"
+                                   name="supplier_form_name"
+                                   value="{{ old('supplier_form_name') }}">
+                            @error('supplier_form_name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="book_from_service" class="form-label">الحجز من الخدمة نفسها</label>
+                            <select class="form-select @error('book_from_service') is-invalid @enderror"
+                                    id="book_from_service"
+                                    name="book_from_service">
+                                <option value="0" {{ old('book_from_service', '0') == '0' ? 'selected' : '' }}>غير مفعل</option>
+                                <option value="1" {{ old('book_from_service') == '1' ? 'selected' : '' }}>مفعل</option>
+                            </select>
+                            <small class="text-muted d-block mt-1">عند التفعيل: يظهر تقويم داخل صفحة الخدمة ويُمنع حجز نفس اليوم أكثر من مرة.</small>
+                            @error('book_from_service')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
                             <label for="description" class="form-label">الوصف</label>
                             <textarea class="form-control @error('description') is-invalid @enderror" 
                                       id="description" 

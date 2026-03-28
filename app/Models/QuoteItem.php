@@ -19,6 +19,7 @@ class QuoteItem extends Model
         'subtotal',
         'customer_notes',
         'selections',
+        'booking_date',
     ];
 
     protected $casts = [
@@ -26,6 +27,7 @@ class QuoteItem extends Model
         'subtotal' => 'decimal:2',
         'quantity' => 'integer',
         'selections' => 'array',
+        'booking_date' => 'date',
     ];
 
     /**

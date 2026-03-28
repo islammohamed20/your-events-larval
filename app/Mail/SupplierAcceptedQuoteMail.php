@@ -34,6 +34,7 @@ class SupplierAcceptedQuoteMail extends Mailable
     {
         return new Envelope(
             subject: 'قبول عرض السعر من المورد - '.($this->quote->quote_number ?? 'عرض سعر'),
+            mailer: 'sales',
         );
     }
 

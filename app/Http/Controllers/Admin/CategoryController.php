@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
@@ -37,6 +38,8 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'name_en' => 'nullable|string|max:255',
+            'supplier_form_name' => 'nullable|string|max:255',
+            'book_from_service' => 'boolean',
             'description' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
             'icon_png' => 'nullable|image|mimes:png|max:2048',
@@ -62,6 +65,10 @@ class CategoryController extends Controller
             $validated['banner'] = $request->file('banner')->store('category-banners', 'public');
         }
 
+        if (! Schema::hasColumn('categories', 'supplier_form_name')) {
+            unset($validated['supplier_form_name']);
+        }
+
         Category::create($validated);
 
         return redirect()->route('admin.categories.index')
@@ -84,6 +91,8 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'name_en' => 'nullable|string|max:255',
+            'supplier_form_name' => 'nullable|string|max:255',
+            'book_from_service' => 'boolean',
             'description' => 'nullable|string',
             'icon' => 'nullable|string|max:100',
             'icon_png' => 'nullable|image|mimes:png|max:2048',
@@ -146,6 +155,10 @@ class CategoryController extends Controller
         unset($validated['delete_image']);
         unset($validated['delete_icon_png']);
         unset($validated['delete_banner']);
+
+        if (! Schema::hasColumn('categories', 'supplier_form_name')) {
+            unset($validated['supplier_form_name']);
+        }
 
         $category->update($validated);
 

@@ -30,6 +30,7 @@ class BookingConfirmation extends Mailable
     {
         return new Envelope(
             subject: 'تأكيد طلب حجز الفعالية - Your Events',
+            mailer: 'sales',
         );
     }
 

@@ -56,6 +56,11 @@
             direction: rtl;
             text-align: right;
             background-color: #f8f9fa;
+            overflow-x: hidden;
+        }
+
+        html {
+            overflow-x: hidden;
         }
 
         .sidebar {
@@ -70,6 +75,18 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+        }
+
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(9, 12, 24, 0.45);
+            z-index: 999;
+        }
+
+        .sidebar-backdrop.show {
+            display: block;
         }
 
         .sidebar-menu {
@@ -143,6 +160,12 @@
             margin-right: 250px;
             padding: 20px;
             transition: all 0.3s;
+            max-width: 100%;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .admin-header {
@@ -318,7 +341,7 @@
             text-align: center;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 992px) {
             .sidebar {
                 transform: translateX(100%);
                 width: 100%;
@@ -327,19 +350,8 @@
             .sidebar.show {
                 transform: translateX(0);
             }
-            
             .main-content {
                 margin-right: 0;
-            }
-            
-            .sidebar-menu {
-                max-height: calc(100vh - 200px);
-            }
-            
-            .logout-button {
-                margin: 0 10px;
-                padding: 10px 15px;
-                font-size: 0.95rem;
             }
             
             .sidebar-brand {
@@ -348,6 +360,88 @@
             
             .sidebar-brand img {
                 max-height: 50px;
+            }
+
+            .admin-header {
+                display: block !important;
+                padding: 12px 16px 12px 16px;
+                /* مسافة يمين إضافية لمنع تداخل زر الهامبرغر (42px + 12px margin) */
+                padding-right: 64px !important;
+                margin: -20px -20px 16px -20px;
+            }
+
+            .admin-header > .d-flex {
+                flex-wrap: wrap;
+                align-items: flex-start !important;
+                gap: 10px;
+            }
+
+            .admin-header h3 {
+                font-size: 1.1rem;
+                line-height: 1.35;
+            }
+
+            .admin-header .d-flex.align-items-center {
+                width: 100%;
+                justify-content: space-between;
+                gap: 10px;
+            }
+
+            #notifDropdownMenu {
+                width: calc(100vw - 24px) !important;
+                max-width: 380px;
+                max-height: 70vh !important;
+            }
+
+            .card-header .d-flex {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .card-header form,
+            .card-header .btn,
+            .card-header .input-group,
+            .card-header .form-select,
+            .card-header .form-control {
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+
+            .card-header form.d-inline,
+            .card-header form.d-inline-flex,
+            .card-header .btn.w-auto {
+                width: auto !important;
+            }
+
+            .mobile-sidebar-toggle {
+                position: fixed;
+                top: 12px;
+                right: 12px;
+                z-index: 1101;
+                width: 42px;
+                height: 42px;
+                border-radius: 10px;
+                box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .main-content {
+                padding-top: 68px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .admin-header {
+                padding: 10px 12px;
+            }
+
+            .mobile-sidebar-toggle {
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
             }
         }
     </style>
@@ -380,6 +474,11 @@
       data-notification-sound-enabled="{{ ($notificationSettings['notification_sound_enabled'] ?? true) ? '1' : '0' }}"
       data-notification-refresh-interval="{{ $notificationSettings['notification_refresh_interval'] ?? 3 }}"
       data-notification-auto-dismiss="{{ $notificationSettings['notification_auto_dismiss'] ?? 10 }}">
+    <button class="btn btn-primary d-lg-none mobile-sidebar-toggle" type="button" onclick="toggleSidebar()" aria-label="فتح القائمة الجانبية">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
         <div class="sidebar-brand">
@@ -602,7 +701,7 @@
                     <small class="text-muted">@yield('page-description', __('common.admin_manage_site'))</small>
                 </div>
                 <div class="d-flex align-items-center">
-                    <button class="btn btn-outline-primary d-md-none me-2" onclick="toggleSidebar()">
+                    <button class="btn btn-outline-primary d-none me-2" onclick="toggleSidebar()" aria-label="فتح القائمة الجانبية">
                         <i class="fas fa-bars"></i>
                     </button>
 
@@ -667,9 +766,48 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('show');
+        function setSidebarState(isOpen) {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (!sidebar) {
+                return;
+            }
+
+            sidebar.classList.toggle('show', isOpen);
+
+            if (backdrop) {
+                backdrop.classList.toggle('show', isOpen && window.innerWidth <= 992);
+            }
+
+            if (window.innerWidth <= 992) {
+                document.body.style.overflow = isOpen ? 'hidden' : '';
+            }
         }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar) {
+                return;
+            }
+            setSidebarState(!sidebar.classList.contains('show'));
+        }
+
+        function closeSidebar() {
+            setSidebarState(false);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeSidebar();
+            }
+        });
+
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 992) {
+                setSidebarState(false);
+                document.body.style.overflow = '';
+            }
+        });
 
         // ─── Notification Bell Dropdown ───────────────────────────────────
         function getNotifIcon(type) {

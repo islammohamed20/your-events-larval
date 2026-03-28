@@ -158,6 +158,10 @@ class Booking extends Model
         $suppliers = $this->getEligibleSuppliers();
 
         foreach ($suppliers as $supplier) {
+            if (! $supplier instanceof Supplier) {
+                continue;
+            }
+
             // إنشاء الإشعار
             BookingNotification::create([
                 'booking_id' => $this->id,
@@ -337,5 +341,28 @@ class Booking extends Model
     public function scopeConfirmed($query)
     {
         return $query->where('status', 'confirmed');
+    }
+
+    /**
+     * Scope bookings that block service-day availability
+     */
+    public function scopeBlockingServiceDate($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('status')
+                ->orWhereNotIn('status', ['cancelled', 'expired']);
+        });
+    }
+
+    /**
+     * Check if a service is already booked in a specific date.
+     */
+    public static function isServiceDateUnavailable(int $serviceId, string $eventDate): bool
+    {
+        return static::query()
+            ->where('service_id', $serviceId)
+            ->whereDate('event_date', $eventDate)
+            ->blockingServiceDate()
+            ->exists();
     }
 }

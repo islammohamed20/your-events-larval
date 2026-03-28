@@ -1241,7 +1241,7 @@
         @if($categories->isEmpty())
             <div class="alert alert-info arabic-text mt-4 text-center" style="border-radius: 16px; border: none; background: rgba(102, 126, 234, 0.08);">
                 <i class="fas fa-info-circle me-2"></i>
-                {{ __('common.no_active_categories') }}
+                قريبًا ستتوفر الخدمات
             </div>
         @endif
         
@@ -1386,6 +1386,10 @@
             @php
                 $categoryServices = $category->services()
                     ->where('is_active', true)
+                    ->whereHas('suppliers', function ($supplierQuery) {
+                        $supplierQuery->where('suppliers.status', 'approved')
+                            ->where('supplier_services.is_available', true);
+                    })
                     ->orderBy('created_at', 'desc')
                     ->limit(8)
                     ->get();
@@ -1497,6 +1501,13 @@
             </div> <!-- /.klb-module -->
             @endif
         @endforeach
+
+        @if($categories->where('is_active', true)->isEmpty())
+            <div class="alert alert-info arabic-text mt-4 text-center" style="border-radius: 16px; border: none; background: rgba(102, 126, 234, 0.08);">
+                <i class="fas fa-info-circle me-2"></i>
+                قريبًا ستتوفر الخدمات
+            </div>
+        @endif
     </div>
 </section>
 
@@ -1824,8 +1835,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="service-icon" style="background: linear-gradient(135deg, var(--accent-color), var(--secondary-color)); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
                         <i class="fas fa-users" style="font-size: 2rem; color: white;"></i>
                     </div>
-                    <h5 class="arabic-text" style="color: var(--primary-color); margin: 20px 0 15px; font-weight: 700;">{{ __('common.home_services_empty_title') }}</h5>
-                    <p class="arabic-text" style="color: #555555; font-size: 1rem; line-height: 1.6;">{{ __('common.home_services_empty_desc') }}</p>
+                    <h5 class="arabic-text" style="color: var(--primary-color); margin: 20px 0 15px; font-weight: 700;">قريبًا ستتوفر الخدمات</h5>
+                    <p class="arabic-text" style="color: #555555; font-size: 1rem; line-height: 1.6;">لا توجد خدمات متاحة حاليًا. سيتم عرضها تلقائيًا بمجرد تسجيل مورد فعلي.</p>
                     <a href="{{ route('booking.create') }}" class="btn btn-secondary" style="margin-top: 15px; border-radius: 25px; padding: 10px 25px;">{{ __('common.request_now') }}</a>
                 </div>
             </div>

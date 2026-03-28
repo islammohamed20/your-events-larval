@@ -34,6 +34,7 @@ class AdminSupplierAcceptedNotification extends Mailable
     {
         return new Envelope(
             subject: 'مورد قبل عرض سعر - '.($this->quote->quote_number ?? 'عرض سعر'),
+            mailer: 'sales',
         );
     }
 

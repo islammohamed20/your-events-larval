@@ -265,6 +265,17 @@
                 </ul>
             </div>
 
+            <div class="info-panel" style="border-right-color:#7C3AED; background:#faf5ff;">
+                <h4>📜 الشروط والأحكام</h4>
+                <p style="margin:0 0 12px 0; color:#555; line-height:1.8;">
+                    باستخدامك لحساب المورد، فأنت توافق على الالتزام بسياسات المنصة وشروط الاستخدام والخصوصية.
+                </p>
+                <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                    <a href="{{ $termsUrl ?? url('/terms-and-conditions') }}" class="cta-button" style="padding:10px 18px; font-size:14px; margin:0;">عرض الشروط والأحكام</a>
+                    <a href="{{ $privacyUrl ?? url('/privacy') }}" class="cta-button" style="padding:10px 18px; font-size:14px; margin:0;">سياسة الخصوصية</a>
+                </div>
+            </div>
+
             <p class="message">
                 نحن هنا لدعمك في كل خطوة. إذا كان لديك أي استفسار أو تحتاج إلى مساعدة، 
                 لا تتردد في التواصل معنا.

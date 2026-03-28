@@ -5,13 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>عرض سعر من Your Events</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        .body {
             background-color: #f4f4f4;
             margin: 0;
             padding: 20px;
             direction: rtl;
-            text-align: right;
+            text-align: center;
         }
         .container {
             max-width: 650px;
@@ -20,7 +19,7 @@
             border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            text-align: right;
+            text-align: center;
         }
         .header {
             background: linear-gradient(135deg, #5B21B6 0%, #7C3AED 50%, #A855F7 100%);
@@ -44,13 +43,13 @@
         .content {
             padding: 35px;
             line-height: 1.8;
-            text-align: right;
+            text-align: center;
         }
         .greeting {
             font-size: 20px;
             color: #333;
             margin-bottom: 20px;
-            text-align: right;
+            text-align: center;
         }
         .intro-text {
             color: #555;
@@ -60,7 +59,7 @@
             padding: 20px;
             border-radius: 10px;
             border-right: 4px solid #7C3AED;
-            text-align: right;
+            text-align: center;
         }
         .section-title {
             color: #5B21B6;
@@ -80,14 +79,14 @@
             padding: 20px;
             margin: 20px 0;
             border-radius: 8px;
-            text-align: right;
+            text-align: center;
         }
         .panel strong {
             color: #5B21B6;
         }
         .quote-details {
             margin: 25px 0;
-            text-align: right;
+            text-align: center;
         }
         .services-table {
             width: 100%;
@@ -116,14 +115,15 @@
             margin: 25px 0;
             border-radius: 12px;
             border: 2px solid #e9e3ff;
-            text-align: right;
+            text-align: center;
         }
         .total-row {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             padding: 12px 0;
             font-size: 15px;
-            text-align: right;
+            text-align: center;
+            flex-wrap: wrap;
         }
         .total-row.final {
             font-size: 22px;
@@ -139,13 +139,13 @@
             padding: 25px;
             margin: 30px 0;
             border: 1px solid #e9ecef;
-            text-align: right;
+            text-align: center;
         }
         .why-us h3 {
             color: #5B21B6;
             margin-bottom: 20px;
             font-size: 20px;
-            text-align: right;
+            text-align: center;
         }
         .why-us-item {
             display: flex;

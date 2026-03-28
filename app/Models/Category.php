@@ -12,18 +12,21 @@ class Category extends Model
     protected $fillable = [
         'name',
         'name_en',
+        'supplier_form_name',
+        'book_from_service',
         'description',
         'icon',
-        'icon_png',
-        'banner',
         'color',
+        'icon_png',
         'image',
+        'banner',
         'order',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'book_from_service' => 'boolean',
         'order' => 'integer',
     ];
 

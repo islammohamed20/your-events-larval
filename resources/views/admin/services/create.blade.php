@@ -35,6 +35,34 @@
     color: #2dbcae;
     font-weight: 600;
 }
+
+@media (max-width: 991.98px) {
+    .service-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+    .service-tabs .nav-link {
+        display: inline-block;
+        min-width: 200px;
+        text-align: center;
+    }
+    .card-body {
+        padding: 0.9rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .attributes-grid {
+        grid-template-columns: 1fr;
+    }
+    .attribute-checkbox {
+        padding: 12px;
+    }
+    .mobile-actions .btn {
+        width: 100%;
+    }
+}
 </style>
 @endsection
 
@@ -168,12 +196,12 @@
                             </div>
                             
                             <div class="mb-3" id="description-field">
-                                <label for="description" class="form-label">وصف الخدمة</label>
+                                <label for="description" class="form-label">وصف قصير للخدمة</label>
                                 <textarea class="form-control @error('description') is-invalid @enderror" 
                                           id="description" 
                                           name="description" 
                                           rows="3">{{ old('description') }}</textarea>
-                                <small class="form-text text-muted">وصف قصير للخدمة (للاستخدام الداخلي)</small>
+                                <small class="form-text text-muted">وصف قصير للخدمة يظهر اسفل اسم الخدمة</small>
                                 @error('description')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -350,6 +378,29 @@
                                 </div>
                             </div>
 
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card border-warning">
+                                        <div class="card-body">
+                                            <label for="supplier_policy" class="form-label fw-bold">
+                                                سياسة الموردين لهذه الخدمة
+                                            </label>
+                                            <select class="form-select" id="supplier_policy" name="supplier_policy">
+                                                <option value="multiple" {{ old('supplier_policy', 'multiple') === 'multiple' ? 'selected' : '' }}>
+                                                    أكثر من مورد (افتراضي)
+                                                </option>
+                                                <option value="single" {{ old('supplier_policy') === 'single' ? 'selected' : '' }}>
+                                                    مورد واحد فقط (للبراندات فقط)
+                                                </option>
+                                            </select>
+                                            <div class="form-text">
+                                                عند اختيار "مورد واحد فقط" لن يتمكن النظام من ربط الخدمة بأكثر من مورد.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Variable Service Options -->
                             <div id="variable_options_section" style="display: none;">
                                 <div class="card bg-light">
@@ -460,7 +511,7 @@
                     
                     <hr class="my-4">
                     
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between flex-wrap gap-2 mobile-actions">
                         <a href="{{ route('admin.services.index') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left me-2"></i>العودة
                         </a>
