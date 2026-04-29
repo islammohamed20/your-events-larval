@@ -252,6 +252,10 @@
                                             <label class="form-check-label" for="edit_perm_manage_emails">إدارة البريد الإلكتروني</label>
                                         </div>
                                         <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="edit_perm_manage_whatsapp" name="permissions[]" value="manage_whatsapp" {{ in_array('manage_whatsapp', $grantedPermissions, true) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="edit_perm_manage_whatsapp">إدارة واتساب</label>
+                                        </div>
+                                        <div class="form-check mb-2">
                                             <input class="form-check-input" type="checkbox" id="edit_perm_manage_services" name="permissions[]" value="manage_services" {{ in_array('manage_services', $grantedPermissions, true) ? 'checked' : '' }}>
                                             <label class="form-check-label" for="edit_perm_manage_services">إدارة الخدمات</label>
                                         </div>
@@ -389,7 +393,7 @@ function applyPermissionPreset(preset) {
 
     const presets = {
         full_admin: [
-            'manage_users', 'manage_emails', 'manage_services', 'manage_categories', 'manage_packages',
+            'manage_users', 'manage_whatsapp', 'manage_emails', 'manage_services', 'manage_categories', 'manage_packages',
             'customers.view', 'customers.edit', 'customers.delete', 'customers.export', 'customers.reset_password',
             'bookings.view', 'bookings.edit', 'bookings.delete',
             'quotes.view', 'quotes.edit', 'quotes.delete'
@@ -402,7 +406,7 @@ function applyPermissionPreset(preset) {
             'quotes.view', 'quotes.edit', 'quotes.delete'
         ],
         read_only: [
-            'customers.view', 'bookings.view', 'quotes.view'
+            'customers.view', 'bookings.view', 'quotes.view', 'manage_whatsapp'
         ],
     };
 

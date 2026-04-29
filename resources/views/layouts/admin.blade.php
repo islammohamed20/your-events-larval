@@ -156,6 +156,42 @@
             color: white;
         }
 
+        .sidebar .whatsapp-submenu {
+            margin: 6px 0 10px;
+            padding-right: 12px;
+            border-right: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .sidebar .whatsapp-submenu .nav-link {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: rgba(236, 240, 241, 0.9);
+        }
+
+        .sidebar .whatsapp-submenu .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .sidebar .whatsapp-submenu .nav-link.active {
+            background-color: rgba(45, 188, 174, 0.22);
+            color: #ffffff;
+        }
+
+        .sidebar .whatsapp-submenu .nav-link.disabled {
+            opacity: 0.65;
+            cursor: default;
+        }
+
+        .sidebar .nav-link .submenu-chevron {
+            transition: transform 0.2s ease;
+        }
+
+        .sidebar .nav-link[aria-expanded="true"] .submenu-chevron {
+            transform: rotate(180deg);
+        }
+
         .main-content {
             margin-right: 250px;
             padding: 20px;
@@ -464,6 +500,7 @@
     $canManageServices = $adminUser?->hasAdminPermission('manage_services') ?? false;
     $canManageCategories = $adminUser?->hasAdminPermission('manage_categories') ?? false;
     $canManagePackages = $adminUser?->hasAdminPermission('manage_packages') ?? false;
+    $canManageWhatsapp = $adminUser?->hasAdminPermission('manage_whatsapp') ?? false;
     $canViewCustomers = $adminUser?->hasAdminPermission('manage_customers') || $adminUser?->hasAdminPermission('customers.view');
     $canViewBookings = $adminUser?->hasAdminPermission('manage_bookings') || $adminUser?->hasAdminPermission('bookings.view');
     $canViewQuotes = $adminUser?->hasAdminPermission('manage_bookings') || $adminUser?->hasAdminPermission('quotes.view');
@@ -583,6 +620,64 @@
                            href="{{ route('admin.user-management.index') }}">
                             <i class="fas fa-users-cog me-2"></i>{{ __('common.user_management') }}
                         </a>
+                    </li>
+                @endif
+                @if($canManageWhatsapp)
+                    @php
+                        $whatsappMenuOpen = request()->routeIs('admin.whatsapp.*')
+                            || request()->routeIs('admin.customers.*')
+                            || request()->routeIs('admin.reports.*')
+                            || request()->routeIs('admin.user-management.*')
+                            || request()->routeIs('admin.settings.*');
+                    @endphp
+                    <li class="nav-item">
+                        <a class="nav-link {{ $whatsappMenuOpen ? 'active' : '' }} d-flex justify-content-between align-items-center"
+                           data-bs-toggle="collapse"
+                           href="#whatsappSubMenu"
+                           role="button"
+                           aria-expanded="{{ $whatsappMenuOpen ? 'true' : 'false' }}"
+                           aria-controls="whatsappSubMenu">
+                            <span><i class="fab fa-whatsapp me-2"></i>لوحة واتساب</span>
+                            <i class="fas fa-chevron-down submenu-chevron" style="font-size: 0.8rem;"></i>
+                        </a>
+
+                        <div class="collapse {{ $whatsappMenuOpen ? 'show' : '' }}" id="whatsappSubMenu">
+                            <ul class="nav flex-column whatsapp-submenu">
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('admin.whatsapp.index') ? 'active' : '' }}"
+                                       href="{{ route('admin.whatsapp.index') }}">
+                                        <i class="fas fa-comments me-2" style="width: 16px; text-align: center;"></i>المحادثات
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('admin.whatsapp.customers.*') ? 'active' : '' }}"
+                                       href="{{ route('admin.whatsapp.customers.index') }}">
+                                        <i class="fas fa-users me-2" style="width: 16px; text-align: center;"></i>العملاء
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('admin.whatsapp.reports.*') ? 'active' : '' }}"
+                                       href="{{ route('admin.whatsapp.reports.index') }}">
+                                        <i class="fas fa-chart-pie me-2" style="width: 16px; text-align: center;"></i>تقارير
+                                    </a>
+                                </li>
+
+
+                                <li class="nav-item">
+                                    <a class="nav-link {{ request()->routeIs('admin.whatsapp.templates.*') ? 'active' : '' }}"
+                                       href="{{ route('admin.whatsapp.templates.index') }}">
+                                        <i class="fas fa-layer-group me-2" style="width: 16px; text-align: center;"></i>قوالب الرسائل
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link disabled"
+                                       href="javascript:void(0)"
+                                       title="سيتم تفعيل الحملات قريباً">
+                                        <i class="fas fa-bullhorn me-2" style="width: 16px; text-align: center;"></i>الحملات
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
                 @endif
                 @if($canViewCustomers)
@@ -1110,6 +1205,45 @@
             setInterval(checkNotifications, refreshInterval);
         })();
         }
+
+        // ── Sidebar scroll persistence ──────────────────────────────────
+        (function() {
+            const SCROLL_KEY  = 'admin_sidebar_scroll';
+            const sidebarMenu = document.querySelector('.sidebar-menu');
+            if (!sidebarMenu) return;
+
+            // Restore scroll position saved from the previous page
+            var savedScroll = sessionStorage.getItem(SCROLL_KEY);
+            if (savedScroll !== null) {
+                sidebarMenu.scrollTop = parseInt(savedScroll, 10);
+            }
+
+            // Scroll the active link into view if it is out of the visible area
+            var activeLink = sidebarMenu.querySelector('.nav-link.active');
+            if (activeLink) {
+                var menuRect   = sidebarMenu.getBoundingClientRect();
+                var linkRect   = activeLink.getBoundingClientRect();
+                var isVisible  = linkRect.top >= menuRect.top && linkRect.bottom <= menuRect.bottom;
+                if (!isVisible) {
+                    activeLink.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                }
+            }
+
+            // Save scroll position before any navigation
+            document.addEventListener('click', function(e) {
+                var link = e.target.closest('a[href]');
+                if (!link) return;
+                var href = link.getAttribute('href');
+                // Ignore external, anchor-only, javascript: and blank-target links
+                if (!href || href === '#' || href.startsWith('javascript') || href.startsWith('http') || link.target === '_blank') return;
+                sessionStorage.setItem(SCROLL_KEY, sidebarMenu.scrollTop);
+            });
+
+            // Also save before form submissions (logout etc.)
+            document.addEventListener('submit', function() {
+                sessionStorage.setItem(SCROLL_KEY, sidebarMenu.scrollTop);
+            });
+        })();
     </script>
 
     @stack('scripts')

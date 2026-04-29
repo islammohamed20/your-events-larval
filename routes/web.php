@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\PackageController as AdminPackageController;
 use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Admin\ServiceVariationController as AdminServiceVariationController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\WhatsAppDashboardController;
+use App\Http\Controllers\Admin\WhatsAppTemplateController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\BiometricController;
 use App\Http\Controllers\BookingController;
@@ -25,6 +27,7 @@ use App\Http\Controllers\ServicesController;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
+use App\Http\Controllers\Webhook\FaalwaWebhookController;
 
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -137,6 +140,7 @@ Route::get('/sitemap.xml', function () {
 })->name('sitemap');
 
 Route::post('/tap/webhook', [QuoteController::class, 'tapWebhook'])->name('tap.webhook');
+Route::post('/webhook/faalwa', FaalwaWebhookController::class)->middleware('throttle:60,1')->name('webhook.faalwa');
 Route::get('/quotes/{quote}/tap/callback', [QuoteController::class, 'tapCallback'])->name('tap.callback');
 
 // Language Switch Route
@@ -539,6 +543,25 @@ Route::prefix('ye/admin')->name('admin.')->middleware(['admin', 'admin.session.v
     Route::get('payments', [\App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('payments.index');
     Route::get('payments/{payment}', [\App\Http\Controllers\Admin\PaymentController::class, 'show'])->name('payments.show');
     Route::patch('payments/{payment}/status', [\App\Http\Controllers\Admin\PaymentController::class, 'updateStatus'])->name('payments.update-status');
+
+    Route::middleware('admin.permission:manage_whatsapp')->prefix('whatsapp')->name('whatsapp.')->group(function () {
+        Route::get('/', [WhatsAppDashboardController::class, 'index'])->name('index');
+        Route::get('/customers', [\App\Http\Controllers\Admin\WhatsAppCustomerController::class, 'index'])->name('customers.index');
+        Route::get('/reports', [\App\Http\Controllers\Admin\WhatsAppReportController::class, 'index'])->name('reports.index');
+        Route::get('/conversations', [WhatsAppDashboardController::class, 'conversations'])->name('conversations');
+        Route::get('/poll', [WhatsAppDashboardController::class, 'poll'])->name('poll');
+        Route::get('/conversations/{conversation}/messages', [WhatsAppDashboardController::class, 'messages'])->name('messages');
+        Route::post('/conversations/{conversation}/send', [WhatsAppDashboardController::class, 'sendMessage'])->name('send');
+        Route::post('/conversations/{conversation}/assign', [WhatsAppDashboardController::class, 'assignConversation'])->name('assign');
+        Route::post('/conversations/{conversation}/status', [WhatsAppDashboardController::class, 'updateStatus'])->name('status');
+        Route::post('/start', [WhatsAppDashboardController::class, 'startConversation'])->name('start');
+
+        Route::get('/templates', [WhatsAppTemplateController::class, 'index'])->name('templates.index');
+        Route::post('/templates', [WhatsAppTemplateController::class, 'store'])->name('templates.store');
+        Route::get('/templates/{template}/edit', [WhatsAppTemplateController::class, 'edit'])->name('templates.edit');
+        Route::put('/templates/{template}', [WhatsAppTemplateController::class, 'update'])->name('templates.update');
+        Route::delete('/templates/{template}', [WhatsAppTemplateController::class, 'destroy'])->name('templates.destroy');
+    });
 
     // Login Activities
     Route::get('login-activities', [\App\Http\Controllers\Admin\LoginActivityController::class, 'index'])->name('login-activities.index');

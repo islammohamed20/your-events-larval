@@ -221,6 +221,19 @@
                                                                 <div class="mb-3">
                                                                     <div class="form-check">
                                                                         <input class="form-check-input" type="checkbox" 
+                                                                               id="can_manage_whatsapp{{ $user->id }}" 
+                                                                               name="permissions[]" 
+                                                                              value="manage_whatsapp"
+                                                                              {{ in_array('manage_whatsapp', old('permissions', $grantedPermissions), true) ? 'checked' : '' }}>
+                                                                        <label class="form-check-label" for="can_manage_whatsapp{{ $user->id }}">
+                                                                            إدارة واتساب
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="mb-3">
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input" type="checkbox" 
                                                                                id="can_manage_services{{ $user->id }}" 
                                                                                name="permissions[]" 
                                                                               value="manage_services"
@@ -421,6 +434,11 @@
                                         </div>
 
                                     <div class="mb-3">
+                                        <h6><i class="fab fa-whatsapp text-success"></i> إدارة واتساب</h6>
+                                        <small class="text-muted">إدارة المحادثات والوكلاء والقوالب والردود عبر Faalwa</small>
+                                    </div>
+
+                                    <div class="mb-3">
                                         <h6><i class="fas fa-cogs text-primary"></i> إدارة الخدمات</h6>
                                         <small class="text-muted">إدارة الخدمات والتغييرات المرتبطة بها</small>
                                     </div>
@@ -475,7 +493,7 @@ function applyPermissionPresetForModal(modalId, preset) {
 
     const presets = {
         full_admin: [
-            'manage_users', 'manage_emails', 'manage_services', 'manage_categories', 'manage_packages',
+            'manage_users', 'manage_whatsapp', 'manage_emails', 'manage_services', 'manage_categories', 'manage_packages',
             'customers.view', 'customers.edit', 'customers.delete', 'customers.export', 'customers.reset_password',
             'bookings.view', 'bookings.edit', 'bookings.delete',
             'quotes.view', 'quotes.edit', 'quotes.delete'
@@ -488,7 +506,7 @@ function applyPermissionPresetForModal(modalId, preset) {
             'quotes.view', 'quotes.edit', 'quotes.delete'
         ],
         read_only: [
-            'customers.view', 'bookings.view', 'quotes.view'
+            'customers.view', 'bookings.view', 'quotes.view', 'manage_whatsapp'
         ],
     };
 

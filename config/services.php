@@ -59,4 +59,11 @@ return [
         'threshold'  => env('RECAPTCHA_THRESHOLD', 0.5),
     ],
 
+    'faalwa' => [
+        'base_url'      => env('FAALWA_BASE_URL', 'https://chat.faal-wa.sa/api'),
+        'token'         => env('FAALWA_API_TOKEN'),
+        'ssl_verify'    => env('FAALWA_SSL_VERIFY', true),
+        'webhook_token' => env('FAALWA_WEBHOOK_TOKEN'),
+    ],
+
 ];

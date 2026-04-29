@@ -40,7 +40,7 @@ class UserManagementController extends Controller
             'must_change_password' => 'nullable|boolean',
             'logout_other_devices' => 'nullable|boolean',
             'permissions' => 'required|array|min:1',
-            'permissions.*' => 'in:manage_users,manage_emails,manage_services,manage_categories,manage_packages,manage_customers,manage_bookings,customers.view,customers.edit,customers.delete,customers.export,customers.reset_password,bookings.view,bookings.edit,bookings.delete,quotes.view,quotes.edit,quotes.delete',
+            'permissions.*' => 'in:manage_users,manage_whatsapp,manage_emails,manage_services,manage_categories,manage_packages,manage_customers,manage_bookings,customers.view,customers.edit,customers.delete,customers.export,customers.reset_password,bookings.view,bookings.edit,bookings.delete,quotes.view,quotes.edit,quotes.delete',
         ]);
 
         $mustChangePassword = $request->boolean('must_change_password');
@@ -147,7 +147,7 @@ class UserManagementController extends Controller
             'must_change_password' => 'nullable|boolean',
             'logout_other_devices' => 'nullable|boolean',
             'permissions' => $permissionsRule,
-            'permissions.*' => 'in:manage_users,manage_emails,manage_services,manage_categories,manage_packages,manage_customers,manage_bookings,customers.view,customers.edit,customers.delete,customers.export,customers.reset_password,bookings.view,bookings.edit,bookings.delete,quotes.view,quotes.edit,quotes.delete',
+            'permissions.*' => 'in:manage_users,manage_whatsapp,manage_emails,manage_services,manage_categories,manage_packages,manage_customers,manage_bookings,customers.view,customers.edit,customers.delete,customers.export,customers.reset_password,bookings.view,bookings.edit,bookings.delete,quotes.view,quotes.edit,quotes.delete',
         ]);
 
         $mustChangePassword = $request->boolean('must_change_password');

@@ -62,6 +62,14 @@ class EnforceAdminPermissionScope
             abort(403, 'غير مصرح لك بالوصول إلى هذا القسم');
         }
 
+        if (str_starts_with($adminRoute, 'whatsapp.')) {
+            if (in_array('manage_whatsapp', $permissions, true)) {
+                return $next($request);
+            }
+
+            abort(403, 'غير مصرح لك بالوصول إلى هذا القسم');
+        }
+
         if (str_starts_with($adminRoute, 'categories.')) {
             if (in_array('manage_categories', $permissions, true)) {
                 return $next($request);

@@ -33,7 +33,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'customer.block_supplier_portal' => \App\Http\Middleware\BlockCustomerFromSupplierPortal::class,
         ]);
 
-        // CSRF protection is enabled by default in Laravel 11
+        // Exclude third-party webhooks from CSRF verification
+        $middleware->validateCsrfTokens(except: [
+            'tap/webhook',
+            'webhook/faalwa',
+        ]);
 
         // Add security headers to all requests
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);

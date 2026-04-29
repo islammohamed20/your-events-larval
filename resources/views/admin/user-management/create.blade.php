@@ -138,6 +138,12 @@
                                             </div>
                                             <div class="col-md-4">
                                                 <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" id="perm_manage_whatsapp" name="permissions[]" value="manage_whatsapp" {{ in_array('manage_whatsapp', old('permissions', \App\Models\User::ADMIN_PERMISSIONS), true) ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="perm_manage_whatsapp">إدارة واتساب</label>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-check mb-2">
                                                     <input class="form-check-input" type="checkbox" id="perm_manage_services" name="permissions[]" value="manage_services" {{ in_array('manage_services', old('permissions', \App\Models\User::ADMIN_PERMISSIONS), true) ? 'checked' : '' }}>
                                                     <label class="form-check-label" for="perm_manage_services">إدارة الخدمات</label>
                                                 </div>
@@ -271,7 +277,7 @@ function applyPermissionPreset(preset) {
 
     const presets = {
         full_admin: [
-            'manage_users', 'manage_emails', 'manage_services', 'manage_categories', 'manage_packages',
+            'manage_users', 'manage_whatsapp', 'manage_emails', 'manage_services', 'manage_categories', 'manage_packages',
             'customers.view', 'customers.edit', 'customers.delete', 'customers.export', 'customers.reset_password',
             'bookings.view', 'bookings.edit', 'bookings.delete',
             'quotes.view', 'quotes.edit', 'quotes.delete'
@@ -284,7 +290,7 @@ function applyPermissionPreset(preset) {
             'quotes.view', 'quotes.edit', 'quotes.delete'
         ],
         read_only: [
-            'customers.view', 'bookings.view', 'quotes.view'
+            'customers.view', 'bookings.view', 'quotes.view', 'manage_whatsapp'
         ],
     };
 

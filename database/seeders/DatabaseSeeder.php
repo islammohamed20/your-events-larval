@@ -182,5 +182,8 @@ class DatabaseSeeder extends Seeder
 
         // Seed Email Templates (booking, welcome, supplier approval)
         $this->call(EmailTemplatesSeeder::class);
+
+        // Seed WhatsApp message templates
+        $this->call(WhatsAppMessageTemplatesSeeder::class);
     }
 }

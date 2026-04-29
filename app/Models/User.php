@@ -12,6 +12,7 @@ class User extends Authenticatable
 
     public const ADMIN_PERMISSIONS = [
         'manage_users',
+        'manage_whatsapp',
         'manage_emails',
         'manage_services',
         'manage_categories',
@@ -45,6 +46,7 @@ class User extends Authenticatable
         'phone',
         'address',
         'role',
+        'is_online',
         'is_admin',
         'status',
         'registration_source',
@@ -66,6 +68,7 @@ class User extends Authenticatable
      */
     protected $attributes = [
         'role' => 'user',
+        'is_online' => false,
         'is_admin' => false,
         'status' => 'active',
         'must_change_password' => false,
@@ -94,6 +97,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password' => 'hashed',
+            'is_online' => 'boolean',
             'is_admin' => 'boolean',
             'must_change_password' => 'boolean',
             'logout_other_devices' => 'boolean',
@@ -136,6 +140,10 @@ class User extends Authenticatable
 
         // manage_users is the top-level admin permission for this panel.
         if (in_array('manage_users', $permissions, true)) {
+            return true;
+        }
+
+        if (in_array('manage_whatsapp', $permissions, true)) {
             return true;
         }
 
@@ -257,6 +265,11 @@ class User extends Authenticatable
     public function orderStatuses()
     {
         return $this->hasMany(\App\Models\SupplierOrderStatus::class, 'supplier_id');
+    }
+
+    public function assignedConversations()
+    {
+        return $this->hasMany(Conversation::class, 'assigned_to');
     }
 
     /**
