@@ -558,6 +558,7 @@ Route::prefix('ye/admin')->name('admin.')->middleware(['admin', 'admin.session.v
 
         Route::get('/templates', [WhatsAppTemplateController::class, 'index'])->name('templates.index');
         Route::post('/templates', [WhatsAppTemplateController::class, 'store'])->name('templates.store');
+        Route::post('/templates/sync', [WhatsAppTemplateController::class, 'sync'])->name('templates.sync');
         Route::get('/templates/{template}/edit', [WhatsAppTemplateController::class, 'edit'])->name('templates.edit');
         Route::put('/templates/{template}', [WhatsAppTemplateController::class, 'update'])->name('templates.update');
         Route::delete('/templates/{template}', [WhatsAppTemplateController::class, 'destroy'])->name('templates.destroy');

@@ -15,6 +15,56 @@ class WhatsAppTemplateController extends Controller
         return view('admin.whatsapp.templates.index', compact('templates'));
     }
 
+    public function sync(\App\Services\FaalwaService $faalwaService)
+    {
+        try {
+            $response = $faalwaService->getTemplates(200);
+            $faalwaTemplates = $response['raw']['data'] ?? [];
+
+            $syncedCount = 0;
+            foreach ($faalwaTemplates as $ft) {
+                $name = $ft['name'] ?? null;
+                if (!$name) continue;
+
+                // Attempt to extract text from template components
+                $content = '';
+                if (isset($ft['components']) && is_array($ft['components'])) {
+                    foreach ($ft['components'] as $comp) {
+                        if (($comp['type'] ?? '') === 'BODY') {
+                            $content = $comp['text'] ?? '';
+                            break;
+                        }
+                    }
+                }
+
+                // If content is still empty, put a placeholder
+                if (trim($content) === '') {
+                    $content = 'محتوى القالب (تم جلبه من Faalwa)';
+                }
+
+                $type = strtolower($ft['category'] ?? 'utility');
+                if (!in_array($type, ['marketing', 'utility', 'authentication'])) {
+                    $type = 'utility';
+                }
+
+                MessageTemplate::updateOrCreate(
+                    ['name' => $name],
+                    [
+                        'content' => $content,
+                        'type' => $type,
+                    ]
+                );
+                $syncedCount++;
+            }
+
+            return redirect()->route('admin.whatsapp.templates.index')
+                ->with('success', "تم جلب وتحديث {$syncedCount} قالب من Faalwa بنجاح.");
+        } catch (\Exception $e) {
+            return redirect()->route('admin.whatsapp.templates.index')
+                ->with('error', 'حدث خطأ أثناء المزامنة: ' . $e->getMessage());
+        }
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([

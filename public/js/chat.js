@@ -564,6 +564,8 @@ document.addEventListener('DOMContentLoaded', function () {
         messageInput.focus();
     });
 
+
+
     /* ── Init ── */
     loadConversations().then(() => {
         syncStatusTabs();

@@ -46,8 +46,14 @@
 
     <div class="col-lg-8">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">القوالب الحالية</h5>
+                <form action="{{ route('admin.whatsapp.templates.sync') }}" method="POST" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="fas fa-sync-alt me-1"></i> جلب القوالب من Faalwa
+                    </button>
+                </form>
             </div>
             <div class="card-body">
                 <div class="table-responsive">

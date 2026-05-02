@@ -199,9 +199,6 @@
                     <button type="button" class="waw-status-btn" id="btnReopenConv" disabled>
                         إغلاق
                     </button>
-                    <button type="button" class="waw-icon-btn" title="المزيد">
-                        <i class="fas fa-ellipsis-v"></i>
-                    </button>
                 </div>
             </div>
 
@@ -255,8 +252,8 @@
 
         </div>{{-- end waw-chat --}}
     </div>{{-- end waw-right --}}
-
 </div>{{-- end waw-shell --}}
+
 
 
 {{-- ═══ New Chat Modal ═══ --}}

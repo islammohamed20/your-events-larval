@@ -183,6 +183,15 @@ class FaalwaService
         return $this->get('/flow-agent-summary', ['range' => $range]);
     }
 
+    /**
+     * Get all WhatsApp templates from Faalwa.
+     */
+    public function getTemplates(int $limit = 100): array
+    {
+        // According to Faalwa docs, this endpoint is a POST request.
+        return $this->post('/whatsapp-template/list', ['limit' => $limit]);
+    }
+
     // ──────────────────────────────────────────────────────────────────
     // HTTP helpers
     // ──────────────────────────────────────────────────────────────────
