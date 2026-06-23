@@ -215,6 +215,7 @@ class WhatsAppDashboardController extends Controller
 
     protected function formatConversation(Conversation $conversation): array
     {
+        $lastMessage = $conversation->messages()->latest('id')->first();
         return [
             'id' => $conversation->id,
             'customer_name' => $conversation->customer_name ?: $conversation->customer_phone,
@@ -227,6 +228,7 @@ class WhatsAppDashboardController extends Controller
             'last_message_at' => optional($conversation->last_message_at)->format('H:i'),
             'last_message_at_iso' => optional($conversation->last_message_at)?->toIso8601String(),
             'unread_count' => $conversation->unread_count,
+            'last_sender_type' => $lastMessage?->sender_type ?? 'customer',
         ];
     }
 

@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const customerNameEl     = document.getElementById('chatCustomerName');
     const customerMetaEl     = document.getElementById('chatCustomerMeta');
     const chatHeaderAvatar   = document.getElementById('chatHeaderAvatar');
-    const contactAvatar      = document.getElementById('contactAvatar');
     const wawIntro           = document.getElementById('wawIntro');
     const wawChat            = document.getElementById('wawChat');
     const agentSelect        = document.getElementById('conversationAgent');
@@ -37,6 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const newChatPhone       = document.getElementById('newChatPhone');
     const newChatMessage     = document.getElementById('newChatMessage');
     const newChatError       = document.getElementById('newChatError');
+    const newChatSubmit      = document.getElementById('newChatSubmit');
     const btnReopenConv      = document.getElementById('btnReopenConv');
     const refreshSpinIcon    = document.getElementById('refreshSpinIcon');
     const themeToggleBtn     = document.getElementById('themeToggleBtn');
@@ -50,6 +50,8 @@ document.addEventListener('DOMContentLoaded', function () {
         selectedConversationId: null,
         lastMessageId: 0,
         pollTimer: null,
+        pollFailCount: 0,
+        pollInterval: 3000,
     };
 
     /* ── API endpoints ── */
@@ -293,7 +295,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const initChar = initials(conv.customer_name || conv.customer_phone);
         chatHeaderAvatar.textContent = initChar;
         chatHeaderAvatar.style.background = avatarColor(conv.customer_name);
-        contactAvatar.textContent = initChar;
 
         if (agentSelect) agentSelect.value = conv.assigned_to || '';
         if (conversationStatus) conversationStatus.value = conv.status || 'open';
@@ -326,15 +327,23 @@ document.addEventListener('DOMContentLoaded', function () {
             const res = await fetch(buildUrl(api.messages, id) + `?since_id=0`, { headers: baseHeaders });
             const data = await res.json();
             messageList.innerHTML = '';
-            if (data.success) {
-                updateHeader(data.conversation);
-                if (data.data && data.data.length) {
-                    renderMessages(data.data, false);
-                } else {
-                    messageList.innerHTML = '<div class="waw-empty-chat"><i class="fab fa-whatsapp"></i><span>لا توجد رسائل بعد</span></div>';
-                }
+            if (!res.ok || !data.success || !data.conversation) {
+                state.selectedConversationId = null;
+                wawIntro?.classList.remove('d-none');
+                wawChat?.classList.add('d-none');
+                messageList.innerHTML = '<div class="waw-empty"><i class="fas fa-exclamation-triangle"></i><span>المحادثة غير متاحة</span></div>';
+                return;
+            }
+            updateHeader(data.conversation);
+            if (data.data && data.data.length) {
+                renderMessages(data.data, false);
+            } else {
+                messageList.innerHTML = '<div class="waw-empty-chat"><i class="fab fa-whatsapp"></i><span>لا توجد رسائل بعد</span></div>';
             }
         } catch (e) {
+            state.selectedConversationId = null;
+            wawIntro?.classList.remove('d-none');
+            wawChat?.classList.add('d-none');
             messageList.innerHTML = '<div class="waw-empty"><i class="fas fa-exclamation-triangle"></i><span>فشل تحميل الرسائل</span></div>';
         }
 
@@ -465,7 +474,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    /* ── Poll ── */
+    /* ── Poll with backoff ── */
     async function poll() {
         const params = new URLSearchParams({
             search: searchInput.value.trim(),
@@ -481,16 +490,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         try {
             const res     = await fetch(api.poll + '?' + params, { headers: baseHeaders });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const payload = await res.json();
+            if (!payload.success) throw new Error('API returned success=false');
             state.conversations = payload.conversations || [];
             renderConversations();
             const selected = state.conversations.find(c => c.id === state.selectedConversationId) || null;
             if (selected) updateHeader(selected);
-            if (Array.isArray(payload.messages) && payload.messages.length) {
+            if (Array.isArray(payload.messages) && payload.messages.length > 0) {
                 renderMessages(payload.messages, true);
             }
+            state.pollFailCount = 0;
+            state.pollInterval = 3000;
             setPollDot(true);
-        } catch {
+        } catch (error) {
+            state.pollFailCount++;
+            state.pollInterval = Math.min(3000 + (state.pollFailCount * 1000), 15000);
+            clearInterval(state.pollTimer);
+            state.pollTimer = setInterval(poll, state.pollInterval);
             setPollDot(false);
         }
     }
@@ -566,11 +583,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
+    /* ── Cleanup on page unload ── */
+    window.addEventListener('beforeunload', () => {
+        if (state.pollTimer) clearInterval(state.pollTimer);
+    });
+
     /* ── Init ── */
     loadConversations().then(() => {
         syncStatusTabs();
         if (state.selectedConversationId) selectConversation(state.selectedConversationId);
     });
 
-    state.pollTimer = setInterval(poll, 3000);
+    state.pollTimer = setInterval(poll, state.pollInterval);
 });
