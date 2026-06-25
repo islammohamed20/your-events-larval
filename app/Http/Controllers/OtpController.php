@@ -25,7 +25,7 @@ class OtpController extends Controller
         $type = $request->session()->get('otp_type', 'email_verification');
 
         if (! $email) {
-            if ($type === 'login') {
+            if ($type === 'login' || $type === 'two_factor') {
                 return redirect()->route('login')->with('error', 'الرجاء تسجيل الدخول لإرسال كود التحقق');
             }
             if ($type === 'supplier_login') {
@@ -35,7 +35,17 @@ class OtpController extends Controller
             return redirect()->route('register')->with('error', 'الرجاء إدخال بريدك الإلكتروني أولاً');
         }
 
-        return view('auth.verify-otp', compact('email', 'type'));
+        $channel = 'email';
+        $otpRecord = OtpVerification::where('email', $email)
+            ->where('type', $type)
+            ->where('status', 'pending')
+            ->latest()
+            ->first();
+        if ($otpRecord && $otpRecord->channel) {
+            $channel = $otpRecord->channel;
+        }
+
+        return view('auth.verify-otp', compact('email', 'type', 'channel'));
     }
 
     /**
@@ -45,7 +55,7 @@ class OtpController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
-            'type' => 'required|in:email_verification,login,password_reset,booking_confirmation,payment_confirmation,supplier_login',
+            'type' => 'required|in:email_verification,login,password_reset,booking_confirmation,payment_confirmation,supplier_login,two_factor',
         ]);
 
         if ($validator->fails()) {
@@ -84,10 +94,10 @@ class OtpController extends Controller
                 }
             }
 
-            // التحقق من وجود البريد في حالة إعادة التعيين أو تسجيل الدخول
-            if (in_array($type, ['password_reset', 'login'])) {
-                $exists = User::where('email', $email)->exists();
-                if (! $exists) {
+            // التحقق من وجود البريد في حالة إعادة التعيين أو تسجيل الدخول أو 2FA
+            if (in_array($type, ['password_reset', 'login', 'two_factor'])) {
+                $user = User::where('email', $email)->first();
+                if (! $user) {
                     return response()->json([
                         'success' => false,
                         'message' => 'البريد الإلكتروني غير مسجل',
@@ -107,7 +117,20 @@ class OtpController extends Controller
             }
 
             // إنشاء وإرسال OTP
-            $otp = OtpVerification::generate($email, $type);
+            if ($type === 'two_factor' && isset($user)) {
+                $channel = $user->two_factor_channel ?? 'email';
+                $phone = $user->phone;
+                if ($channel === 'whatsapp' && ! $phone) {
+                    $channel = 'email';
+                }
+                OtpVerification::generate($email, $type, 6, 10, $channel === 'email', $channel, $phone);
+                $msg = $channel === 'whatsapp'
+                    ? 'تم إرسال كود التحقق إلى واتس أب رقمك المسجل'
+                    : 'تم إرسال كود التحقق إلى بريدك الإلكتروني';
+            } else {
+                OtpVerification::generate($email, $type);
+                $msg = 'تم إرسال كود التحقق إلى بريدك الإلكتروني';
+            }
 
             // حفظ البريد في الجلسة
             $request->session()->put('otp_email', $email);
@@ -115,7 +138,7 @@ class OtpController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'تم إرسال كود التحقق إلى بريدك الإلكتروني',
+                'message' => $msg,
                 'expires_in' => 10, // minutes
             ]);
 
@@ -138,7 +161,7 @@ class OtpController extends Controller
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email',
                 'otp' => 'required|string|size:6',
-                'type' => 'required|in:email_verification,login,password_reset,booking_confirmation,payment_confirmation,supplier_login',
+                'type' => 'required|in:email_verification,login,password_reset,booking_confirmation,payment_confirmation,supplier_login,two_factor',
             ]);
 
             if ($validator->fails()) {
@@ -192,7 +215,7 @@ class OtpController extends Controller
 
                 // في حالة التحقق لتسجيل الدخول، نقوم بتسجيل الدخول فعلياً
                 $redirectUrl = $this->getRedirectUrl($type);
-                if ($type === 'login') {
+                if (in_array($type, ['login', 'two_factor'])) {
                     try {
                         $userId = $request->session()->get('login_user_id');
                         $remember = (bool) $request->session()->get('login_remember', false);
@@ -400,6 +423,7 @@ class OtpController extends Controller
                 'booking_confirmation' => route('booking.my-bookings'),
                 'payment_confirmation' => route('home'),
                 'supplier_login' => route('supplier.login'),
+                'two_factor' => route('home'),
             ];
 
             return $urls[$type] ?? route('home');

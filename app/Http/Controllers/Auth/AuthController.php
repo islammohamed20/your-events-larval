@@ -57,27 +57,65 @@ class AuthController extends Controller
                     ->onlyInput('email');
             }
 
-            // OTP للعملاء
-            try {
-                \App\Models\OtpVerification::generate($user->email, 'login');
+            // 2FA: إذا كان مفعّل، أرسل OTP عبر القناة المختارة
+            if ($user->two_factor_enabled) {
+                $channel = $user->two_factor_channel ?? 'email';
+                $phone = $user->phone;
 
-                $request->session()->put('otp_email', $user->email);
-                $request->session()->put('otp_type', 'login');
-                $request->session()->put('login_pending', true);
-                $request->session()->put('login_remember', $request->boolean('remember'));
-                $request->session()->put('login_user_id', $user->id);
+                if ($channel === 'whatsapp' && ! $phone) {
+                    $channel = 'email';
+                }
 
-                Auth::logout();
+                try {
+                    \App\Models\OtpVerification::generate(
+                        $user->email,
+                        'two_factor',
+                        6,
+                        10,
+                        $channel === 'email',
+                        $channel,
+                        $phone
+                    );
 
-                return redirect()->route('otp.verify.form')
-                    ->with('success', 'تم إرسال كود التحقق لتأكيد تسجيل الدخول');
-            } catch (\Exception $e) {
-                Auth::logout();
-                $request->session()->forget(['login_pending', 'login_remember', 'login_user_id']);
+                    $request->session()->put('otp_email', $user->email);
+                    $request->session()->put('otp_type', 'two_factor');
+                    $request->session()->put('login_pending', true);
+                    $request->session()->put('login_remember', $request->boolean('remember'));
+                    $request->session()->put('login_user_id', $user->id);
 
-                return back()->withErrors(['error' => 'فشل في إرسال كود التحقق: '.$e->getMessage()])
-                    ->withInput();
+                    $msg = $channel === 'whatsapp'
+                        ? 'تم إرسال كود التحقق إلى واتس أب رقمك المسجل'
+                        : 'تم إرسال كود التحقق إلى بريدك الإلكتروني';
+
+                    Auth::logout();
+
+                    return redirect()->route('otp.verify.form')
+                        ->with('success', $msg);
+                } catch (\Exception $e) {
+                    Auth::logout();
+                    $request->session()->forget(['login_pending', 'login_remember', 'login_user_id']);
+
+                    return back()->withErrors(['error' => 'فشل في إرسال كود التحقق: '.$e->getMessage()])
+                        ->withInput();
+                }
             }
+
+            // 2FA غير مفعّل → تسجيل دخول مباشر
+            $request->session()->regenerate();
+            $newSessionVersion = ((int) ($user->session_version ?: 1)) + 1;
+            $user->forceFill([
+                'session_version' => $newSessionVersion,
+                'remember_token' => \Illuminate\Support\Str::random(60),
+            ])->save();
+            $request->session()->put('user_session_version', $newSessionVersion);
+
+            try {
+                $user->last_login_at = now();
+                $user->save();
+            } catch (\Throwable $e) {
+            }
+
+            return redirect()->intended(route('home'));
         }
 
         return back()->withErrors([

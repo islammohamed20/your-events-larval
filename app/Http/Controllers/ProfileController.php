@@ -69,6 +69,8 @@ class ProfileController extends Controller
             'card_last_four' => ['nullable', 'string', 'size:4', 'regex:/^[0-9]{4}$/'],
             'card_expiry_month' => ['nullable', 'string', 'size:2', 'regex:/^(0[1-9]|1[0-2])$/'],
             'card_expiry_year' => ['nullable', 'string', 'size:4', 'regex:/^[0-9]{4}$/'],
+            'two_factor_enabled' => ['nullable', 'boolean'],
+            'two_factor_channel' => ['nullable', 'in:email,whatsapp'],
         ], [
             'name.required' => 'الاسم مطلوب',
             'company_name.required' => 'اسم الجهة مطلوب',
@@ -81,6 +83,14 @@ class ProfileController extends Controller
             'card_expiry_month.regex' => 'يجب إدخال شهر صحيح (01-12)',
             'card_expiry_year.regex' => 'يجب إدخال سنة صحيحة (4 أرقام)',
         ]);
+
+        $validated['two_factor_enabled'] = $request->boolean('two_factor_enabled');
+
+        if ($validated['two_factor_enabled'] && ($validated['two_factor_channel'] ?? 'email') === 'whatsapp' && empty($validated['phone'])) {
+            return redirect()->back()
+                ->withErrors(['two_factor_channel' => 'يجب إدخال رقم هاتف لاستخدام واتس أب كقناة تحقق'])
+                ->withInput();
+        }
 
         $user->update($validated);
 

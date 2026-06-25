@@ -47,6 +47,7 @@ class WhatsAppDashboardController extends Controller
     public function conversations(Request $request): JsonResponse
     {
         $userId = Auth::id();
+        $canViewAllAssigned = (bool) $request->user()?->isAdmin();
 
         $conversations = Conversation::query()
             ->with('assignedAgent:id,name,is_online')
@@ -61,7 +62,7 @@ class WhatsAppDashboardController extends Controller
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->string('status'));
             })
-            ->forInboxFilter($request->string('filter')->toString(), $userId)
+            ->forInboxFilter($request->string('filter')->toString(), $userId, $canViewAllAssigned)
             ->orderByDesc('last_message_at')
             ->limit(100)
             ->get();
@@ -101,15 +102,65 @@ class WhatsAppDashboardController extends Controller
             'message' => 'nullable|string',
             'message_type' => 'required|in:text,template',
             'template_id' => 'nullable|exists:message_templates,id',
+            'template_params' => 'nullable|array',
+            'template_params.*' => 'nullable|string|max:1000',
         ]);
+
+        $authId = Auth::id();
+        $conversation->refresh();
+
+        if ($authId && $conversation->assigned_to && $conversation->assigned_to !== $authId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'تم استلام هذه المحادثة بواسطة موظف آخر.',
+                'conversation' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online')),
+            ], 409);
+        }
+
+        if ($authId && ! $conversation->assigned_to) {
+            $claimed = Conversation::query()
+                ->whereKey($conversation->id)
+                ->whereNull('assigned_to')
+                ->update(['assigned_to' => $authId]);
+
+            if ($claimed === 0) {
+                $conversation->refresh();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'تم استلام هذه المحادثة بواسطة موظف آخر.',
+                    'conversation' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online')),
+                ], 409);
+            }
+
+            $conversation->assigned_to = $authId;
+        }
 
         $messageType = $validated['message_type'];
         $template = null;
         $content = trim((string) ($validated['message'] ?? ''));
+        $resolvedUserNs = null;
+        $templateParams = collect($validated['template_params'] ?? [])
+            ->map(fn ($value) => trim((string) $value))
+            ->values()
+            ->all();
 
         if ($messageType === 'template') {
             $template = MessageTemplate::findOrFail($validated['template_id']);
-            $content = $content !== '' ? $content : $template->content;
+            $content = $content !== '' ? $content : $this->renderTemplatePreview($template->content, $templateParams);
+
+            if ($template->faalwa_namespace && is_array($template->params_schema) && count($template->params_schema) > 0) {
+                $missingParam = collect($templateParams)
+                    ->take(count($template->params_schema))
+                    ->contains(fn ($value) => $value === '');
+
+                if ($missingParam || count($templateParams) < count($template->params_schema)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'يرجى تعبئة جميع متغيرات القالب قبل الإرسال.',
+                    ], 422);
+                }
+            }
         }
 
         if ($content === '') {
@@ -126,17 +177,22 @@ class WhatsAppDashboardController extends Controller
         ]);
 
         try {
-            $result = $messageType === 'template'
+            $resolvedUserNs = $faalwaService->resolveUserNs($conversation->customer_phone);
+            $this->syncClaimToFaalwa($conversation, $resolvedUserNs, $authId, $faalwaService);
+
+            $result = ($messageType === 'template' && $template && $template->faalwa_namespace)
                 ? $faalwaService->sendTemplateMessage($conversation->customer_phone, [
-                    'name' => $template?->name,
-                    'type' => $template?->type,
-                    'body' => $content,
+                    'namespace' => $template->faalwa_namespace,
+                    'name' => $template->name,
+                    'lang' => $template->language_code ?: 'ar',
+                    'params' => $templateParams,
                 ])
                 : $faalwaService->sendTextMessage($conversation->customer_phone, $content);
 
             $message->update([
                 'status' => $result['status'] ?? 'sent',
                 'external_id' => $result['external_id'] ?? null,
+                'message_type' => ($messageType === 'template' && $template && $template->faalwa_namespace) ? 'template' : 'text',
             ]);
         } catch (Throwable $throwable) {
             $message->update(['status' => 'failed']);
@@ -146,10 +202,6 @@ class WhatsAppDashboardController extends Controller
                 'message' => $throwable->getMessage(),
                 'data' => $this->formatMessage($message->fresh()),
             ], 500);
-        }
-
-        if (! $conversation->assigned_to && Auth::id()) {
-            $conversation->assigned_to = Auth::id();
         }
 
         $conversation->update([
@@ -190,6 +242,21 @@ class WhatsAppDashboardController extends Controller
 
         $conversation->update(['status' => $validated['status']]);
 
+        try {
+            $faalwaService = app(FaalwaService::class);
+            $userNs = $faalwaService->resolveUserNs($conversation->customer_phone);
+
+            if ($validated['status'] === 'closed') {
+                $faalwaService->moveChatTo($userNs, 'closed');
+                $faalwaService->resumeBot($userNs);
+            } else {
+                $faalwaService->moveChatTo($userNs, $validated['status']);
+                $this->syncClaimToFaalwa($conversation->fresh(), $userNs, Auth::id(), $faalwaService);
+            }
+        } catch (Throwable $throwable) {
+            report($throwable);
+        }
+
         return response()->json([
             'success' => true,
             'data' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online')),
@@ -211,6 +278,74 @@ class WhatsAppDashboardController extends Controller
         }
 
         return response()->json($payload);
+    }
+
+    public function panel(Conversation $conversation, FaalwaService $faalwaService): JsonResponse
+    {
+        $messages = $conversation->messages()->latest('id')->limit(20)->get()->reverse()->values();
+        $subscriber = [];
+        $livechatUrl = null;
+
+        try {
+            $subscriber = $faalwaService->getSubscriberByPhone($conversation->customer_phone);
+            $userNs = data_get($subscriber, 'user_ns') ?? data_get($subscriber, 'data.user_ns');
+            if ($userNs) {
+                $flowId = strstr((string) config('services.faalwa.base_url', ''), 'chat.faal-wa.sa') !== false ? 'f261493' : null;
+                if ($flowId) {
+                    $livechatUrl = 'https://chat.faal-wa.sa/inbox/'.$userNs;
+                }
+            }
+        } catch (Throwable $throwable) {
+            report($throwable);
+        }
+
+        return response()->json([
+            'success' => true,
+            'conversation' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online')),
+            'subscriber' => [
+                'user_ns' => data_get($subscriber, 'user_ns') ?? data_get($subscriber, 'data.user_ns'),
+                'user_id' => data_get($subscriber, 'user_id') ?? data_get($subscriber, 'data.user_id'),
+                'name' => data_get($subscriber, 'name') ?? data_get($subscriber, 'data.name'),
+                'phone' => data_get($subscriber, 'phone') ?? data_get($subscriber, 'data.phone'),
+                'status' => data_get($subscriber, 'status') ?? data_get($subscriber, 'data.status'),
+                'allow_send_message' => (bool) (data_get($subscriber, 'allow_send_message') ?? data_get($subscriber, 'data.allow_send_message')),
+                'paused_diff_seconds' => (int) (data_get($subscriber, 'paused_diff_seconds') ?? data_get($subscriber, 'data.paused_diff_seconds') ?? 0),
+                'subscribed' => data_get($subscriber, 'subscribed') ?? data_get($subscriber, 'data.subscribed'),
+                'last_interaction' => data_get($subscriber, 'last_interaction') ?? data_get($subscriber, 'data.last_interaction'),
+                'last_message_at' => data_get($subscriber, 'last_message_at') ?? data_get($subscriber, 'data.last_message_at'),
+                'last_message_type' => data_get($subscriber, 'last_message_type') ?? data_get($subscriber, 'data.last_message_type'),
+                'labels' => data_get($subscriber, 'labels') ?? data_get($subscriber, 'data.labels') ?? [],
+                'tags' => data_get($subscriber, 'tags') ?? data_get($subscriber, 'data.tags') ?? [],
+                'livechat_url' => $livechatUrl,
+            ],
+            'stats' => [
+                'messages_count' => $conversation->messages()->count(),
+                'agent_messages_count' => $conversation->messages()->where('sender_type', 'agent')->count(),
+                'customer_messages_count' => $conversation->messages()->where('sender_type', 'customer')->count(),
+            ],
+            'messages' => $messages->map(fn (WhatsAppMessage $message) => $this->formatMessage($message)),
+        ]);
+    }
+
+    public function pauseBot(Request $request, Conversation $conversation, FaalwaService $faalwaService): JsonResponse
+    {
+        $validated = $request->validate([
+            'minutes' => 'nullable|integer|min:0|max:525600',
+            'resume' => 'nullable|boolean',
+        ]);
+
+        $userNs = $faalwaService->resolveUserNs($conversation->customer_phone);
+
+        if ((bool) ($validated['resume'] ?? false)) {
+            $faalwaService->resumeBot($userNs);
+
+            return response()->json(['success' => true, 'message' => 'تم استئناف البوت.']);
+        }
+
+        $minutes = (int) ($validated['minutes'] ?? 30);
+        $faalwaService->pauseBot($userNs, $minutes);
+
+        return response()->json(['success' => true, 'message' => 'تم إيقاف البوت مؤقتًا.']);
     }
 
     protected function formatConversation(Conversation $conversation): array
@@ -297,5 +432,33 @@ class WhatsAppDashboardController extends Controller
         } catch (Throwable $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
         }
+    }
+
+    protected function syncClaimToFaalwa(Conversation $conversation, string $userNs, ?int $authId, FaalwaService $faalwaService): void
+    {
+        $faalwaService->pauseBot($userNs);
+
+        if (! $authId) {
+            return;
+        }
+
+        $agent = User::query()->find($authId);
+        if (! $agent?->faalwa_agent_id) {
+            return;
+        }
+
+        $faalwaService->assignAgent($userNs, (int) $agent->faalwa_agent_id);
+    }
+
+    protected function renderTemplatePreview(string $content, array $params): string
+    {
+        $index = 0;
+
+        return preg_replace_callback('/{{\s*[^}]+\s*}}/', function () use ($params, &$index) {
+            $value = $params[$index] ?? '';
+            $index++;
+
+            return $value !== '' ? $value : '_____';
+        }, $content) ?? $content;
     }
 }

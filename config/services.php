@@ -60,10 +60,11 @@ return [
     ],
 
     'faalwa' => [
-        'base_url'      => env('FAALWA_BASE_URL', 'https://chat.faal-wa.sa/api'),
-        'token'         => env('FAALWA_API_TOKEN'),
-        'ssl_verify'    => env('FAALWA_SSL_VERIFY', true),
-        'webhook_token' => env('FAALWA_WEBHOOK_TOKEN'),
+        'base_url'             => env('FAALWA_BASE_URL', 'https://chat.faal-wa.sa/api'),
+        'token'                => env('FAALWA_API_TOKEN'),
+        'ssl_verify'           => env('FAALWA_SSL_VERIFY', true),
+        'webhook_token'        => env('FAALWA_WEBHOOK_TOKEN'),
+        'default_pause_minutes' => env('FAALWA_DEFAULT_PAUSE_MINUTES', 30),
     ],
 
 ];

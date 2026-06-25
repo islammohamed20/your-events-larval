@@ -46,9 +46,11 @@
     data-conversations-url="{{ route('admin.whatsapp.conversations') }}"
     data-poll-url="{{ route('admin.whatsapp.poll') }}"
     data-message-url-template="{{ route('admin.whatsapp.messages', ['conversation' => '__ID__']) }}"
+    data-panel-url-template="{{ route('admin.whatsapp.panel', ['conversation' => '__ID__']) }}"
     data-send-url-template="{{ route('admin.whatsapp.send', ['conversation' => '__ID__']) }}"
     data-assign-url-template="{{ route('admin.whatsapp.assign', ['conversation' => '__ID__']) }}"
     data-status-url-template="{{ route('admin.whatsapp.status', ['conversation' => '__ID__']) }}"
+    data-pause-bot-url-template="{{ route('admin.whatsapp.pause-bot', ['conversation' => '__ID__']) }}"
     data-start-url="{{ route('admin.whatsapp.start') }}"
 >
 
@@ -183,10 +185,10 @@
                     <i class="fas fa-arrow-right"></i>
                 </button>
                 <div class="waw-chd-avatar" id="chatHeaderAvatar">؟</div>
-                <div class="waw-chd-info">
+                <button type="button" class="waw-chd-info waw-customer-trigger" id="chatCustomerTrigger">
                     <div class="waw-chd-name" id="chatCustomerName">اختر محادثة</div>
                     <div class="waw-chd-sub"  id="chatCustomerMeta"></div>
-                </div>
+                </button>
                 <div class="waw-chd-actions">
                     <select id="conversationAgent" class="waw-agent-select" disabled>
                         <option value="">تعيين وكيل...</option>
@@ -203,12 +205,130 @@
             </div>
 
             {{-- Messages --}}
-            <div class="waw-messages" id="messageList">
+            <div class="waw-messages w-full p-0 chat-panel-height overflow-y-auto container-scroll h-100 no-footer" id="messageList">
                 <div class="waw-empty-chat">
                     <i class="fab fa-whatsapp"></i>
                     <span>لا توجد رسائل بعد</span>
                 </div>
             </div>
+
+            <aside class="waw-customer-panel d-none" id="customerInfoPanel" aria-hidden="true">
+                <div class="waw-panel-tabs" id="customerPanelTabs">
+                    <button type="button" class="waw-panel-tab active" data-panel-tab="profile" title="الملف الشخصي"><i class="fas fa-user"></i></button>
+                    <button type="button" class="waw-panel-tab" data-panel-tab="summary" title="ملخص"><i class="fas fa-expand"></i><span class="waw-panel-badge d-none" id="customerPanelSummaryBadge">0</span></button>
+                    <button type="button" class="waw-panel-tab" data-panel-tab="notes" title="آخر الرسائل"><i class="fas fa-book"></i></button>
+                    <button type="button" class="waw-panel-tab" data-panel-tab="tags" title="الوسوم"><i class="fas fa-tag"></i></button>
+                    <button type="button" class="waw-panel-tab" data-panel-tab="meta" title="البيانات"><i class="fas fa-tags"></i></button>
+                    <button type="button" class="waw-panel-tab" data-panel-tab="actions" title="إجراءات"><i class="fas fa-copy"></i></button>
+                    <button type="button" class="waw-panel-tab" data-panel-tab="links" title="روابط"><i class="fas fa-shopping-cart"></i></button>
+                    <button type="button" class="waw-panel-tab ms-auto" id="refreshCustomerPanel" title="تحديث"><i class="fas fa-sync-alt"></i></button>
+                </div>
+                <div class="waw-customer-panel-hd">
+                    <div>
+                        <div class="waw-customer-panel-title">بيانات المحادثة</div>
+                        <div class="waw-customer-panel-sub">عرض سريع لمعلومات العميل والمحادثة</div>
+                    </div>
+                    <button type="button" class="waw-icon-btn" id="closeCustomerPanel" title="إغلاق">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="waw-customer-panel-body w-full p-0 chat-panel-height overflow-y-auto container-scroll h-100 no-footer" id="customerInfoBody">
+                    <div class="waw-panel-view" data-panel-view="profile">
+                        <div class="waw-panel-actions-row">
+                            <button type="button" class="waw-action-chip" id="customerPanelStatusButton">فتح</button>
+                            <button type="button" class="waw-action-chip" id="customerPanelExportButton">تنزيل بيانات المستخدم</button>
+                            <button type="button" class="waw-action-chip" id="customerPanelCopyLinkButton">نسخ رابط الدردشة</button>
+                        </div>
+
+                        <div class="waw-customer-card">
+                            <div class="waw-customer-avatar" id="customerPanelAvatar">؟</div>
+                            <div class="waw-customer-title" id="customerPanelName">اختر محادثة</div>
+                            <div class="waw-customer-phone" id="customerPanelPhone">-</div>
+                        </div>
+
+                        <div class="waw-info-group">
+                            <div class="waw-info-row">
+                                <span>الحالة</span>
+                                <strong id="customerPanelStatus">-</strong>
+                            </div>
+                            <div class="waw-info-row">
+                                <span>الموظف المسؤول</span>
+                                <strong id="customerPanelAgent">غير معين</strong>
+                            </div>
+                            <div class="waw-info-row">
+                                <span>آخر تحديث</span>
+                                <strong id="customerPanelUpdated">-</strong>
+                            </div>
+                            <div class="waw-info-row">
+                                <span>غير مقروء</span>
+                                <strong id="customerPanelUnread">0</strong>
+                            </div>
+                        </div>
+
+                        <div class="waw-info-group">
+                            <div class="waw-info-label">إيقاف تلقائي مؤقتًا</div>
+                            <div class="waw-pause-actions">
+                                <button type="button" class="waw-pause-btn" data-pause-minutes="30">+ 30 دقائق</button>
+                                <button type="button" class="waw-pause-btn" data-pause-minutes="5">+ 5 دقائق</button>
+                                <button type="button" class="waw-pause-btn" data-pause-minutes="60">+ 1 ساعة</button>
+                                <button type="button" class="waw-pause-btn" data-pause-resume="1">استئناف البوت</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="waw-panel-view d-none" data-panel-view="summary">
+                        <div class="waw-info-group">
+                            <div class="waw-info-row"><span>عدد الرسائل</span><strong id="customerPanelMessagesCount">0</strong></div>
+                            <div class="waw-info-row"><span>رسائل العميل</span><strong id="customerPanelCustomerCount">0</strong></div>
+                            <div class="waw-info-row"><span>رسائل الفريق</span><strong id="customerPanelAgentCount">0</strong></div>
+                            <div class="waw-info-row"><span>يمكن الإرسال الآن</span><strong id="customerPanelSendAllowed">-</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="waw-panel-view d-none" data-panel-view="notes">
+                        <div class="waw-info-group">
+                            <div class="waw-info-label">آخر رسالة</div>
+                            <div class="waw-info-message" id="customerPanelLastMessage">لا توجد رسائل بعد</div>
+                        </div>
+                        <div class="waw-transcript-list" id="customerPanelTranscript"></div>
+                    </div>
+
+                    <div class="waw-panel-view d-none" data-panel-view="tags">
+                        <div class="waw-info-group">
+                            <div class="waw-info-label">الوسوم / التصنيفات</div>
+                            <div class="waw-tag-list" id="customerPanelTags"></div>
+                        </div>
+                    </div>
+
+                    <div class="waw-panel-view d-none" data-panel-view="meta">
+                        <div class="waw-info-group">
+                            <div class="waw-info-row"><span>رقم المستخدم</span><strong id="customerPanelUserId">-</strong></div>
+                            <div class="waw-info-row"><span>مستخدم Ns</span><strong id="customerPanelUserNs">-</strong></div>
+                            <div class="waw-info-row"><span>تم الاشتراك</span><strong id="customerPanelSubscribed">-</strong></div>
+                            <div class="waw-info-row"><span>آخر تفاعل</span><strong id="customerPanelInteraction">-</strong></div>
+                            <div class="waw-info-row"><span>آخر نوع رسالة</span><strong id="customerPanelLastType">-</strong></div>
+                            <div class="waw-info-row"><span>إيقاف البوت</span><strong id="customerPanelPaused">0</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="waw-panel-view d-none" data-panel-view="actions">
+                        <div class="waw-info-group">
+                            <div class="waw-panel-actions-stack">
+                                <button type="button" class="waw-action-chip w-100" id="customerPanelCopyPhoneButton">نسخ الرقم</button>
+                                <button type="button" class="waw-action-chip w-100" id="customerPanelCopyNsButton">نسخ مستخدم Ns</button>
+                                <button type="button" class="waw-action-chip w-100" id="customerPanelReloadButton">تحديث البيانات</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="waw-panel-view d-none" data-panel-view="links">
+                        <div class="waw-info-group">
+                            <div class="waw-info-label">عنوان URL للدردشة المباشرة</div>
+                            <div class="waw-info-message" id="customerPanelLivechatUrl">-</div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
 
             {{-- Compose --}}
             <div class="waw-compose">
@@ -237,11 +357,16 @@
                             @foreach($templates as $template)
                                 <option value="{{ $template->id }}"
                                         data-content="{{ e($template->content) }}"
-                                        data-type="{{ $template->type }}">
+                                        data-type="{{ $template->type }}"
+                                        data-namespace="{{ $template->faalwa_namespace }}"
+                                        data-language="{{ $template->language_code ?? 'ar' }}"
+                                        data-params-schema='@json($template->params_schema ?? [])'>
                                     {{ $template->name }}
                                 </option>
                             @endforeach
                         </select>
+                        <div id="templateModeHint" class="small px-1 mt-2 d-none" style="color:var(--waw-text-2);"></div>
+                        <div id="templateParamsPanel" class="mt-2 d-none"></div>
                     </div>
 
                     <button type="submit" class="waw-send-btn" id="sendMessageButton" disabled>

@@ -16,17 +16,53 @@ document.addEventListener('DOMContentLoaded', function () {
     const statusFilterInput  = document.getElementById('statusFilter');
     const filterTabs         = document.querySelectorAll('.waw-sb-item[data-filter-tab]');
     const statusTabs         = document.querySelectorAll('.waw-sb-item[data-status-tab]');
+    const customerPanelTabs  = document.querySelectorAll('.waw-panel-tab[data-panel-tab]');
+    const customerPanelViews = document.querySelectorAll('.waw-panel-view[data-panel-view]');
     const unansweredToggle   = document.getElementById('unansweredFilter');
     const messageList        = document.getElementById('messageList');
     const messageInput       = document.getElementById('messageInput');
     const sendButton         = document.getElementById('sendMessageButton');
     const chatForm           = document.getElementById('chatForm');
     const templateSelect     = document.getElementById('templateSelect');
+    const templateModeHint   = document.getElementById('templateModeHint');
+    const templateParamsPanel = document.getElementById('templateParamsPanel');
     const messageTypeInput   = document.getElementById('messageType');
     const templateIdInput    = document.getElementById('selectedTemplateId');
+    const customerTrigger    = document.getElementById('chatCustomerTrigger');
     const customerNameEl     = document.getElementById('chatCustomerName');
     const customerMetaEl     = document.getElementById('chatCustomerMeta');
     const chatHeaderAvatar   = document.getElementById('chatHeaderAvatar');
+    const customerInfoPanel  = document.getElementById('customerInfoPanel');
+    const closeCustomerPanel = document.getElementById('closeCustomerPanel');
+    const customerPanelAvatar = document.getElementById('customerPanelAvatar');
+    const customerPanelName  = document.getElementById('customerPanelName');
+    const customerPanelPhone = document.getElementById('customerPanelPhone');
+    const customerPanelStatus = document.getElementById('customerPanelStatus');
+    const customerPanelAgent = document.getElementById('customerPanelAgent');
+    const customerPanelUpdated = document.getElementById('customerPanelUpdated');
+    const customerPanelUnread = document.getElementById('customerPanelUnread');
+    const customerPanelLastMessage = document.getElementById('customerPanelLastMessage');
+    const customerPanelSummaryBadge = document.getElementById('customerPanelSummaryBadge');
+    const customerPanelMessagesCount = document.getElementById('customerPanelMessagesCount');
+    const customerPanelCustomerCount = document.getElementById('customerPanelCustomerCount');
+    const customerPanelAgentCount = document.getElementById('customerPanelAgentCount');
+    const customerPanelSendAllowed = document.getElementById('customerPanelSendAllowed');
+    const customerPanelTags = document.getElementById('customerPanelTags');
+    const customerPanelUserId = document.getElementById('customerPanelUserId');
+    const customerPanelUserNs = document.getElementById('customerPanelUserNs');
+    const customerPanelSubscribed = document.getElementById('customerPanelSubscribed');
+    const customerPanelInteraction = document.getElementById('customerPanelInteraction');
+    const customerPanelLastType = document.getElementById('customerPanelLastType');
+    const customerPanelPaused = document.getElementById('customerPanelPaused');
+    const customerPanelTranscript = document.getElementById('customerPanelTranscript');
+    const customerPanelLivechatUrl = document.getElementById('customerPanelLivechatUrl');
+    const customerPanelStatusButton = document.getElementById('customerPanelStatusButton');
+    const customerPanelExportButton = document.getElementById('customerPanelExportButton');
+    const customerPanelCopyLinkButton = document.getElementById('customerPanelCopyLinkButton');
+    const customerPanelCopyPhoneButton = document.getElementById('customerPanelCopyPhoneButton');
+    const customerPanelCopyNsButton = document.getElementById('customerPanelCopyNsButton');
+    const customerPanelReloadButton = document.getElementById('customerPanelReloadButton');
+    const refreshCustomerPanel = document.getElementById('refreshCustomerPanel');
     const wawIntro           = document.getElementById('wawIntro');
     const wawChat            = document.getElementById('wawChat');
     const agentSelect        = document.getElementById('conversationAgent');
@@ -52,6 +88,11 @@ document.addEventListener('DOMContentLoaded', function () {
         pollTimer: null,
         pollFailCount: 0,
         pollInterval: 3000,
+        selectedTemplateSchema: [],
+        selectedTemplateHasNamespace: false,
+        selectedConversation: null,
+        selectedMessages: [],
+        panelData: null,
     };
 
     /* ── API endpoints ── */
@@ -63,6 +104,8 @@ document.addEventListener('DOMContentLoaded', function () {
         assign:        root.dataset.assignUrlTemplate,
         status:        root.dataset.statusUrlTemplate,
         start:         root.dataset.startUrl,
+        panel:         root.dataset.panelUrlTemplate,
+        pauseBot:      root.dataset.pauseBotUrlTemplate,
     };
 
     const baseHeaders = {
@@ -129,9 +172,245 @@ document.addEventListener('DOMContentLoaded', function () {
         el.style.height = Math.min(el.scrollHeight, 120) + 'px';
     }
 
+    function resetSelectedConversation(message) {
+        state.selectedConversationId = null;
+        state.lastMessageId = 0;
+        state.selectedConversation = null;
+        wawIntro?.classList.remove('d-none');
+        wawChat?.classList.add('d-none');
+        setComposerEnabled(false);
+        closeCustomerInfoPanel();
+        renderConversations();
+
+        if (message) {
+            messageList.innerHTML = `<div class="waw-empty"><i class="fas fa-user-lock"></i><span>${escapeHtml(message)}</span></div>`;
+        }
+    }
+
     function debounce(fn, ms) {
         let t;
         return function () { clearTimeout(t); t = setTimeout(() => fn.apply(this, arguments), ms || 300); };
+    }
+
+    function openCustomerInfoPanel() {
+        if (!customerInfoPanel || !state.selectedConversation) return;
+        customerInfoPanel.classList.remove('d-none');
+        customerInfoPanel.setAttribute('aria-hidden', 'false');
+        loadCustomerPanelData();
+    }
+
+    function closeCustomerInfoPanel() {
+        if (!customerInfoPanel) return;
+        customerInfoPanel.classList.add('d-none');
+        customerInfoPanel.setAttribute('aria-hidden', 'true');
+    }
+
+    function setPanelTab(tabName) {
+        customerPanelTabs.forEach(tab => tab.classList.toggle('active', tab.dataset.panelTab === tabName));
+        customerPanelViews.forEach(view => view.classList.toggle('d-none', view.dataset.panelView !== tabName));
+    }
+
+    function safeCopy(value) {
+        if (!value) return;
+        navigator.clipboard?.writeText(String(value)).catch(() => {});
+    }
+
+    function downloadJson(filename, payload) {
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    function renderPanelTags(subscriber, conv) {
+        if (!customerPanelTags) return;
+        const tags = [];
+        if (conv?.status) tags.push(`الحالة: ${statusLabel(conv.status)}`);
+        if (conv?.assigned_agent) tags.push(`الموظف: ${conv.assigned_agent}`);
+        (subscriber?.tags || []).forEach(tag => tags.push(String(tag)));
+        (subscriber?.labels || []).forEach(tag => tags.push(String(tag)));
+        customerPanelTags.innerHTML = tags.length
+            ? tags.map(tag => `<span class="waw-tag-pill">${escapeHtml(tag)}</span>`).join('')
+            : '<span class="waw-tag-pill">لا توجد وسوم</span>';
+    }
+
+    function renderPanelTranscript(messages) {
+        if (!customerPanelTranscript) return;
+        customerPanelTranscript.innerHTML = (messages || []).length
+            ? messages.map(msg => `
+                <div class="waw-transcript-item">
+                    <div class="waw-transcript-meta">
+                        <span>${msg.sender_type === 'agent' ? 'الفريق' : 'العميل'}</span>
+                        <span>${escapeHtml(msg.created_at || '')}</span>
+                    </div>
+                    <div class="waw-transcript-body">${escapeHtml(msg.message || '').replace(/\n/g, '<br>')}</div>
+                </div>
+            `).join('')
+            : '<div class="waw-transcript-item"><div class="waw-transcript-body">لا توجد رسائل بعد</div></div>';
+    }
+
+    function renderPanelData(panelData) {
+        const conv = panelData?.conversation || state.selectedConversation || {};
+        const subscriber = panelData?.subscriber || {};
+        const stats = panelData?.stats || {};
+        const messages = panelData?.messages || state.selectedMessages || [];
+
+        populateCustomerInfoPanel(conv);
+        customerPanelStatusButton && (customerPanelStatusButton.textContent = statusLabel(conv.status || 'open'));
+        customerPanelMessagesCount && (customerPanelMessagesCount.textContent = String(stats.messages_count ?? messages.length ?? 0));
+        customerPanelCustomerCount && (customerPanelCustomerCount.textContent = String(stats.customer_messages_count ?? 0));
+        customerPanelAgentCount && (customerPanelAgentCount.textContent = String(stats.agent_messages_count ?? 0));
+        customerPanelSendAllowed && (customerPanelSendAllowed.textContent = subscriber.allow_send_message ? 'نعم' : 'لا');
+        customerPanelUserId && (customerPanelUserId.textContent = subscriber.user_id || conv.customer_phone || '-');
+        customerPanelUserNs && (customerPanelUserNs.textContent = subscriber.user_ns || '-');
+        customerPanelSubscribed && (customerPanelSubscribed.textContent = subscriber.subscribed || '-');
+        customerPanelInteraction && (customerPanelInteraction.textContent = subscriber.last_interaction || '-');
+        customerPanelLastType && (customerPanelLastType.textContent = subscriber.last_message_type || '-');
+        customerPanelPaused && (customerPanelPaused.textContent = subscriber.paused_diff_seconds ? `${subscriber.paused_diff_seconds} ثانية` : '0');
+        customerPanelLivechatUrl && (customerPanelLivechatUrl.textContent = subscriber.livechat_url || '-');
+        customerPanelSummaryBadge && (() => {
+            const count = Number(conv.unread_count || 0);
+            customerPanelSummaryBadge.textContent = String(count);
+            customerPanelSummaryBadge.classList.toggle('d-none', count <= 0);
+        })();
+
+        renderPanelTags(subscriber, conv);
+        renderPanelTranscript(messages);
+    }
+
+    async function loadCustomerPanelData() {
+        if (!state.selectedConversationId || !api.panel) return;
+        try {
+            const res = await fetch(buildUrl(api.panel, state.selectedConversationId), { headers: baseHeaders });
+            const data = await res.json();
+            if (!res.ok || !data.success) return;
+            state.panelData = data;
+            renderPanelData(data);
+        } catch {
+            renderPanelData({ conversation: state.selectedConversation, messages: state.selectedMessages });
+        }
+    }
+
+    async function pauseBotAction(options = {}) {
+        if (!state.selectedConversationId || !api.pauseBot) return;
+        const res = await fetch(buildUrl(api.pauseBot, state.selectedConversationId), {
+            method: 'POST',
+            headers: jsonHeaders,
+            body: JSON.stringify(options),
+        });
+        if (res.ok) {
+            await loadCustomerPanelData();
+        }
+    }
+
+    function populateCustomerInfoPanel(conv) {
+        if (!conv || !customerPanelName) return;
+
+        const displayName = conv.customer_name || conv.customer_phone || 'عميل';
+        const phone = conv.customer_phone || '-';
+
+        customerPanelName.textContent = displayName;
+        customerPanelPhone.textContent = phone;
+        customerPanelStatus.textContent = statusLabel(conv.status || 'open');
+        customerPanelAgent.textContent = conv.assigned_agent || 'غير معين';
+        customerPanelUpdated.textContent = formatTime(conv.last_message_at_iso || conv.last_message_at) || '-';
+        customerPanelUnread.textContent = String(conv.unread_count ?? 0);
+        customerPanelLastMessage.textContent = conv.last_message || 'لا توجد رسائل بعد';
+        customerPanelAvatar.textContent = initials(displayName);
+        customerPanelAvatar.style.background = avatarColor(displayName);
+    }
+
+    function parseTemplateSchema(raw) {
+        if (!raw) return [];
+        try {
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch {
+            return [];
+        }
+    }
+
+    function renderTemplatePreview(content, params) {
+        let index = 0;
+        return String(content || '').replace(/{{\s*[^}]+\s*}}/g, () => {
+            const value = params[index] ?? '';
+            index += 1;
+            return value || '_____';
+        });
+    }
+
+    function getTemplateParams() {
+        if (!templateParamsPanel) return [];
+        return Array.from(templateParamsPanel.querySelectorAll('[data-template-param]'))
+            .map(input => input.value.trim());
+    }
+
+    function syncTemplatePreview() {
+        const opt = templateSelect?.selectedOptions?.[0];
+        if (!opt || !opt.value) return;
+
+        const content = opt.dataset.content || '';
+        const preview = renderTemplatePreview(content, getTemplateParams());
+        messageInput.value = preview;
+        autoResize(messageInput);
+    }
+
+    function resetTemplateState() {
+        state.selectedTemplateSchema = [];
+        state.selectedTemplateHasNamespace = false;
+        if (templateParamsPanel) {
+            templateParamsPanel.innerHTML = '';
+            templateParamsPanel.classList.add('d-none');
+        }
+        if (templateModeHint) {
+            templateModeHint.textContent = '';
+            templateModeHint.classList.add('d-none');
+        }
+        messageInput.readOnly = false;
+    }
+
+    function renderTemplateControls(opt) {
+        resetTemplateState();
+
+        if (!opt || !opt.value) return;
+
+        state.selectedTemplateSchema = parseTemplateSchema(opt.dataset.paramsSchema);
+        state.selectedTemplateHasNamespace = Boolean(opt.dataset.namespace);
+
+        if (templateModeHint) {
+            templateModeHint.classList.remove('d-none');
+            templateModeHint.textContent = state.selectedTemplateHasNamespace
+                ? 'سيتم الإرسال كقالب واتساب معتمد عبر Faalwa.'
+                : 'هذا قالب محلي وسيتم إرساله كنص عادي قابل للتعديل.';
+        }
+
+        if (state.selectedTemplateHasNamespace) {
+            messageInput.readOnly = true;
+        }
+
+        if (!state.selectedTemplateSchema.length) {
+            syncTemplatePreview();
+            return;
+        }
+
+        templateParamsPanel.classList.remove('d-none');
+        templateParamsPanel.innerHTML = state.selectedTemplateSchema.map((placeholder, index) => `
+            <div class="mb-2">
+                <label class="form-label small mb-1" style="color:var(--waw-text-2);">المتغير ${index + 1}</label>
+                <input type="text" class="form-control form-control-sm" data-template-param="${index}" placeholder="${escapeHtml(placeholder || `قيمة ${index + 1}`)}">
+            </div>
+        `).join('');
+
+        templateParamsPanel.querySelectorAll('[data-template-param]').forEach(input => {
+            input.addEventListener('input', syncTemplatePreview);
+        });
+
+        syncTemplatePreview();
     }
 
     /* ── Avatar color ── */
@@ -153,8 +432,40 @@ document.addEventListener('DOMContentLoaded', function () {
     if (btnBack) {
         btnBack.addEventListener('click', () => {
             wawLeft && wawLeft.classList.remove('mobile-hidden');
+            closeCustomerInfoPanel();
         });
     }
+
+    if (customerTrigger) {
+        customerTrigger.addEventListener('click', () => {
+            if (!state.selectedConversation) return;
+            openCustomerInfoPanel();
+        });
+    }
+
+    if (closeCustomerPanel) {
+        closeCustomerPanel.addEventListener('click', closeCustomerInfoPanel);
+    }
+
+    customerPanelTabs.forEach(tab => {
+        tab.addEventListener('click', () => setPanelTab(tab.dataset.panelTab));
+    });
+
+    refreshCustomerPanel?.addEventListener('click', loadCustomerPanelData);
+    customerPanelReloadButton?.addEventListener('click', loadCustomerPanelData);
+    customerPanelCopyPhoneButton?.addEventListener('click', () => safeCopy(customerPanelPhone?.textContent));
+    customerPanelCopyNsButton?.addEventListener('click', () => safeCopy(customerPanelUserNs?.textContent));
+    customerPanelCopyLinkButton?.addEventListener('click', () => safeCopy(customerPanelLivechatUrl?.textContent));
+    customerPanelExportButton?.addEventListener('click', () => {
+        if (!state.panelData) return;
+        downloadJson(`conversation-${state.selectedConversationId}.json`, state.panelData);
+    });
+    document.querySelectorAll('[data-pause-minutes]').forEach(button => {
+        button.addEventListener('click', () => pauseBotAction({ minutes: Number(button.dataset.pauseMinutes || 30) }));
+    });
+    document.querySelectorAll('[data-pause-resume]').forEach(button => {
+        button.addEventListener('click', () => pauseBotAction({ resume: true }));
+    });
 
     /* ── Theme Toggle ── */
     const savedTheme = localStorage.getItem('waw-theme') || 'dark';
@@ -233,6 +544,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!append) {
             messageList.innerHTML = '';
             state.lastMessageId = 0;
+            state.selectedMessages = [];
         }
 
         let lastDate = null;
@@ -273,6 +585,7 @@ document.addEventListener('DOMContentLoaded', function () {
     ${isOut ? tickIcon(msg.status) : ''}
 </div>`;
             messageList.appendChild(wrap);
+            state.selectedMessages.push(msg);
         });
 
         messageList.scrollTop = messageList.scrollHeight;
@@ -290,11 +603,13 @@ document.addEventListener('DOMContentLoaded', function () {
     /* ── Update chat header ── */
     function updateHeader(conv) {
         if (!conv) return;
+        state.selectedConversation = conv;
         customerNameEl.textContent = conv.customer_name || conv.customer_phone;
         customerMetaEl.textContent = conv.customer_phone;
         const initChar = initials(conv.customer_name || conv.customer_phone);
         chatHeaderAvatar.textContent = initChar;
         chatHeaderAvatar.style.background = avatarColor(conv.customer_name);
+        populateCustomerInfoPanel(conv);
 
         if (agentSelect) agentSelect.value = conv.assigned_to || '';
         if (conversationStatus) conversationStatus.value = conv.status || 'open';
@@ -304,11 +619,14 @@ document.addEventListener('DOMContentLoaded', function () {
             btnReopenConv.textContent = isClosed ? 'إعادة فتح' : 'إغلاق';
             btnReopenConv.className   = 'waw-status-btn' + (isClosed ? '' : ' is-open');
         }
+
+        renderPanelData({ conversation: conv, messages: state.selectedMessages, subscriber: state.panelData?.subscriber, stats: state.panelData?.stats });
     }
 
     /* ── Select conversation ── */
     async function selectConversation(id) {
         state.selectedConversationId = id;
+        closeCustomerInfoPanel();
 
         // Mobile: hide sidebar
         if (window.innerWidth <= 768 && wawLeft) {
@@ -328,10 +646,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await res.json();
             messageList.innerHTML = '';
             if (!res.ok || !data.success || !data.conversation) {
-                state.selectedConversationId = null;
-                wawIntro?.classList.remove('d-none');
-                wawChat?.classList.add('d-none');
-                messageList.innerHTML = '<div class="waw-empty"><i class="fas fa-exclamation-triangle"></i><span>المحادثة غير متاحة</span></div>';
+                resetSelectedConversation(data.message || 'المحادثة غير متاحة');
                 return;
             }
             updateHeader(data.conversation);
@@ -341,10 +656,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 messageList.innerHTML = '<div class="waw-empty-chat"><i class="fab fa-whatsapp"></i><span>لا توجد رسائل بعد</span></div>';
             }
         } catch (e) {
-            state.selectedConversationId = null;
-            wawIntro?.classList.remove('d-none');
-            wawChat?.classList.add('d-none');
-            messageList.innerHTML = '<div class="waw-empty"><i class="fas fa-exclamation-triangle"></i><span>فشل تحميل الرسائل</span></div>';
+            resetSelectedConversation('فشل تحميل الرسائل');
         }
 
         setComposerEnabled(true);
@@ -400,12 +712,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     message:      content,
                     message_type: messageTypeInput.value,
                     template_id:  templateIdInput.value || '',
+                    template_params: getTemplateParams(),
                 }),
             });
             const result = await res.json();
             const tempNode = messageList.querySelector(`[data-message-id="${tempId}"]`);
 
             if (!res.ok || !result.success) {
+                if (res.status === 409) {
+                    if (tempNode) tempNode.remove();
+                    await loadConversations();
+                    resetSelectedConversation(result.message || 'تم استلام هذه المحادثة بواسطة موظف آخر.');
+                    return;
+                }
                 if (tempNode) {
                     tempNode.querySelector('.waw-bubble')?.classList.add('failed');
                     tempNode.querySelector('.waw-msg-meta').innerHTML = '<span style="color:#f15c6d;">فشل الإرسال &#10005;</span>';
@@ -417,6 +736,7 @@ document.addEventListener('DOMContentLoaded', function () {
             messageTypeInput.value = 'text';
             templateIdInput.value  = '';
             templateSelect.value   = '';
+            resetTemplateState();
             await loadConversations();
         } finally {
             setComposerEnabled(!!state.selectedConversationId);
@@ -496,6 +816,10 @@ document.addEventListener('DOMContentLoaded', function () {
             state.conversations = payload.conversations || [];
             renderConversations();
             const selected = state.conversations.find(c => c.id === state.selectedConversationId) || null;
+            if (state.selectedConversationId && !selected) {
+                resetSelectedConversation('تم تحويل هذه المحادثة إلى موظف آخر أو لم تعد ضمن صندوقك.');
+                return;
+            }
             if (selected) updateHeader(selected);
             if (Array.isArray(payload.messages) && payload.messages.length > 0) {
                 renderMessages(payload.messages, true);
@@ -572,12 +896,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!opt || !opt.value) {
             messageTypeInput.value = 'text';
             templateIdInput.value  = '';
+            resetTemplateState();
             return;
         }
         messageTypeInput.value = 'template';
         templateIdInput.value  = opt.value;
-        messageInput.value     = opt.dataset.content || '';
-        autoResize(messageInput);
+        renderTemplateControls(opt);
         messageInput.focus();
     });
 

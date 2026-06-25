@@ -19,6 +19,7 @@ class Conversation extends Model
         'last_message',
         'last_message_at',
         'unread_count',
+        'faalwa_user_ns',
     ];
 
     protected function casts(): array
@@ -49,12 +50,24 @@ class Conversation extends Model
         return $query->where('status', 'open');
     }
 
-    public function scopeForInboxFilter($query, ?string $filter, ?int $userId)
+    public function scopeForInboxFilter($query, ?string $filter, ?int $userId, bool $canViewAllAssigned = false, ?string $status = null)
     {
+        // All closed conversations are visible to everyone (even non-admins)
+        // when the "all" filter is active. This lets agents review completed chats.
+        if ($status === 'closed' && ($filter === 'all' || $filter === '' || $filter === null)) {
+            return $query;
+        }
+
         return match ($filter) {
             'my' => $query->where('assigned_to', $userId),
             'unassigned' => $query->whereNull('assigned_to'),
-            default => $query,
+            default => $canViewAllAssigned ? $query : $query->where(function ($inner) use ($userId) {
+                $inner->whereNull('assigned_to');
+
+                if ($userId) {
+                    $inner->orWhere('assigned_to', $userId);
+                }
+            }),
         };
     }
 }

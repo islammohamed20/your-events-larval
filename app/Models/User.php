@@ -58,6 +58,7 @@ class User extends Authenticatable
         'card_last_four',
         'card_expiry_month',
         'card_expiry_year',
+        'faalwa_agent_id',
         'permissions',
     ];
 
@@ -102,6 +103,7 @@ class User extends Authenticatable
             'must_change_password' => 'boolean',
             'logout_other_devices' => 'boolean',
             'session_version' => 'integer',
+            'faalwa_agent_id' => 'integer',
             'permissions' => 'array',
         ];
     }

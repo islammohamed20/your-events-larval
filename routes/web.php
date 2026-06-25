@@ -140,6 +140,12 @@ Route::get('/sitemap.xml', function () {
 })->name('sitemap');
 
 Route::post('/tap/webhook', [QuoteController::class, 'tapWebhook'])->name('tap.webhook');
+Route::get('/webhook/faalwa', function () {
+    return response()->json([
+        'success' => true,
+        'message' => 'Faalwa webhook endpoint is active. Use POST with X-Faalwa-Webhook-Token.',
+    ]);
+});
 Route::post('/webhook/faalwa', FaalwaWebhookController::class)->middleware('throttle:60,1')->name('webhook.faalwa');
 Route::get('/quotes/{quote}/tap/callback', [QuoteController::class, 'tapCallback'])->name('tap.callback');
 
@@ -551,9 +557,11 @@ Route::prefix('ye/admin')->name('admin.')->middleware(['admin', 'admin.session.v
         Route::get('/conversations', [WhatsAppDashboardController::class, 'conversations'])->name('conversations');
         Route::get('/poll', [WhatsAppDashboardController::class, 'poll'])->name('poll');
         Route::get('/conversations/{conversation}/messages', [WhatsAppDashboardController::class, 'messages'])->name('messages');
+        Route::get('/conversations/{conversation}/panel', [WhatsAppDashboardController::class, 'panel'])->name('panel');
         Route::post('/conversations/{conversation}/send', [WhatsAppDashboardController::class, 'sendMessage'])->name('send');
         Route::post('/conversations/{conversation}/assign', [WhatsAppDashboardController::class, 'assignConversation'])->name('assign');
         Route::post('/conversations/{conversation}/status', [WhatsAppDashboardController::class, 'updateStatus'])->name('status');
+        Route::post('/conversations/{conversation}/pause-bot', [WhatsAppDashboardController::class, 'pauseBot'])->name('pause-bot');
         Route::post('/start', [WhatsAppDashboardController::class, 'startConversation'])->name('start');
 
         Route::get('/templates', [WhatsAppTemplateController::class, 'index'])->name('templates.index');

@@ -14,13 +14,37 @@ class FaalwaWebhookController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         $configuredToken = (string) config('services.faalwa.webhook_token');
-        $receivedToken = trim((string) (
-            $request->header('X-Faalwa-Webhook-Token')
-            ?: $request->bearerToken()
-            ?: $request->input('token', '')
-        ));
+        $candidateTokens = [
+            $request->header('X-Faalwa-Webhook-Token'),
+            $request->header('X-Webhook-Token'),
+            $request->header('X-Api-Key'),
+            $request->bearerToken(),
+            $request->input('token', ''),
+        ];
 
-        if ($configuredToken !== '' && ! hash_equals($configuredToken, $receivedToken)) {
+        if ($configuredToken !== '') {
+            foreach ($request->headers->all() as $values) {
+                foreach ((array) $values as $value) {
+                    $candidateTokens[] = $value;
+                }
+            }
+        }
+
+        $tokenMatched = false;
+        foreach ($candidateTokens as $candidate) {
+            $candidate = trim((string) $candidate);
+            if ($candidate !== '' && hash_equals($configuredToken, $candidate)) {
+                $tokenMatched = true;
+                break;
+            }
+        }
+
+        if ($configuredToken !== '' && ! $tokenMatched) {
+            Log::warning('Faalwa webhook rejected: token mismatch', [
+                'ip' => $request->ip(),
+                'header_keys' => array_keys($request->headers->all()),
+            ]);
+
             return response()->json(['success' => false, 'message' => 'Invalid webhook token.'], 403);
         }
 
@@ -112,6 +136,12 @@ class FaalwaWebhookController extends Controller
                 'last_message_at' => now(),
             ]
         );
+
+        // Cache faalwa user_ns from webhook payload
+        $webhookUserNs = data_get($payload, 'user.user_ns');
+        if ($webhookUserNs && !$conversation->faalwa_user_ns) {
+            $conversation->forceFill(['faalwa_user_ns' => $webhookUserNs])->save();
+        }
 
         if ($customerName && ! $conversation->customer_name) {
             $conversation->customer_name = $customerName;

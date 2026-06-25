@@ -78,6 +78,25 @@ body[data-waw-theme="light"] .waw-sb-item.active {
     color: #111b21;
 }
 
+/* Utility classes used to mirror Faalwa livechat panel section */
+.w-full { width: 100%; }
+.p-0 { padding: 0 !important; }
+.overflow-y-auto { overflow-y: auto !important; }
+.chat-panel-height {
+  height: calc(100vh - var(--waw-header-h) - var(--waw-compose-h));
+  min-height: 260px;
+}
+
+.container-scroll.h-100.no-footer {
+  display: block;
+  height: 100%;
+  margin: 0;
+  padding: 0 !important;
+  overflow-x: auto;
+  overflow-y: auto;
+  border-radius: 0;
+}
+
 /* ── Layout Shell ── */
 .waw-shell {
   display: flex;
@@ -412,6 +431,14 @@ body[data-waw-theme="light"] .waw-sb-item.active {
   flex-shrink: 0; cursor: pointer;
 }
 .waw-chd-info { flex: 1; min-width: 0; }
+.waw-customer-trigger {
+  border: none;
+  background: transparent;
+  text-align: right;
+  padding: 0;
+  cursor: pointer;
+}
+.waw-customer-trigger:hover .waw-chd-name { color: var(--waw-green); }
 .waw-chd-name { font-size: .95rem; font-weight: 700; color: var(--waw-text); }
 .waw-chd-sub  { font-size: .75rem; color: var(--waw-text-2); }
 .waw-chd-actions { display: flex; align-items: center; gap: 4px; }
@@ -463,6 +490,242 @@ body[data-waw-theme="light"] .waw-sb-item.active {
 }
 .waw-messages::-webkit-scrollbar { width: 4px; }
 .waw-messages::-webkit-scrollbar-thumb { background: var(--waw-border); border-radius: 4px; }
+
+.waw-customer-panel {
+  position: absolute;
+  top: var(--waw-header-h);
+  left: 0;
+  bottom: var(--waw-compose-h);
+  width: min(298px, 100%);
+  background: #fff;
+  border-right: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  box-shadow: none;
+  direction: rtl;
+}
+
+.waw-panel-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #fff;
+  border-bottom: 1px solid #f4f5f6;
+  overflow: hidden;
+}
+
+.waw-panel-tab {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: #fff;
+  color: #8a97a3;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.waw-panel-tab:hover,
+.waw-panel-tab.active {
+  color: #1976d2;
+  border-bottom-color: #1976d2;
+}
+
+.waw-panel-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #28a745;
+  color: #fff;
+  font-size: .62rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.waw-customer-panel-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f4f5f6;
+  background: #fff;
+}
+
+.waw-customer-panel-title {
+  color: #0a0a0a;
+  font-size: .92rem;
+  font-weight: 700;
+}
+
+.waw-customer-panel-sub {
+  color: #828c94;
+  font-size: .72rem;
+  margin-top: 2px;
+}
+
+.waw-customer-panel-body {
+  flex: 1;
+  background: transparent;
+  padding: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  border-radius: 0;
+}
+
+.waw-panel-view { display: block; }
+
+.waw-customer-card,
+.waw-info-group {
+  margin: 0;
+  border-radius: 0;
+  background: #fff;
+  border: 0;
+}
+
+.waw-customer-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid #f4f5f6;
+}
+
+.waw-customer-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #00a884, #005c4b);
+}
+
+.waw-customer-title {
+  color: #0a0a0a;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.waw-customer-phone {
+  color: #828c94;
+  font-size: .82rem;
+  margin-top: 4px;
+}
+
+.waw-panel-actions-row,
+.waw-panel-actions-stack,
+.waw-pause-actions,
+.waw-tag-list,
+.waw-transcript-list {
+  padding: 12px 16px;
+}
+
+.waw-panel-actions-row,
+.waw-pause-actions,
+.waw-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.waw-panel-actions-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.waw-action-chip,
+.waw-pause-btn {
+  border: 1px solid #e1e4e8;
+  background: #c9e5cf;
+  color: #0a0a0a;
+  border-radius: 0;
+  padding: 8px 12px;
+  font-size: .78rem;
+  cursor: pointer;
+}
+
+.waw-action-chip:hover,
+.waw-pause-btn:hover { background: #b7dcc0; }
+
+.waw-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f6f6f6;
+  color: #49545a;
+  font-size: .76rem;
+}
+
+.waw-transcript-item {
+  padding: 10px 16px;
+  border-bottom: 1px solid #f4f5f6;
+}
+
+.waw-transcript-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #828c94;
+  font-size: .72rem;
+  margin-bottom: 4px;
+}
+
+.waw-transcript-body {
+  color: #0a0a0a;
+  font-size: .82rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.waw-info-group {
+  padding: 0;
+  border-bottom: 1px solid #f4f5f6;
+}
+
+.waw-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f4f5f6;
+  color: #828c94;
+  font-size: .83rem;
+}
+
+.waw-info-row:last-child { border-bottom: none; }
+.waw-info-row strong { color: #0a0a0a; font-size: .85rem; }
+
+.waw-info-label {
+  padding: 8px 16px 0;
+  color: #828c94;
+  font-size: .76rem;
+}
+
+.waw-info-message {
+  color: #0a0a0a;
+  font-size: .85rem;
+  line-height: 1.7;
+  padding: 12px 16px 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 
 /* Message bubbles */
 .waw-msg-wrap {
@@ -594,6 +857,7 @@ body[data-waw-theme="light"] .waw-sb-item.active {
   .waw-left { width: 100%; max-width: 100%; position: absolute; inset: 0; z-index: 10; }
   .waw-left.mobile-hidden { display: none; }
   .waw-right { position: absolute; inset: 0; }
+  .waw-customer-panel { width: 100%; right: 0; left: 0; }
   .waw-chat-hd { padding-right: 8px; }
   .waw-back-btn { display: flex !important; }
   .waw-msg-wrap { max-width: 85%; }

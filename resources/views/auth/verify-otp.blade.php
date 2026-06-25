@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'تحقق من البريد الإلكتروني') 'التحقق من البريد الإلكتروني')
+@section('title', $type === 'two_factor' ? 'التحقق بخطوتين (2FA)' : 'تحقق من البريد الإلكتروني')
 
 @section('content')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -11,7 +11,7 @@
                 <!-- Header -->
                 <div class="card-header text-center py-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px 15px 0 0;">
                     <img src="{{ asset('images/logo/White.png') }}" alt="Your Events" style="height: 60px; width: auto; margin-bottom: 10px;">
-                    <h3 class="text-white mb-0">التحقق من البريد الإلكتروني</h3>
+                    <h3 class="text-white mb-0">{{ $type === 'two_factor' ? 'التحقق بخطوتين (2FA)' : 'التحقق من البريد الإلكتروني' }}</h3>
                 </div>
 
                 <div class="card-body p-4">
@@ -35,10 +35,21 @@
                     
                     <!-- Info Box -->
                     <div class="alert alert-info border-0" style="border-right: 4px solid #667eea !important;">
-                        <i class="fas fa-info-circle"></i>
-                        ولا عليك أمر، ادخل الكود المؤقت اللي أرسلناه لإيميلك:
+                        @if($channel === 'whatsapp')
+                            <i class="fab fa-whatsapp text-success me-1"></i>
+                            تم إرسال كود التحقق إلى رقم واتس أب المسجل لدينا
+                            @if($type === 'two_factor')
+                                <br><small class="text-muted">للتحقق بخطوتين (2FA)</small>
+                            @endif
+                        @else
+                            <i class="fas fa-envelope me-1"></i>
+                            تم إرسال كود التحقق إلى بريدك الإلكتروني
+                            @if($type === 'two_factor')
+                                <br><small class="text-muted">للتحقق بخطوتين (2FA)</small>
+                            @endif
+                        @endif
                         <br>
-                        <strong class="text-primary">{{ $email }}</strong>
+                        <strong class="text-primary">{{ $channel === 'whatsapp' ? 'واتس أب' : $email }}</strong>
                     </div>
 
                     <!-- OTP Form -->
@@ -105,9 +116,15 @@
 
             <!-- Back Link -->
             <div class="text-center mt-3">
-                <a href="{{ route('register') }}" class="text-muted">
-                    <i class="fas fa-arrow-right"></i> العودة للتسجيل
-                </a>
+                @if(in_array($type, ['login', 'two_factor']))
+                    <a href="{{ route('login') }}" class="text-muted">
+                        <i class="fas fa-arrow-right"></i> العودة لتسجيل الدخول
+                    </a>
+                @else
+                    <a href="{{ route('register') }}" class="text-muted">
+                        <i class="fas fa-arrow-right"></i> العودة للتسجيل
+                    </a>
+                @endif
             </div>
         </div>
     </div>

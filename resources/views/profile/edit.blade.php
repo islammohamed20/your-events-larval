@@ -262,6 +262,62 @@
                             </div>
                         </div>
 
+                        <!-- 2FA Settings -->
+                        <h6 class="mb-3 text-primary">
+                            <i class="fas fa-shield-alt me-2"></i> التحقق بخطوتين (2FA)
+                        </h6>
+
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" role="switch"
+                                           id="two_factor_enabled" name="two_factor_enabled" value="1"
+                                           {{ old('two_factor_enabled', $user->two_factor_enabled) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="two_factor_enabled">
+                                        تفعيل التحقق بخطوتين عند تسجيل الدخول
+                                    </label>
+                                </div>
+
+                                <div id="two_factor_channel_wrapper" style="{{ old('two_factor_enabled', $user->two_factor_enabled) ? '' : 'display:none;' }}">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-paper-plane text-primary"></i> قناة استلام كود التحقق
+                                    </label>
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="two_factor_channel"
+                                                       id="channel_email" value="email"
+                                                       {{ old('two_factor_channel', $user->two_factor_channel ?? 'email') === 'email' ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="channel_email">
+                                                    <i class="fas fa-envelope me-1"></i> البريد الإلكتروني
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="two_factor_channel"
+                                                       id="channel_whatsapp" value="whatsapp"
+                                                       {{ old('two_factor_channel', $user->two_factor_channel ?? 'email') === 'whatsapp' ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="channel_whatsapp">
+                                                    <i class="fab fa-whatsapp me-1 text-success"></i> واتس أب
+                                                    <small class="text-muted d-block">يُرسل الكود لرقم هاتفك المسجل</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @error('two_factor_channel')
+                                        <div class="text-danger small mt-2">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="alert alert-light border small mt-3 mb-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    عند تفعيل التحقق بخطوتين، سيُطلب منك إدخال كود تحقق عند كل تسجيل دخول.
+                                    يمكنك اختيار استلام الكود عبر البريد الإلكتروني أو واتس أب.
+                                </div>
+                            </div>
+                        </div>
+
                         <h6 class="mb-3 text-primary">
                             <i class="fas fa-fingerprint me-2"></i> البصمة
                         </h6>
@@ -343,6 +399,15 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // 2FA toggle
+    const twoFaToggle = document.getElementById('two_factor_enabled');
+    const twoFaChannelWrapper = document.getElementById('two_factor_channel_wrapper');
+    if (twoFaToggle && twoFaChannelWrapper) {
+        twoFaToggle.addEventListener('change', function () {
+            twoFaChannelWrapper.style.display = this.checked ? '' : 'none';
+        });
+    }
+
     const cardNumberInput = document.getElementById('card_number');
     const lastFourInput = document.getElementById('card_last_four');
     if (!cardNumberInput || !lastFourInput) return;

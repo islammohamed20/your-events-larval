@@ -70,11 +70,168 @@
             top: 0;
             right: 0;
             width: 250px;
-            transition: all 0.3s;
+            transition: width 0.3s ease, transform 0.3s ease;
             z-index: 1000;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+        }
+
+        /* ── Collapsed sidebar ── */
+        .sidebar.collapsed {
+            width: 64px;
+        }
+
+        .sidebar.collapsed .sidebar-brand img {
+            max-width: 36px;
+            max-height: 36px;
+            margin-bottom: 0;
+        }
+
+        .sidebar.collapsed .sidebar-brand small,
+        .sidebar.collapsed .sidebar-language {
+            display: none;
+        }
+
+        .sidebar.collapsed .sidebar-brand {
+            padding: 18px 0;
+        }
+
+        .sidebar.collapsed .nav-link {
+            padding: 15px 0 !important;
+            text-align: center !important;
+            white-space: nowrap;
+            overflow: hidden;
+            display: block !important;
+            font-size: 0 !important;
+        }
+        
+        .sidebar.collapsed .nav-link.d-flex {
+            display: block !important;
+        }
+
+        /* Force remove all margins from icons */
+        .sidebar.collapsed .nav-link i,
+        .sidebar.collapsed .nav-link i.me-2,
+        .sidebar.collapsed .nav-link i.fa,
+        .sidebar.collapsed .nav-link i.fas,
+        .sidebar.collapsed .nav-link i.fab {
+            margin: 0 !important;
+            padding: 0 !important;
+            font-size: 1.2rem !important;
+            display: inline-block !important;
+        }
+
+        /* Hide all text content */
+        .sidebar.collapsed .nav-link > span,
+        .sidebar.collapsed .nav-link > small {
+            display: none !important;
+        }
+
+        /* Hide text nodes */
+        .sidebar.collapsed .nav-link {
+            color: transparent;
+        }
+        
+        .sidebar.collapsed .nav-link i {
+            color: #ecf0f1 !important;
+        }
+        
+        .sidebar.collapsed .nav-link:hover i {
+            color: var(--gold-color) !important;
+        }
+        
+        .sidebar.collapsed .nav-link.active i {
+            color: white !important;
+        }
+
+        .sidebar.collapsed .nav-link .badge {
+            display: none;
+        }
+
+        .sidebar.collapsed .whatsapp-submenu,
+        .sidebar.collapsed .submenu-chevron,
+        .sidebar.collapsed .collapse {
+            display: none !important;
+        }
+
+        .sidebar.collapsed .logout-button span {
+            display: none;
+        }
+
+        .sidebar.collapsed .logout-button {
+            margin: 0 auto;
+            padding: 12px;
+            width: 44px;
+            height: 44px;
+        }
+
+        .sidebar.collapsed hr {
+            display: none;
+        }
+
+        .sidebar.collapsed .sidebar-footer {
+            padding: 15px 0;
+        }
+
+        /* Tooltip for collapsed items */
+        .sidebar.collapsed .nav-link::after {
+            content: attr(data-collapsed-title);
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #1f144a;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, left 0.2s;
+            margin-left: 10px;
+            z-index: 1100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .sidebar.collapsed .nav-link:hover::after {
+            opacity: 1;
+            left: calc(100% + 2px);
+        }
+
+        /* Collapse toggle button */
+        .sidebar-collapse-btn {
+            position: absolute;
+            left: -12px;
+            top: 72px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: #fff;
+            border: 2px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.7rem;
+            z-index: 1001;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .sidebar-collapse-btn:hover {
+            background: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .sidebar-collapse-btn i {
+            transition: transform 0.3s;
+        }
+
+        .sidebar.collapsed .sidebar-collapse-btn i {
+            transform: rotate(180deg);
         }
 
         .sidebar-backdrop {
@@ -144,6 +301,7 @@
             padding: 15px 20px;
             border-radius: 0;
             transition: all 0.3s;
+            position: relative;
         }
 
         .sidebar .nav-link:hover {
@@ -195,8 +353,12 @@
         .main-content {
             margin-right: 250px;
             padding: 20px;
-            transition: all 0.3s;
+            transition: margin-right 0.3s ease;
             max-width: 100%;
+        }
+
+        .main-content.expanded {
+            margin-right: 64px;
         }
 
         .table-responsive {
@@ -382,6 +544,18 @@
                 transform: translateX(100%);
                 width: 100%;
             }
+
+            .sidebar.collapsed {
+                width: 100%;
+            }
+
+            .sidebar-collapse-btn {
+                display: none;
+            }
+
+            .main-content.expanded {
+                margin-right: 0;
+            }
             
             .sidebar.show {
                 transform: translateX(0);
@@ -518,6 +692,9 @@
 
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
+        <div class="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" aria-label="طي القائمة">
+            <i class="fas fa-chevron-right"></i>
+        </div>
         <div class="sidebar-brand">
             @php
                 $logo = \App\Models\Setting::get('logo');
@@ -552,14 +729,14 @@
             <ul class="nav flex-column">
                 <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" 
-                       href="{{ route('admin.dashboard') }}">
+                       href="{{ route('admin.dashboard') }}" data-collapsed-title="{{ __('common.admin_dashboard_main') }}">
                         <i class="fas fa-tachometer-alt me-2"></i>{{ __('common.admin_dashboard_main') }}
                     </a>
                 </li>
                 @if($canManageCategories)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.categories.index') }}">
+                           href="{{ route('admin.categories.index') }}" data-collapsed-title="{{ __('common.categories') }}">
                             <i class="fas fa-folder me-2"></i>{{ __('common.categories') }}
                         </a>
                     </li>
@@ -567,7 +744,7 @@
                 @if($canManagePackages)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.packages.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.packages.index') }}">
+                           href="{{ route('admin.packages.index') }}" data-collapsed-title="{{ __('common.packages') }}">
                             <i class="fas fa-box me-2"></i>{{ __('common.packages') }}
                         </a>
                     </li>
@@ -575,13 +752,13 @@
                 @if($canManageServices)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.services.index') }}">
+                           href="{{ route('admin.services.index') }}" data-collapsed-title="{{ __('common.services') }}">
                             <i class="fas fa-cogs me-2"></i>{{ __('common.services') }}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.attributes.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.attributes.index') }}">
+                           href="{{ route('admin.attributes.index') }}" data-collapsed-title="{{ __('common.service_attributes') }}">
                             <i class="fas fa-tags me-2"></i>{{ __('common.service_attributes') }}
                         </a>
                     </li>
@@ -589,7 +766,7 @@
                 @if($canViewBookings)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.bookings.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.bookings.index') }}">
+                           href="{{ route('admin.bookings.index') }}" data-collapsed-title="{{ __('common.bookings') }}">
                             <i class="fas fa-calendar-check me-2"></i>{{ __('common.bookings') }}
                         </a>
                     </li>
@@ -597,7 +774,7 @@
                 @if($canViewQuotes)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.quotes.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.quotes.index') }}">
+                           href="{{ route('admin.quotes.index') }}" data-collapsed-title="{{ __('common.quotes') }}">
                             <i class="fas fa-file-invoice-dollar me-2"></i>{{ __('common.quotes') }}
                         </a>
                     </li>
@@ -605,19 +782,19 @@
                 @if($canManageUsers)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.payments.index') }}">
+                           href="{{ route('admin.payments.index') }}" data-collapsed-title="{{ __('common.payments') }}">
                             <i class="fas fa-credit-card me-2"></i>{{ __('common.payments') }}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.gallery.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.gallery.index') }}">
+                           href="{{ route('admin.gallery.index') }}" data-collapsed-title="{{ __('common.gallery') }}">
                             <i class="fas fa-images me-2"></i>{{ __('common.gallery') }}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.user-management.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.user-management.index') }}">
+                           href="{{ route('admin.user-management.index') }}" data-collapsed-title="{{ __('common.user_management') }}">
                             <i class="fas fa-users-cog me-2"></i>{{ __('common.user_management') }}
                         </a>
                     </li>
@@ -636,7 +813,7 @@
                            href="#whatsappSubMenu"
                            role="button"
                            aria-expanded="{{ $whatsappMenuOpen ? 'true' : 'false' }}"
-                           aria-controls="whatsappSubMenu">
+                           aria-controls="whatsappSubMenu" data-collapsed-title="لوحة واتساب">
                             <span><i class="fab fa-whatsapp me-2"></i>لوحة واتساب</span>
                             <i class="fas fa-chevron-down submenu-chevron" style="font-size: 0.8rem;"></i>
                         </a>
@@ -683,7 +860,7 @@
                 @if($canViewCustomers)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.customers.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.customers.index') }}">
+                           href="{{ route('admin.customers.index') }}" data-collapsed-title="{{ __('common.customers_management') }}">
                             <i class="fas fa-user-tie me-2"></i>{{ __('common.customers_management') }}
                         </a>
                     </li>
@@ -691,7 +868,7 @@
                 @if($canManageUsers)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.suppliers.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.suppliers.index') }}">
+                           href="{{ route('admin.suppliers.index') }}" data-collapsed-title="{{ __('common.suppliers_management') }}">
                             <i class="fas fa-handshake me-2"></i>{{ __('common.suppliers_management') }}
                             @if(\App\Models\Supplier::where('status', 'pending')->count() > 0)
                                 <span class="badge bg-warning text-dark ms-1">{{ \App\Models\Supplier::where('status', 'pending')->count() }}</span>
@@ -700,50 +877,50 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.hero-slides.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.hero-slides.index') }}">
+                           href="{{ route('admin.hero-slides.index') }}" data-collapsed-title="{{ __('common.hero_slides') }}">
                             <i class="fas fa-images me-2"></i>{{ __('common.hero_slides') }}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.homepage.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.homepage.index') }}">
+                           href="{{ route('admin.homepage.index') }}" data-collapsed-title="{{ __('common.homepage_management') }}">
                             <i class="fas fa-home me-2"></i>{{ __('common.homepage_management') }}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.reports.index') }}">
+                           href="{{ route('admin.reports.index') }}" data-collapsed-title="{{ __('common.reports') }}">
                             <i class="fas fa-chart-line me-2"></i>{{ __('common.reports') }}
                         </a>
                     </li>
                     <li class="nav-item ms-3">
                         <a class="nav-link {{ request()->routeIs('admin.reports.security') ? 'active' : '' }}" 
-                           href="{{ route('admin.reports.security') }}">
+                           href="{{ route('admin.reports.security') }}" data-collapsed-title="{{ __('common.security_report') }}">
                             <i class="fas fa-shield-alt me-2 text-muted"></i>
                             <small>{{ __('common.security_report') }}</small>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.login-activities.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.login-activities.index') }}">
+                           href="{{ route('admin.login-activities.index') }}" data-collapsed-title="{{ __('common.login_logs') }}">
                             <i class="fas fa-user-shield me-2"></i>{{ __('common.login_logs') }}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.settings.index') }}">
+                           href="{{ route('admin.settings.index') }}" data-collapsed-title="{{ __('common.settings') }}">
                             <i class="fas fa-cog me-2"></i>{{ __('common.settings') }}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.contact-messages.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.contact-messages.index') }}">
+                           href="{{ route('admin.contact-messages.index') }}" data-collapsed-title="{{ __('common.contact_messages') }}">
                             <i class="fas fa-envelope me-2"></i>{{ __('common.contact_messages') }}
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.otp.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.otp.index') }}">
+                           href="{{ route('admin.otp.index') }}" data-collapsed-title="{{ __('common.otp_codes') }}">
                             <i class="fas fa-shield-alt me-2 text-muted"></i>
                             <small>{{ __('common.otp_codes') }}</small>
                         </a>
@@ -752,13 +929,13 @@
                 @if($canManageEmails)
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.email-management.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.email-management.index') }}">
+                           href="{{ route('admin.email-management.index') }}" data-collapsed-title="{{ __('common.email_management') }}">
                             <i class="fas fa-envelope-open-text me-2"></i>{{ __('common.email_management') }}
                         </a>
                     </li>
                     <li class="nav-item ms-3">
                         <a class="nav-link {{ request()->routeIs('admin.email-templates.*') ? 'active' : '' }}" 
-                           href="{{ route('admin.email-templates.index') }}">
+                           href="{{ route('admin.email-templates.index') }}" data-collapsed-title="{{ __('common.templates') }}">
                             <i class="fas fa-file-alt me-2 text-muted"></i>
                             <small>{{ __('common.templates') }}</small>
                         </a>
@@ -768,7 +945,7 @@
                     <hr style="border-color: #34495e; margin: 15px 20px;">
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('home') }}" target="_blank">
+                    <a class="nav-link" href="{{ route('home') }}" target="_blank" data-collapsed-title="{{ __('common.view_site') }}">
                         <i class="fas fa-external-link-alt me-2"></i>{{ __('common.view_site') }}
                     </a>
                 </li>
@@ -778,7 +955,7 @@
         <div class="sidebar-footer">
             <form method="POST" action="{{ route('admin.logout') }}">
                 @csrf
-                <button type="submit" class="logout-button nav-link btn border-0 w-auto">
+                <button type="submit" class="logout-button nav-link btn border-0 w-auto" data-collapsed-title="{{ __('common.logout') }}">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>{{ __('common.logout') }}</span>
                 </button>
@@ -890,6 +1067,30 @@
         function closeSidebar() {
             setSidebarState(false);
         }
+
+        function toggleSidebarCollapse() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.querySelector('.main-content');
+            if (!sidebar || !mainContent) return;
+
+            const isCollapsed = sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded', isCollapsed);
+
+            localStorage.setItem('admin_sidebar_collapsed', isCollapsed ? '1' : '0');
+        }
+
+        (function() {
+            if (window.innerWidth <= 992) return;
+            const collapsed = localStorage.getItem('admin_sidebar_collapsed') === '1';
+            if (collapsed) {
+                const sidebar = document.getElementById('sidebar');
+                const mainContent = document.querySelector('.main-content');
+                if (sidebar && mainContent) {
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                }
+            }
+        })();
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {

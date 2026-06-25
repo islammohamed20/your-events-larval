@@ -68,14 +68,19 @@ class FaalwaService
 
     /**
      * Pause the Faalwa bot for a subscriber so a human agent can take over.
-     * $minutes = 0 means pause indefinitely until manually resumed.
+     * $minutes = 0 falls back to the configured default pause duration.
      */
     public function pauseBot(string $userNs, int $minutes = 0): array
     {
-        $payload = ['user_ns' => $userNs];
-        if ($minutes > 0) {
-            $payload['minutes'] = $minutes;
+        $defaultMinutes = (int) config('services.faalwa.default_pause_minutes', 30);
+        if ($minutes <= 0) {
+            $minutes = $defaultMinutes > 0 ? $defaultMinutes : 30;
         }
+
+        $payload = [
+            'user_ns' => $userNs,
+            'minutes' => $minutes,
+        ];
 
         return $this->post('/subscriber/pause-bot', $payload);
     }
@@ -190,6 +195,24 @@ class FaalwaService
     {
         // According to Faalwa docs, this endpoint is a POST request.
         return $this->post('/whatsapp-template/list', ['limit' => $limit]);
+    }
+
+    /**
+     * Create a WhatsApp template in Faalwa.
+     */
+    public function createTemplate(array $data): array
+    {
+        return $this->post('/whatsapp-template/create', $data);
+    }
+
+    /**
+     * Update a WhatsApp template in Faalwa.
+     */
+    public function updateTemplate(string $templateId, array $data): array
+    {
+        $data['id'] = $templateId;
+
+        return $this->post('/whatsapp-template/update', $data);
     }
 
     // ──────────────────────────────────────────────────────────────────

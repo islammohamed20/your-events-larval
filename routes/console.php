@@ -10,6 +10,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schedule;
+
+// Faalwa polling is handled by systemd service (faalwa-poll.service) every 5 seconds
 
 // Artisan command to set price for all services and variations
 Artisan::command('services:set-price {value=1}', function (string $value) {

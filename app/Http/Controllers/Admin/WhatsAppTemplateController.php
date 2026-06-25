@@ -47,11 +47,24 @@ class WhatsAppTemplateController extends Controller
                     $type = 'utility';
                 }
 
+                $languageCode = strtolower((string) ($ft['language'] ?? $ft['lang'] ?? $ft['locale'] ?? 'ar'));
+                $namespace = (string) ($ft['namespace'] ?? $ft['template_namespace'] ?? '');
+                $paramsSchema = [];
+                foreach (($ft['components'] ?? []) as $comp) {
+                    if (($comp['type'] ?? '') === 'BODY' && !empty($comp['example']['body_text'][0]) && is_array($comp['example']['body_text'][0])) {
+                        $paramsSchema = array_values($comp['example']['body_text'][0]);
+                        break;
+                    }
+                }
+
                 MessageTemplate::updateOrCreate(
                     ['name' => $name],
                     [
                         'content' => $content,
                         'type' => $type,
+                        'faalwa_namespace' => $namespace !== '' ? $namespace : null,
+                        'language_code' => $languageCode !== '' ? $languageCode : 'ar',
+                        'params_schema' => $paramsSchema ?: null,
                     ]
                 );
                 $syncedCount++;
@@ -71,7 +84,11 @@ class WhatsAppTemplateController extends Controller
             'name' => 'required|string|max:255|unique:message_templates,name',
             'content' => 'required|string',
             'type' => 'required|in:marketing,utility,authentication',
+            'faalwa_namespace' => 'nullable|string|max:255',
+            'language_code' => 'nullable|string|max:10',
         ]);
+
+        $validated['language_code'] = $validated['language_code'] ?: 'ar';
 
         MessageTemplate::create($validated);
 
@@ -89,7 +106,11 @@ class WhatsAppTemplateController extends Controller
             'name' => 'required|string|max:255|unique:message_templates,name,'.$template->id,
             'content' => 'required|string',
             'type' => 'required|in:marketing,utility,authentication',
+            'faalwa_namespace' => 'nullable|string|max:255',
+            'language_code' => 'nullable|string|max:10',
         ]);
+
+        $validated['language_code'] = $validated['language_code'] ?: 'ar';
 
         $template->update($validated);
 
