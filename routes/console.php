@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schedule;
 
+use App\Services\BackupService;
+
 // Faalwa polling is handled by systemd service (faalwa-poll.service) every 5 seconds
 
 // Artisan command to set price for all services and variations
@@ -281,3 +283,128 @@ Artisan::command('payments:purge-by-customer-name {name} {--dry-run} {--force}',
 
     return 0;
 })->purpose('Delete payment records associated with a customer name from Tap charge data');
+
+// ===============================
+// Maintenance & Backup Commands
+// ===============================
+
+Artisan::command('backup:database {--type=database : Backup type: database, files, or full}', function (string $type) {
+    $service = app(BackupService::class);
+
+    $this->info("Starting backup (type: {$type})...");
+
+    try {
+        match ($type) {
+            'database' => $filename = $service->createDatabaseBackup(),
+            'files' => $filename = $service->createFilesBackup(),
+            'full' => $filename = $service->createFullBackup(),
+            default => throw new \RuntimeException("Invalid backup type: {$type}. Use database, files, or full."),
+        };
+
+        $this->info("Backup created successfully: {$filename}");
+    } catch (\Exception $e) {
+        $this->error("Backup failed: {$e->getMessage()}");
+
+        return 1;
+    }
+
+    return 0;
+})->purpose('Create a database, files, or full backup');
+
+Artisan::command('backup:restore {filename}', function (string $filename) {
+    $service = app(BackupService::class);
+
+    $this->warn('WARNING: This will replace the current database and/or files.');
+    $this->warn("Restoring from: {$filename}");
+
+    try {
+        $service->restoreBackup($filename);
+        $this->info('Backup restored successfully.');
+    } catch (\Exception $e) {
+        $this->error("Restore failed: {$e->getMessage()}");
+
+        return 1;
+    }
+
+    return 0;
+})->purpose('Restore a backup from a file');
+
+Artisan::command('backup:clean {--days=30 : Delete backups older than N days}', function (string $days) {
+    $service = app(BackupService::class);
+
+    $days = (int) $days;
+    $this->info("Cleaning backups older than {$days} days...");
+
+    $deleted = $service->cleanOldBackups($days);
+
+    $this->info("Deleted {$deleted} old backup(s).");
+
+    return 0;
+})->purpose('Delete backups older than the specified number of days');
+
+Artisan::command('backup:list', function () {
+    $service = app(BackupService::class);
+    $backups = $service->listBackups();
+
+    if (empty($backups)) {
+        $this->info('No backups found.');
+
+        return 0;
+    }
+
+    $this->table(['Name', 'Type', 'Size', 'Date'], array_map(fn ($b) => [
+        $b['name'], $b['type'], $b['size'], $b['date'],
+    ], $backups));
+
+    return 0;
+})->purpose('List all available backups');
+
+Artisan::command('db:optimize', function () {
+    $service = app(BackupService::class);
+
+    $this->info('Optimizing database...');
+
+    try {
+        $results = $service->optimizeDatabase();
+        foreach ($results as $result) {
+            $this->line("  - {$result}");
+        }
+        $this->info('Database optimization completed.');
+    } catch (\Exception $e) {
+        $this->error("Optimization failed: {$e->getMessage()}");
+
+        return 1;
+    }
+
+    return 0;
+})->purpose('Optimize database tables');
+
+Artisan::command('maintenance:clear-logs', function () {
+    $service = app(BackupService::class);
+
+    $deleted = $service->clearLogs();
+    $this->info("Deleted {$deleted} log file(s).");
+
+    return 0;
+})->purpose('Delete all log files from storage/logs');
+
+Artisan::command('maintenance:clean-sessions', function () {
+    $service = app(BackupService::class);
+
+    $deleted = $service->cleanSessions();
+    $this->info("Cleaned {$deleted} old session(s).");
+
+    return 0;
+})->purpose('Delete expired session files/records older than 24 hours');
+
+Artisan::command('maintenance:clean-temp', function () {
+    $service = app(BackupService::class);
+
+    $results = $service->cleanTempFiles();
+    foreach ($results as $result) {
+        $this->line("  - {$result}");
+    }
+    $this->info('Temp files cleaned.');
+
+    return 0;
+})->purpose('Delete framework temp files (cache, sessions, views)');

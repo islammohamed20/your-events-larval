@@ -205,7 +205,7 @@
                             تم الدفع
                         </button>
                         @elseif(in_array($quote->status, ['approved', 'under_review', 'pending'], true))
-                        <a href="{{ route('quotes.complete-booking', $quote) }}" class="btn btn-success btn-lg">
+                        <a href="{{ route('quotes.complete-booking.by-number', $quote->quote_number) }}" class="btn btn-success btn-lg">
                             <i class="fas fa-credit-card me-2"></i>
                             استكمال بيانات الحجز والدفع
                         </a>

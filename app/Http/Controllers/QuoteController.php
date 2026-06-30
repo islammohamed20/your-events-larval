@@ -22,7 +22,7 @@ class QuoteController extends Controller
 
     public function __construct(N8nNotificationService $n8nService)
     {
-        $this->middleware('auth');
+        $this->middleware('auth')->except(['tapCallback']);
         $this->n8nService = $n8nService;
     }
 
@@ -50,6 +50,30 @@ class QuoteController extends Controller
     public function show(Quote $quote)
     {
         // Ensure user can only view their own quotes
+        if ($quote->user_id !== Auth::id()) {
+            abort(403, 'غير مصرح لك بعرض هذا العرض');
+        }
+
+        $quote->load([
+            'items.service.thumbnailImage',
+            'items.service.images',
+        ]);
+        $quote->loadCount([
+            'bookings as paid_bookings_count' => function ($q) {
+                $q->where('payment_status', 'paid');
+            },
+        ]);
+
+        return view('quotes.show', compact('quote'));
+    }
+
+    /**
+     * Show quote by number for authenticated customer (WhatsApp link)
+     */
+    public function showByNumber($quote_number)
+    {
+        $quote = Quote::where('quote_number', $quote_number)->firstOrFail();
+
         if ($quote->user_id !== Auth::id()) {
             abort(403, 'غير مصرح لك بعرض هذا العرض');
         }
@@ -324,6 +348,26 @@ class QuoteController extends Controller
         $request->session()->put('quotes.complete_booking.'.$quote->id, $validated);
 
         return $this->startTapPayment($quote, $validated);
+    }
+
+    /**
+     * Show combined booking and payment page by quote number (for WhatsApp templates)
+     */
+    public function showCompleteBookingPaymentByNumber($quote_number)
+    {
+        $quote = Quote::where('quote_number', $quote_number)->firstOrFail();
+
+        return $this->showCompleteBookingPayment($quote);
+    }
+
+    /**
+     * Process combined booking and payment by quote number (for WhatsApp templates)
+     */
+    public function processCompleteBookingPaymentByNumber(Request $request, $quote_number)
+    {
+        $quote = Quote::where('quote_number', $quote_number)->firstOrFail();
+
+        return $this->processCompleteBookingPayment($request, $quote);
     }
 
     /**

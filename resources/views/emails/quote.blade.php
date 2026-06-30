@@ -363,11 +363,11 @@
             </div>
 
             <div class="btn-container">
-                <a href="{{ route('quotes.show', $quote) }}" class="btn">
+                <a href="{{ route('quotes.show-by-number', $quote->quote_number) }}" class="btn">
                     📋 تفاصيل عرضك
                 </a>
                 @if($quote->status === 'approved' && $quote->payment_status !== 'paid')
-                <a href="{{ route('quotes.complete-booking', $quote) }}" class="btn btn-secondary">
+                <a href="{{ route('quotes.complete-booking.by-number', $quote->quote_number) }}" class="btn btn-secondary">
                     ✅ استكمال بيانات الحجز والدفع
                 </a>
                 @endif

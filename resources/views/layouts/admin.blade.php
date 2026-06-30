@@ -907,6 +907,18 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.cloudflare-security.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.cloudflare-security.index') }}" data-collapsed-title="Cloudflare Security">
+                            <i class="fas fa-shield-alt me-2"></i>Cloudflare Security
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.maintenance.*') ? 'active' : '' }}" 
+                           href="{{ route('admin.maintenance.index') }}" data-collapsed-title="أدوات الصيانة">
+                            <i class="fas fa-tools me-2"></i>أدوات الصيانة
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" 
                            href="{{ route('admin.settings.index') }}" data-collapsed-title="{{ __('common.settings') }}">
                             <i class="fas fa-cog me-2"></i>{{ __('common.settings') }}

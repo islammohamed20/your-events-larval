@@ -191,12 +191,21 @@
                 </button>
                 <div class="waw-chd-actions">
                     <select id="conversationAgent" class="waw-agent-select" disabled>
-                        <option value="">تعيين وكيل...</option>
-                        @foreach($agents as $agent)
-                            <option value="{{ $agent->id }}">
-                                {{ $agent->name }}{{ $agent->is_online ? ' 🟢' : '' }}
-                            </option>
-                        @endforeach
+                        <option value="">تعيين جهة...</option>
+                        <optgroup label="الفريق">
+                            @foreach($agents as $agent)
+                                <option value="user:{{ $agent->id }}">
+                                    {{ $agent->name }}{{ $agent->is_online ? ' 🟢' : '' }}
+                                </option>
+                            @endforeach
+                        </optgroup>
+                        @if(isset($suppliers) && $suppliers->count())
+                            <optgroup label="الموردون">
+                                @foreach($suppliers as $supplier)
+                                    <option value="supplier:{{ $supplier->id }}">{{ $supplier->name }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endif
                     </select>
                     <button type="button" class="waw-status-btn" id="btnReopenConv" disabled>
                         إغلاق

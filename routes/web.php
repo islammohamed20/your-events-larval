@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AdminWhatsAppController;
 use App\Http\Controllers\Admin\Auth\AdminAuthController;
 use App\Http\Controllers\Admin\AttributeController as AdminAttributeController;
 use App\Http\Controllers\Admin\BookingController as AdminBookingController;
@@ -8,9 +9,12 @@ use App\Http\Controllers\Admin\GalleryController as AdminGalleryController;
 use App\Http\Controllers\Admin\PackageController as AdminPackageController;
 use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Admin\ServiceVariationController as AdminServiceVariationController;
+use App\Http\Controllers\Admin\CloudflareSecurityController;
+use App\Http\Controllers\Admin\MaintenanceController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\WhatsAppDashboardController;
 use App\Http\Controllers\Admin\WhatsAppTemplateController;
+use App\Http\Controllers\WhatsAppWebhookController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\BiometricController;
 use App\Http\Controllers\BookingController;
@@ -149,6 +153,9 @@ Route::get('/webhook/faalwa', function () {
 Route::post('/webhook/faalwa', FaalwaWebhookController::class)->middleware('throttle:60,1')->name('webhook.faalwa');
 Route::get('/quotes/{quote}/tap/callback', [QuoteController::class, 'tapCallback'])->name('tap.callback');
 
+// WhatsApp Webhook Route (Faalwa)
+Route::post('/webhook/whatsapp', [WhatsAppWebhookController::class, 'handle'])->name('webhook.whatsapp.handle');
+
 // Language Switch Route
 Route::get('/lang/{locale}', function ($locale) {
     $supported = ['ar', 'en'];
@@ -180,6 +187,7 @@ Route::get('/search/autocomplete', [SearchController::class, 'autocomplete'])->n
 use App\Http\Controllers\Supplier\SupplierAuthController;
 use App\Http\Controllers\Supplier\SupplierBookingController;
 use App\Http\Controllers\Supplier\SupplierDashboardController;
+use App\Http\Controllers\Supplier\SupplierWhatsAppController;
 use App\Http\Controllers\SupplierController;
 
 Route::get('/suppliers/register', [SupplierController::class, 'create'])->name('suppliers.register')->middleware('customer.block_supplier_portal');
@@ -320,6 +328,8 @@ Route::get('/preview/email/supplier-otp', function () {
 Route::get('/booking', [BookingController::class, 'create'])->name('booking.create');
 Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
 Route::get('/booking/success/{reference}', [BookingController::class, 'success'])->name('booking.success');
+Route::get('/booking/review/{reference}', [BookingController::class, 'showReview'])->name('booking.review');
+Route::post('/booking/review/{reference}', [BookingController::class, 'submitReview'])->name('booking.review.submit');
 Route::get('/my-bookings', [BookingController::class, 'myBookings'])->name('booking.my-bookings')->middleware('auth');
 
 // Cart Routes
@@ -336,21 +346,25 @@ Route::get('/cart/dropdown', [CartController::class, 'getDropdownHtml'])->name('
 // Quote Routes (Require Auth)
 Route::middleware('auth')->group(function () {
     Route::get('/quotes', [QuoteController::class, 'index'])->name('quotes.index');
-    Route::get('/quotes/{quote}', [QuoteController::class, 'show'])->name('quotes.show');
+    Route::get('/quotes/{quote_number}', [QuoteController::class, 'showByNumber'])->name('quotes.show-by-number')->where('quote_number', 'QT-[0-9]{9}');
+    Route::get('/quotes/{quote}', [QuoteController::class, 'show'])->name('quotes.show')->where('quote', '[0-9]+');
     Route::post('/quotes/checkout', [QuoteController::class, 'checkout'])->name('quotes.checkout');
-    Route::get('/quotes/{quote}/download', [QuoteController::class, 'downloadPdf'])->name('quotes.download');
-    Route::patch('/quotes/{quote}/notes', [QuoteController::class, 'updateNotes'])->name('quotes.update-notes');
+    Route::get('/quotes/{quote}/download', [QuoteController::class, 'downloadPdf'])->name('quotes.download')->where('quote', '[0-9]+');
+    Route::patch('/quotes/{quote}/notes', [QuoteController::class, 'updateNotes'])->name('quotes.update-notes')->where('quote', '[0-9]+');
+    // Quote number based payment path (for WhatsApp templates) - must be before ID-based route
+    Route::get('/quotes/{quote_number}/complete-booking-payment', [QuoteController::class, 'showCompleteBookingPaymentByNumber'])->name('quotes.complete-booking.by-number')->where('quote_number', 'QT-[0-9]{9}');
+    Route::post('/quotes/{quote_number}/complete-booking-payment', [QuoteController::class, 'processCompleteBookingPaymentByNumber'])->name('quotes.complete-booking.store.by-number')->where('quote_number', 'QT-[0-9]{9}');
     // New combined booking + payment path
-    Route::get('/quotes/{quote}/complete-booking-payment', [QuoteController::class, 'showCompleteBookingPayment'])->name('quotes.complete-booking');
-    Route::post('/quotes/{quote}/complete-booking-payment', [QuoteController::class, 'processCompleteBookingPayment'])->name('quotes.complete-booking.store');
+    Route::get('/quotes/{quote}/complete-booking-payment', [QuoteController::class, 'showCompleteBookingPayment'])->name('quotes.complete-booking')->where('quote', '[0-9]+');
+    Route::post('/quotes/{quote}/complete-booking-payment', [QuoteController::class, 'processCompleteBookingPayment'])->name('quotes.complete-booking.store')->where('quote', '[0-9]+');
 
     // Backward compatibility: old paths redirect to the new combined page
-    Route::get('/quotes/{quote}/complete-booking', [QuoteController::class, 'showCompleteBooking'])->name('quotes.complete-booking.legacy');
-    Route::post('/quotes/{quote}/complete-booking', [QuoteController::class, 'storeCompleteBooking'])->name('quotes.complete-booking.store.legacy');
+    Route::get('/quotes/{quote}/complete-booking', [QuoteController::class, 'showCompleteBooking'])->name('quotes.complete-booking.legacy')->where('quote', '[0-9]+');
+    Route::post('/quotes/{quote}/complete-booking', [QuoteController::class, 'storeCompleteBooking'])->name('quotes.complete-booking.store.legacy')->where('quote', '[0-9]+');
 
     // Backward compatibility: old payment routes now redirect to the combined flow
-    Route::get('/quotes/{quote}/payment', [QuoteController::class, 'showPayment'])->name('quotes.payment');
-    Route::post('/quotes/{quote}/payment', [QuoteController::class, 'processPayment'])->name('quotes.process-payment');
+    Route::get('/quotes/{quote}/payment', [QuoteController::class, 'showPayment'])->name('quotes.payment')->where('quote', '[0-9]+');
+    Route::post('/quotes/{quote}/payment', [QuoteController::class, 'processPayment'])->name('quotes.process-payment')->where('quote', '[0-9]+');
 
     // Wishlist Routes
     Route::get('/wishlist', [\App\Http\Controllers\WishlistController::class, 'index'])->name('wishlist.index');
@@ -570,6 +584,15 @@ Route::prefix('ye/admin')->name('admin.')->middleware(['admin', 'admin.session.v
         Route::get('/templates/{template}/edit', [WhatsAppTemplateController::class, 'edit'])->name('templates.edit');
         Route::put('/templates/{template}', [WhatsAppTemplateController::class, 'update'])->name('templates.update');
         Route::delete('/templates/{template}', [WhatsAppTemplateController::class, 'destroy'])->name('templates.destroy');
+
+        // Supplier WhatsApp Conversations Management
+        Route::prefix('supplier')->name('supplier.')->group(function () {
+            Route::get('/', [AdminWhatsAppController::class, 'index'])->middleware('admin.permission:whatsapp.view')->name('index');
+            Route::get('/{id}', [AdminWhatsAppController::class, 'show'])->middleware('admin.permission:whatsapp.view')->name('show');
+            Route::post('/{id}/assign', [AdminWhatsAppController::class, 'assignSupplier'])->middleware('admin.permission:whatsapp.assign')->name('assign');
+            Route::post('/{id}/send', [AdminWhatsAppController::class, 'sendMessage'])->middleware('admin.permission:whatsapp.send')->name('send');
+            Route::get('/unassigned', [AdminWhatsAppController::class, 'getUnassigned'])->middleware('admin.permission:whatsapp.view')->name('unassigned');
+        });
     });
 
     // Login Activities
@@ -624,6 +647,33 @@ Route::prefix('ye/admin')->name('admin.')->middleware(['admin', 'admin.session.v
     Route::middleware('admin.permission:customers.export')->group(function () {
         Route::get('customers/export/all', [CustomerManagementController::class, 'exportCustomers'])->name('customers.export');
         Route::get('customers/{customer}/export', [CustomerManagementController::class, 'exportCustomerDetail'])->name('customers.export-detail');
+    });
+
+    // Cloudflare Security Center
+    Route::prefix('cloudflare-security')->name('cloudflare-security.')->group(function () {
+        Route::get('/', [CloudflareSecurityController::class, 'index'])->name('index');
+        Route::post('enable-under-attack', [CloudflareSecurityController::class, 'enableUnderAttackMode'])->name('enable-under-attack');
+        Route::post('purge-cache', [CloudflareSecurityController::class, 'purgeCache'])->name('purge-cache');
+        Route::post('block-ip', [CloudflareSecurityController::class, 'blockIP'])->name('block-ip');
+        Route::post('allow-ip', [CloudflareSecurityController::class, 'allowIP'])->name('allow-ip');
+        Route::post('block-country', [CloudflareSecurityController::class, 'blockCountry'])->name('block-country');
+    });
+
+    // Maintenance Tools
+    Route::prefix('maintenance')->name('maintenance.')->group(function () {
+        Route::get('/', [MaintenanceController::class, 'index'])->name('index');
+        Route::post('backup/database', [MaintenanceController::class, 'backupDatabase'])->name('backup.database');
+        Route::post('backup/files', [MaintenanceController::class, 'backupFiles'])->name('backup.files');
+        Route::post('backup/full', [MaintenanceController::class, 'backupFull'])->name('backup.full');
+        Route::post('restore/{filename}', [MaintenanceController::class, 'restore'])->where('filename', '[^/]+')->name('restore');
+        Route::delete('delete/{filename}', [MaintenanceController::class, 'deleteBackup'])->where('filename', '[^/]+')->name('delete');
+        Route::get('download/{filename}', [MaintenanceController::class, 'downloadBackup'])->where('filename', '[^/]+')->name('download');
+        Route::post('optimize-database', [MaintenanceController::class, 'optimizeDatabase'])->name('optimize-database');
+        Route::post('clear-cache', [MaintenanceController::class, 'clearCache'])->name('clear-cache');
+        Route::post('clear-logs', [MaintenanceController::class, 'clearLogs'])->name('clear-logs');
+        Route::post('clean-sessions', [MaintenanceController::class, 'cleanSessions'])->name('clean-sessions');
+        Route::post('clean-temp', [MaintenanceController::class, 'cleanTempFiles'])->name('clean-temp');
+        Route::get('system-info', [MaintenanceController::class, 'systemInfo'])->name('system-info');
     });
 
     // Suppliers Management
@@ -710,6 +760,11 @@ Route::prefix('supplier')->name('supplier.')->group(function () {
 
         // Reports
         Route::get('/reports', [SupplierDashboardController::class, 'reports'])->name('reports.index');
+
+        // WhatsApp
+        Route::get('/whatsapp', [SupplierWhatsAppController::class, 'index'])->name('whatsapp.index');
+        Route::get('/whatsapp/{id}', [SupplierWhatsAppController::class, 'show'])->name('whatsapp.show');
+        Route::post('/whatsapp/{id}/send', [SupplierWhatsAppController::class, 'sendMessage'])->name('whatsapp.send');
 
         // Logout
         Route::post('/logout', [SupplierAuthController::class, 'logout'])->name('logout');

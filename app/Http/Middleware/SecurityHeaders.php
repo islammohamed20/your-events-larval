@@ -28,7 +28,7 @@ class SecurityHeaders
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.bunny.net; ".
             "font-src 'self' https://fonts.gstatic.com https://fonts.bunny.net https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; ".
             "img-src 'self' data: https: blob:; ".
-            "media-src 'self'; ".
+            "media-src 'self' data: blob:; ".
             "connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.tiny.cloud https://www.google.com https://nominatim.openstreetmap.org; ".
             "frame-src 'self' https://www.google.com https://maps.google.com https://www.youtube.com; ".
             "child-src 'self' https://www.google.com https://maps.google.com https://www.youtube.com; ".

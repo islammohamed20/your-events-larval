@@ -184,19 +184,24 @@ class OtpVerification extends Model
         $typeLabel = $typeLabels[$type] ?? 'التحقق';
         // إرسال باستخدام قالب Blade الموحد (emails.supplier-otp)
         try {
-            Mail::mailer('hello')->send('emails.supplier-otp', [
+            $mailData = [
                 'otp' => $otp,
                 'supplierName' => null,
                 'typeLabel' => $typeLabel,
                 'expiryMinutes' => $expiryMinutes,
                 'email' => $email,
-            ], function ($message) use ($email, $subject) {
+            ];
+
+            Mail::mailer('hello')->send('emails.supplier-otp', $mailData, function ($message) use ($email, $subject, $mailData) {
                 $message->to($email)
                         ->subject($subject)
                         ->from(
                             env('HELLO_MAIL_USERNAME', 'hello@yourevents.sa'),
                             env('HELLO_MAIL_FROM_NAME', 'Your Events')
                         );
+
+                // Plain text alternative for copyable OTP
+                $message->text(view('emails.supplier-otp-plain', $mailData)->render());
             });
         } catch (\Exception $e) {
             Log::error('OTP Email Error: '.$e->getMessage());

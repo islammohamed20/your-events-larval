@@ -441,4 +441,12 @@ return [
     'total_amount' => 'المبلغ الإجمالي',
     'view_all_packages' => 'عرض كل الباقات',
     'view_full_gallery' => 'عرض المعرض بالكامل',
+    'whatsapp' => 'واتس أب',
+    'whatsapp_conversations' => 'محادثات واتس أب',
+    'whatsapp_conversation' => 'محادثة واتس أب',
+    'search_conversations' => 'البحث في المحادثات',
+    'welcome_to_whatsapp' => 'مرحباً بك في واتس أب',
+    'select_conversation_to_start' => 'اختر محادثة للبدء',
+    'type_message' => 'اكتب رسالتك...',
+    'online' => 'متصل',
 ];

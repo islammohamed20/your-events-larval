@@ -231,7 +231,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!customerPanelTags) return;
         const tags = [];
         if (conv?.status) tags.push(`الحالة: ${statusLabel(conv.status)}`);
-        if (conv?.assigned_agent) tags.push(`الموظف: ${conv.assigned_agent}`);
+        if (conv?.assigned_agent) {
+            const label = conv?.assignment_type === 'supplier' ? 'المورد' : 'الموظف';
+            tags.push(`${label}: ${conv.assigned_agent}`);
+        }
         (subscriber?.tags || []).forEach(tag => tags.push(String(tag)));
         (subscriber?.labels || []).forEach(tag => tags.push(String(tag)));
         customerPanelTags.innerHTML = tags.length
@@ -317,7 +320,9 @@ document.addEventListener('DOMContentLoaded', function () {
         customerPanelName.textContent = displayName;
         customerPanelPhone.textContent = phone;
         customerPanelStatus.textContent = statusLabel(conv.status || 'open');
-        customerPanelAgent.textContent = conv.assigned_agent || 'غير معين';
+        customerPanelAgent.textContent = conv.assigned_agent
+            ? `${conv.assignment_type === 'supplier' ? 'مورد' : 'موظف'}: ${conv.assigned_agent}`
+            : 'غير معين';
         customerPanelUpdated.textContent = formatTime(conv.last_message_at_iso || conv.last_message_at) || '-';
         customerPanelUnread.textContent = String(conv.unread_count ?? 0);
         customerPanelLastMessage.textContent = conv.last_message || 'لا توجد رسائل بعد';
@@ -504,6 +509,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const avatarCls = hasUnread ? 'waw-conv-avatar unread' : 'waw-conv-avatar';
             const tickHtml  = c.last_sender_type === 'agent' ? '<span class="conv-tick">&#10003;&#10003;</span>' : '';
             const timeStr   = escapeHtml(formatTime(c.last_message_at_iso || c.last_message_at));
+            const assignmentIcon = c.assignment_type === 'supplier' ? '🏪' : '👤';
 
             return `
 <button type="button" class="waw-conv-item mb-1 ${active}" data-conversation-id="${c.id}">
@@ -525,7 +531,7 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
         <div style="margin-top:3px;">
             <span class="waw-status-pill ${c.status}">${statusLabel(c.status)}</span>
-            ${c.assigned_agent ? `<span style="font-size:.65rem;color:var(--waw-text-2);margin-right:4px;">👤 ${escapeHtml(c.assigned_agent)}</span>` : ''}
+            ${c.assigned_agent ? `<span style="font-size:.65rem;color:var(--waw-text-2);margin-right:4px;">${assignmentIcon} ${escapeHtml(c.assigned_agent)}</span>` : ''}
         </div>
     </div>
 </button>`;
@@ -611,7 +617,11 @@ document.addEventListener('DOMContentLoaded', function () {
         chatHeaderAvatar.style.background = avatarColor(conv.customer_name);
         populateCustomerInfoPanel(conv);
 
-        if (agentSelect) agentSelect.value = conv.assigned_to || '';
+        if (agentSelect) {
+            agentSelect.value = conv.assigned_target_value
+                || (conv.assigned_to ? `user:${conv.assigned_to}` : '')
+                || (conv.assigned_supplier_id ? `supplier:${conv.assigned_supplier_id}` : '');
+        }
         if (conversationStatus) conversationStatus.value = conv.status || 'open';
 
         if (btnReopenConv) {
@@ -746,9 +756,18 @@ document.addEventListener('DOMContentLoaded', function () {
     /* ── Assignment / Status ── */
     async function updateAssignment() {
         if (!state.selectedConversationId) return;
+        const selected = (agentSelect.value || '').trim();
+        const payload = { assigned_to: null, assigned_supplier_id: null };
+
+        if (selected.startsWith('user:')) {
+            payload.assigned_to = Number(selected.slice(5)) || null;
+        } else if (selected.startsWith('supplier:')) {
+            payload.assigned_supplier_id = Number(selected.slice(9)) || null;
+        }
+
         await fetch(buildUrl(api.assign, state.selectedConversationId), {
             method: 'POST', headers: jsonHeaders,
-            body: JSON.stringify({ assigned_to: agentSelect.value || null }),
+            body: JSON.stringify(payload),
         });
         await loadConversations();
     }

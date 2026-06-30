@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\MessageTemplate;
+use App\Models\Supplier;
 use App\Models\User;
 use App\Models\WhatsAppMessage;
 use App\Services\FaalwaService;
@@ -29,7 +30,7 @@ class WhatsAppDashboardController extends Controller
             'open_chats'          => Conversation::where('status', 'open')->count(),
             'pending_chats'       => Conversation::where('status', 'pending')->count(),
             'closed_chats'        => Conversation::where('status', 'closed')->count(),
-            'unassigned_chats'    => Conversation::whereNull('assigned_to')->count(),
+            'unassigned_chats'    => Conversation::whereNull('assigned_to')->whereNull('assigned_supplier_id')->count(),
             'messages_today'      => WhatsAppMessage::whereDate('created_at', today())->count(),
             'active_agents'       => User::where('is_online', true)->where(function ($query) {
                 $query->where('role', 'agent')->orWhere('is_admin', true);
@@ -40,8 +41,9 @@ class WhatsAppDashboardController extends Controller
         $agents = User::where(function ($query) {
             $query->where('role', 'agent')->orWhere('is_admin', true);
         })->orderBy('name')->get(['id', 'name', 'role', 'is_online']);
+        $suppliers = Supplier::where('status', 'approved')->orderBy('name')->get(['id', 'name']);
 
-        return view('admin.whatsapp.index', compact('stats', 'templates', 'agents'));
+        return view('admin.whatsapp.index', compact('stats', 'templates', 'agents', 'suppliers'));
     }
 
     public function conversations(Request $request): JsonResponse
@@ -50,7 +52,7 @@ class WhatsAppDashboardController extends Controller
         $canViewAllAssigned = (bool) $request->user()?->isAdmin();
 
         $conversations = Conversation::query()
-            ->with('assignedAgent:id,name,is_online')
+            ->with('assignedAgent:id,name,is_online', 'assignedSupplier:id,name,status')
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = trim((string) $request->input('search'));
                 $query->where(function ($inner) use ($search) {
@@ -91,7 +93,7 @@ class WhatsAppDashboardController extends Controller
 
         return response()->json([
             'success' => true,
-            'conversation' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online')),
+            'conversation' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online', 'assignedSupplier:id,name,status')),
             'data' => $messages->map(fn (WhatsAppMessage $message) => $this->formatMessage($message)),
         ]);
     }
@@ -113,14 +115,15 @@ class WhatsAppDashboardController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'تم استلام هذه المحادثة بواسطة موظف آخر.',
-                'conversation' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online')),
+                'conversation' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online', 'assignedSupplier:id,name,status')),
             ], 409);
         }
 
-        if ($authId && ! $conversation->assigned_to) {
+        if ($authId && ! $conversation->assigned_to && ! $conversation->assigned_supplier_id) {
             $claimed = Conversation::query()
                 ->whereKey($conversation->id)
                 ->whereNull('assigned_to')
+                ->whereNull('assigned_supplier_id')
                 ->update(['assigned_to' => $authId]);
 
             if ($claimed === 0) {
@@ -129,7 +132,7 @@ class WhatsAppDashboardController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'تم استلام هذه المحادثة بواسطة موظف آخر.',
-                    'conversation' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online')),
+                    'conversation' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online', 'assignedSupplier:id,name,status')),
                 ], 409);
             }
 
@@ -213,7 +216,7 @@ class WhatsAppDashboardController extends Controller
 
         return response()->json([
             'success' => true,
-            'conversation' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online')),
+            'conversation' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online', 'assignedSupplier:id,name,status')),
             'data' => $this->formatMessage($message->fresh()),
         ]);
     }
@@ -222,15 +225,31 @@ class WhatsAppDashboardController extends Controller
     {
         $validated = $request->validate([
             'assigned_to' => 'nullable|exists:users,id',
+            'assigned_supplier_id' => 'nullable|exists:suppliers,id',
         ]);
 
+        $assignedTo = $validated['assigned_to'] ?? null;
+        $assignedSupplierId = $validated['assigned_supplier_id'] ?? null;
+
+        if ($assignedSupplierId) {
+            Supplier::where('id', $assignedSupplierId)
+                ->where('status', 'approved')
+                ->firstOrFail();
+            $assignedTo = null;
+        }
+
+        if ($assignedTo) {
+            $assignedSupplierId = null;
+        }
+
         $conversation->update([
-            'assigned_to' => $validated['assigned_to'] ?? null,
+            'assigned_to' => $assignedTo,
+            'assigned_supplier_id' => $assignedSupplierId,
         ]);
 
         return response()->json([
             'success' => true,
-            'data' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online')),
+            'data' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online', 'assignedSupplier:id,name,status')),
         ]);
     }
 
@@ -259,7 +278,7 @@ class WhatsAppDashboardController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online')),
+            'data' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online', 'assignedSupplier:id,name,status')),
         ]);
     }
 
@@ -301,7 +320,7 @@ class WhatsAppDashboardController extends Controller
 
         return response()->json([
             'success' => true,
-            'conversation' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online')),
+            'conversation' => $this->formatConversation($conversation->fresh('assignedAgent:id,name,is_online', 'assignedSupplier:id,name,status')),
             'subscriber' => [
                 'user_ns' => data_get($subscriber, 'user_ns') ?? data_get($subscriber, 'data.user_ns'),
                 'user_id' => data_get($subscriber, 'user_id') ?? data_get($subscriber, 'data.user_id'),
@@ -357,8 +376,14 @@ class WhatsAppDashboardController extends Controller
             'customer_phone' => $conversation->customer_phone,
             'status' => $conversation->status,
             'assigned_to' => $conversation->assigned_to,
-            'assigned_agent' => $conversation->assignedAgent?->name,
+            'assigned_supplier_id' => $conversation->assigned_supplier_id,
+            'assigned_agent' => $conversation->assignedAgent?->name ?: $conversation->assignedSupplier?->name,
             'assigned_agent_online' => (bool) $conversation->assignedAgent?->is_online,
+            'assigned_supplier' => $conversation->assignedSupplier?->name,
+            'assignment_type' => $conversation->assigned_supplier_id ? 'supplier' : ($conversation->assigned_to ? 'agent' : null),
+            'assigned_target_value' => $conversation->assigned_supplier_id
+                ? 'supplier:'.$conversation->assigned_supplier_id
+                : ($conversation->assigned_to ? 'user:'.$conversation->assigned_to : ''),
             'last_message' => $conversation->last_message,
             'last_message_at' => optional($conversation->last_message_at)->format('H:i'),
             'last_message_at_iso' => optional($conversation->last_message_at)?->toIso8601String(),

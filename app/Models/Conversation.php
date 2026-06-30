@@ -15,6 +15,7 @@ class Conversation extends Model
         'customer_name',
         'customer_phone',
         'assigned_to',
+        'assigned_supplier_id',
         'status',
         'last_message',
         'last_message_at',
@@ -33,6 +34,11 @@ class Conversation extends Model
     public function assignedAgent(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function assignedSupplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class, 'assigned_supplier_id');
     }
 
     public function messages(): HasMany
@@ -60,9 +66,12 @@ class Conversation extends Model
 
         return match ($filter) {
             'my' => $query->where('assigned_to', $userId),
-            'unassigned' => $query->whereNull('assigned_to'),
+            'unassigned' => $query->whereNull('assigned_to')->whereNull('assigned_supplier_id'),
             default => $canViewAllAssigned ? $query : $query->where(function ($inner) use ($userId) {
-                $inner->whereNull('assigned_to');
+                $inner->where(function ($unassigned) {
+                    $unassigned->whereNull('assigned_to')
+                        ->whereNull('assigned_supplier_id');
+                });
 
                 if ($userId) {
                     $inner->orWhere('assigned_to', $userId);

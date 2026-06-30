@@ -46,6 +46,8 @@ class EnforceAdminPermissionScope
             $adminRoute === 'dashboard'
             || str_starts_with($adminRoute, 'notifications.')
             || str_starts_with($adminRoute, 'force-password.')
+            || str_starts_with($adminRoute, 'maintenance.')
+            || str_starts_with($adminRoute, 'cloudflare-security.')
         ) {
             return $next($request);
         }

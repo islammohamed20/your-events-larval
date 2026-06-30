@@ -178,6 +178,11 @@
                 <div class="otp-validity">⏰ صالح لمدة 10 دقائق فقط</div>
             </div>
 
+            <!-- Plain text copyable OTP -->
+            <div style="font-size: 16px; color: #333333; margin: 20px 0; font-family: 'Courier New', monospace; direction: ltr; text-align: center;">
+                <strong>رمز التحقق: {{ $otp }}</strong>
+            </div>
+
             <!-- Warning -->
             <div class="warning">
                 <div class="warning-title">⚠️ تنبيه أمني مهم</div>

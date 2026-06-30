@@ -32,6 +32,26 @@
                 <div class="col-12">
                     <label class="form-label">المحتوى</label>
                     <textarea name="content" class="form-control" rows="8" required>{{ old('content', $template->content) }}</textarea>
+                    <div class="form-text">استخدم @{{1}}، @{{2}}… لإدراج متغيرات. مثال: "مرحباً @{{1}}، رقم الحجز @{{2}}"</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">متغيرات القالب (Labels)</label>
+                    <div id="paramsSchemaInputs">
+                        @php
+                            $params = old('params_schema', $template->params_schema ?? []);
+                        @endphp
+                        @forelse($params as $i => $param)
+                            <div class="mb-2 d-flex gap-2">
+                                <input type="text" name="params_schema[]" class="form-control" value="{{ $param }}" placeholder="المتغير {{ $i + 1 }}">
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()">×</button>
+                            </div>
+                        @empty
+                            <div class="mb-2 d-flex gap-2">
+                                <input type="text" name="params_schema[]" class="form-control" placeholder="المتغير 1">
+                            </div>
+                        @endforelse
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addParamInput()">+ إضافة متغير</button>
                 </div>
             </div>
 
@@ -42,4 +62,20 @@
         </form>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+let paramCount = {{ count($params ?? []) }};
+if (paramCount === 0) paramCount = 1;
+
+function addParamInput() {
+    paramCount++;
+    const container = document.getElementById('paramsSchemaInputs');
+    const div = document.createElement('div');
+    div.className = 'mb-2 d-flex gap-2';
+    div.innerHTML = `<input type="text" name="params_schema[]" class="form-control" placeholder="المتغير ${paramCount}"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.parentElement.remove()">×</button>`;
+    container.appendChild(div);
+}
+</script>
 @endsection

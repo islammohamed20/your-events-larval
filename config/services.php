@@ -67,4 +67,20 @@ return [
         'default_pause_minutes' => env('FAALWA_DEFAULT_PAUSE_MINUTES', 30),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | WhatsApp Business API Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for WhatsApp Business API integration
+    |
+    */
+
+    'whatsapp' => [
+        'access_token' => env('WHATSAPP_ACCESS_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'api_version' => env('WHATSAPP_API_VERSION', 'v18.0'),
+        'webhook_verify_token' => env('WHATSAPP_WEBHOOK_VERIFY_TOKEN'),
+    ],
+
 ];

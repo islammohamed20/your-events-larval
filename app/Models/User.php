@@ -30,6 +30,12 @@ class User extends Authenticatable
         'quotes.view',
         'quotes.edit',
         'quotes.delete',
+        // WhatsApp تفصيلية
+        'whatsapp.view',
+        'whatsapp.assign',
+        'whatsapp.send',
+        'whatsapp.delete',
+        'whatsapp.export',
     ];
 
     /**
@@ -175,6 +181,11 @@ class User extends Authenticatable
         }
 
         if (str_starts_with($permission, 'packages.') && in_array('manage_packages', $permissions, true)) {
+            return true;
+        }
+
+        // WhatsApp تفصيلية
+        if (str_starts_with($permission, 'whatsapp.') && in_array('manage_whatsapp', $permissions, true)) {
             return true;
         }
 

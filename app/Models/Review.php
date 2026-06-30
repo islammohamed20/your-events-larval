@@ -14,12 +14,19 @@ class Review extends Model
         'rating',
         'comment',
         'is_approved',
+        'booking_id',
+        'source',
     ];
 
     protected $casts = [
         'rating' => 'integer',
         'is_approved' => 'boolean',
     ];
+
+    public function booking()
+    {
+        return $this->belongsTo(Booking::class);
+    }
 
     /**
      * Scope for approved reviews

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\BookingConfirmation;
 use App\Models\Booking;
 use App\Models\Package;
+use App\Models\Review;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -125,5 +126,41 @@ class BookingController extends Controller
         $bookings = Booking::where('user_id', Auth::id())->latest()->get();
 
         return view('booking.my-bookings', compact('bookings'));
+    }
+
+    public function showReview($reference)
+    {
+        $booking = Booking::where('booking_reference', $reference)->firstOrFail();
+
+        $existingReview = Review::where('booking_id', $booking->id)->first();
+
+        return view('booking.review', compact('booking', 'existingReview'));
+    }
+
+    public function submitReview(Request $request, $reference)
+    {
+        $booking = Booking::where('booking_reference', $reference)->firstOrFail();
+
+        if (Review::where('booking_id', $booking->id)->exists()) {
+            return back()->with('error', 'تم إرسال تقييم لهذا الحجز مسبقاً.');
+        }
+
+        $validated = $request->validate([
+            'client_name' => 'required|string|max:255',
+            'rating' => 'required|integer|between:1,5',
+            'comment' => 'nullable|string|max:1000',
+        ]);
+
+        Review::create([
+            'client_name' => $validated['client_name'],
+            'rating' => $validated['rating'],
+            'comment' => $validated['comment'] ?? null,
+            'booking_id' => $booking->id,
+            'source' => 'whatsapp',
+            'is_approved' => false,
+        ]);
+
+        return redirect()->route('booking.review', $reference)
+            ->with('success', 'شكراً لك! تم استلام تقييمك وسيتم نشره بعد المراجعة.');
     }
 }

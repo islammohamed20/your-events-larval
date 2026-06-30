@@ -29,6 +29,7 @@ class SupplierOtpMail extends Mailable
     public function build()
     {
         return $this->subject('رمز التحقق - منصة فعالياتك')
-            ->view('emails.supplier-otp');
+            ->view('emails.supplier-otp')
+            ->text('emails.supplier-otp-plain');
     }
 }

@@ -459,6 +459,11 @@
                 @endif
             </a>
             
+            <a href="{{ route('supplier.whatsapp.index') }}" class="nav-link {{ request()->routeIs('supplier.whatsapp*') ? 'active' : '' }}">
+                <i class="fab fa-whatsapp"></i>
+                <span>{{ __('common.whatsapp') }}</span>
+            </a>
+            
             <div class="nav-section">{{ __('common.statistics') }}</div>
             
             <a href="{{ route('supplier.reports.index') }}" class="nav-link {{ request()->routeIs('supplier.reports*') ? 'active' : '' }}">

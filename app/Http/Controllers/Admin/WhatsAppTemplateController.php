@@ -49,11 +49,21 @@ class WhatsAppTemplateController extends Controller
 
                 $languageCode = strtolower((string) ($ft['language'] ?? $ft['lang'] ?? $ft['locale'] ?? 'ar'));
                 $namespace = (string) ($ft['namespace'] ?? $ft['template_namespace'] ?? '');
+
+                // 1. Try to get param labels from Meta's example
                 $paramsSchema = [];
                 foreach (($ft['components'] ?? []) as $comp) {
                     if (($comp['type'] ?? '') === 'BODY' && !empty($comp['example']['body_text'][0]) && is_array($comp['example']['body_text'][0])) {
                         $paramsSchema = array_values($comp['example']['body_text'][0]);
                         break;
+                    }
+                }
+
+                // 2. Fallback: count {{1}}, {{2}} … placeholders in BODY text and build generic labels
+                if (empty($paramsSchema) && preg_match_all('/{{\s*(\d+)\s*}}/', $content, $matches)) {
+                    $maxIndex = max(array_map('intval', $matches[1]));
+                    for ($i = 1; $i <= $maxIndex; $i++) {
+                        $paramsSchema[] = 'المتغير ' . $i;
                     }
                 }
 
@@ -86,9 +96,22 @@ class WhatsAppTemplateController extends Controller
             'type' => 'required|in:marketing,utility,authentication',
             'faalwa_namespace' => 'nullable|string|max:255',
             'language_code' => 'nullable|string|max:10',
+            'params_schema' => 'nullable|array',
+            'params_schema.*' => 'nullable|string|max:255',
         ]);
 
-        $validated['language_code'] = $validated['language_code'] ?: 'ar';
+        $validated['language_code'] = ($validated['language_code'] ?? null) ?: 'ar';
+
+        // Auto-extract params_schema from {{1}}, {{2}} … placeholders if not provided
+        $content = $validated['content'] ?? '';
+        if (empty($validated['params_schema']) && preg_match_all('/{{\s*(\d+)\s*}}/', $content, $matches)) {
+            $maxIndex = max(array_map('intval', $matches[1]));
+            $extracted = [];
+            for ($i = 1; $i <= $maxIndex; $i++) {
+                $extracted[] = 'المتغير ' . $i;
+            }
+            $validated['params_schema'] = $extracted ?: null;
+        }
 
         MessageTemplate::create($validated);
 
@@ -108,9 +131,22 @@ class WhatsAppTemplateController extends Controller
             'type' => 'required|in:marketing,utility,authentication',
             'faalwa_namespace' => 'nullable|string|max:255',
             'language_code' => 'nullable|string|max:10',
+            'params_schema' => 'nullable|array',
+            'params_schema.*' => 'nullable|string|max:255',
         ]);
 
-        $validated['language_code'] = $validated['language_code'] ?: 'ar';
+        $validated['language_code'] = ($validated['language_code'] ?? null) ?: 'ar';
+
+        // Auto-extract params_schema from {{1}}, {{2}} … placeholders if not provided
+        $content = $validated['content'] ?? '';
+        if (empty($validated['params_schema']) && preg_match_all('/{{\s*(\d+)\s*}}/', $content, $matches)) {
+            $maxIndex = max(array_map('intval', $matches[1]));
+            $extracted = [];
+            for ($i = 1; $i <= $maxIndex; $i++) {
+                $extracted[] = 'المتغير ' . $i;
+            }
+            $validated['params_schema'] = $extracted ?: null;
+        }
 
         $template->update($validated);
 

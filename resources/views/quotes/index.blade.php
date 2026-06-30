@@ -49,7 +49,7 @@
                                         <small class="text-muted d-block mt-2">{{ $quote->quote_number }}</small>
                                     </div>
                                     <div class="col-md-3 mb-3 mb-md-0">
-                                        <h5 class="mb-1">عرض سعر #{{ $quote->id }}</h5>
+                                        <h5 class="mb-1">عرض سعر #{{ $quote->quote_number }}</h5>
                                         <p class="text-muted small mb-1">
                                             <i class="fas fa-calendar me-1"></i>
                                             {{ $quote->created_at->format('Y/m/d') }}
@@ -67,7 +67,7 @@
                                         <small class="text-muted">شامل الضريبة</small>
                                     </div>
                                     <div class="col-md-2 text-center">
-                                        <a href="{{ route('quotes.show', $quote, false) }}" class="btn btn-primary btn-sm w-100 mb-2">
+                                        <a href="{{ route('quotes.show-by-number', $quote->quote_number, false) }}" class="btn btn-primary btn-sm w-100 mb-2">
                                             <i class="fas fa-eye me-1"></i>عرض
                                         </a>
                                         @php
@@ -81,7 +81,7 @@
                                                 <i class="fas fa-check-circle me-1"></i>تم الدفع
                                             </button>
                                         @elseif(in_array($quote->status, ['approved', 'under_review', 'pending'], true))
-                                            <a href="{{ route('quotes.complete-booking', $quote, false) }}" class="btn btn-success btn-sm w-100 mb-2">
+                                            <a href="{{ route('quotes.complete-booking.by-number', $quote->quote_number, false) }}" class="btn btn-success btn-sm w-100 mb-2">
                                                 <i class="fas fa-credit-card me-1"></i>استكمال بيانات الحجز والدفع
                                             </a>
                                         @else

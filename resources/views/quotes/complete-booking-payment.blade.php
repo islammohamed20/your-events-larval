@@ -222,7 +222,7 @@
                                 <i class="fas fa-check-circle me-2"></i>
                                 تأكيد الحجز والدفع
                             </button>
-                            <a href="{{ route('quotes.show', $quote) }}" class="btn btn-outline-secondary flex-fill">
+                            <a href="{{ route('quotes.show-by-number', $quote->quote_number) }}" class="btn btn-outline-secondary flex-fill">
                                 <i class="fas fa-arrow-right me-2"></i>
                                 العودة لعرض السعر
                             </a>
